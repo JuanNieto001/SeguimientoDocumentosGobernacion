@@ -11,22 +11,51 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
+        // Limpia caché de permisos para evitar errores
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Permisos administrativos
+        |--------------------------------------------------------------------------
+        */
         $permissions = [
             'manage users',
             'manage roles',
             'manage permissions',
         ];
 
-        foreach ($permissions as $p) {
-            Permission::firstOrCreate(['name' => $p]);
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $user  = Role::firstOrCreate(['name' => 'user']);
+        /*
+        |--------------------------------------------------------------------------
+        | Roles del sistema
+        |--------------------------------------------------------------------------
+        */
+        $roles = [
+            'admin',
+            'unidad_solicitante',
+            'planeacion',
+            'hacienda',
+            'juridica',
+            'secop',
+        ];
 
-        $admin->givePermissionTo($permissions);
-        // el user no recibe permisos administrativos
+        foreach ($roles as $roleName) {
+            Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Asignar permisos administrativos al admin
+        |--------------------------------------------------------------------------
+        */
+        $adminRole = Role::where('name', 'admin')->first();
+
+        if ($adminRole) {
+            $adminRole->givePermissionTo($permissions);
+        }
     }
 }
