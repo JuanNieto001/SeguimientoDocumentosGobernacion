@@ -61,35 +61,35 @@ Route::middleware(['auth', 'role:admin'])
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:unidad_solicitante'])
+Route::middleware(['auth', 'role:admin|unidad_solicitante'])
     ->prefix('unidad')
     ->name('unidad.')
     ->group(function () {
         Route::get('/', [UnidadController::class, 'index'])->name('index');
     });
 
-Route::middleware(['auth', 'role:planeacion'])
+Route::middleware(['auth', 'role:admin|planeacion'])
     ->prefix('planeacion')
     ->name('planeacion.')
     ->group(function () {
         Route::get('/', [PlaneacionController::class, 'index'])->name('index');
     });
 
-Route::middleware(['auth', 'role:hacienda'])
+Route::middleware(['auth', 'role:admin|hacienda'])
     ->prefix('hacienda')
     ->name('hacienda.')
     ->group(function () {
         Route::get('/', [HaciendaController::class, 'index'])->name('index');
     });
 
-Route::middleware(['auth', 'role:juridica'])
+Route::middleware(['auth', 'role:admin|juridica'])
     ->prefix('juridica')
     ->name('juridica.')
     ->group(function () {
         Route::get('/', [JuridicaController::class, 'index'])->name('index');
     });
 
-Route::middleware(['auth', 'role:secop'])
+Route::middleware(['auth', 'role:admin|secop'])
     ->prefix('secop')
     ->name('secop.')
     ->group(function () {
