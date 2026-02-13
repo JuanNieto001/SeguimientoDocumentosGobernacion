@@ -11,6 +11,22 @@ use App\Http\Controllers\Area\JuridicaController;
 use App\Http\Controllers\Area\SecopController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProcesoController;
+use App\Http\Controllers\WorkflowController;
+
+Route::middleware(['auth'])->group(function () {
+
+    // Marcar "Recibí"
+    Route::post('/workflow/procesos/{proceso}/recibir', [WorkflowController::class, 'recibir'])
+        ->name('workflow.recibir');
+
+    // Toggle de un item del checklist
+    Route::post('/workflow/procesos/{proceso}/checks/{check}/toggle', [WorkflowController::class, 'toggleCheck'])
+        ->name('workflow.checks.toggle');
+
+    // Marcar "Envié" y avanzar etapa
+    Route::post('/workflow/procesos/{proceso}/enviar', [WorkflowController::class, 'enviar'])
+        ->name('workflow.enviar');
+});
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/procesos', [ProcesoController::class, 'index'])->name('procesos.index');

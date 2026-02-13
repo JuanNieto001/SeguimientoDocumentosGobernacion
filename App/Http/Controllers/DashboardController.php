@@ -10,31 +10,34 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        // Admin: vista principal del sistema (procesos)
         if ($user->hasRole('admin')) {
-            return redirect('/admin/usuarios');
+            return redirect()->route('procesos.index');
         }
 
+        // Áreas (cada una a su bandeja)
         if ($user->hasRole('unidad_solicitante')) {
-            return redirect('/unidad');
+            return redirect()->route('unidad.index');
         }
 
         if ($user->hasRole('planeacion')) {
-            return redirect('/planeacion');
+            return redirect()->route('planeacion.index');
         }
 
         if ($user->hasRole('hacienda')) {
-            return redirect('/hacienda');
+            return redirect()->route('hacienda.index');
         }
 
         if ($user->hasRole('juridica')) {
-            return redirect('/juridica');
+            return redirect()->route('juridica.index');
         }
 
         if ($user->hasRole('secop')) {
-            return redirect('/secop');
+            return redirect()->route('secop.index');
         }
 
-        // fallback
-        return view('dashboard');
+        // Si entra aquí: no tiene rol asignado
+        abort(403, 'No tienes un rol asignado.');
     }
 }
+
