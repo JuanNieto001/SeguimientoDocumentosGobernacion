@@ -4,13 +4,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
-
-// (Estos controladores los crearemos después)
 use App\Http\Controllers\Area\UnidadController;
 use App\Http\Controllers\Area\PlaneacionController;
 use App\Http\Controllers\Area\HaciendaController;
 use App\Http\Controllers\Area\JuridicaController;
 use App\Http\Controllers\Area\SecopController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProcesoController;
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/procesos', [ProcesoController::class, 'index'])->name('procesos.index');
+    Route::get('/procesos/crear', [ProcesoController::class, 'create'])->name('procesos.create');
+    Route::post('/procesos', [ProcesoController::class, 'store'])->name('procesos.store');
+});
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,10 +28,8 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        // Puedes cambiar esto luego por un controller que redirija
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 });
 
 /*

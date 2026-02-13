@@ -8,7 +8,7 @@ class JuridicaController extends Controller
 {
     public function index()
     {
-        return view('areas.inbox', [
+        return view('areas.juridica', [
             'areaName' => 'Secretaría Jurídica',
         ]);
     }

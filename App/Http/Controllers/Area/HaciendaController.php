@@ -8,7 +8,7 @@ class HaciendaController extends Controller
 {
     public function index()
     {
-        return view('areas.inbox', [
+        return view('areas.hacienda', [
             'areaName' => 'Secretaría de Hacienda',
         ]);
     }

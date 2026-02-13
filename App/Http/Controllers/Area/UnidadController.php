@@ -8,7 +8,7 @@ class UnidadController extends Controller
 {
     public function index()
     {
-        return view('areas.inbox', [
+        return view('areas.unidad', [
             'areaName' => 'Unidad Solicitante',
         ]);
     }
