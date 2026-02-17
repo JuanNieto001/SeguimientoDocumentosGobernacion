@@ -42,39 +42,58 @@
                             <div class="text-gray-600">{{ $proceso->objeto }}</div>
                         </div>
 
+                        {{-- Si aún no existe la instancia de proceso_etapas para esta etapa --}}
+                        @if(!$procesoEtapa)
+                            <div class="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                                Este proceso está en Jurídica, pero todavía no tiene registrada la instancia de etapa
+                                (<code>proceso_etapas</code>). Revisa que al mover el proceso se cree la etapa actual.
+                            </div>
+                        @endif
+
+                        {{-- RECIBÍ --}}
                         <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
                             @csrf
                             <input type="hidden" name="area_role" value="{{ $areaRole }}">
                             <button class="px-4 py-2 rounded text-white {{ $procesoEtapa && $procesoEtapa->recibido ? 'bg-gray-400' : 'bg-gray-800' }}"
-                                    {{ $procesoEtapa && $procesoEtapa->recibido ? 'disabled' : '' }}>
+                                    {{ !$procesoEtapa || ($procesoEtapa && $procesoEtapa->recibido) ? 'disabled' : '' }}>
                                 {{ $procesoEtapa && $procesoEtapa->recibido ? 'Documento recibido' : 'Marcar como recibido' }}
                             </button>
                         </form>
 
+                        {{-- CHECKLIST --}}
                         <div class="border-t pt-4">
                             <div class="font-semibold mb-3">Checklist</div>
 
-                            <div class="space-y-2">
-                                @foreach($checks as $c)
-                                    <form method="POST" action="{{ route('workflow.checks.toggle', [$proceso->id, $c->check_id]) }}">
-                                        @csrf
-                                        <input type="hidden" name="area_role" value="{{ $areaRole }}">
-                                        <button type="submit"
-                                            class="w-full text-left px-3 py-2 rounded border
-                                            {{ $c->checked ? 'bg-green-50' : '' }}
-                                            {{ !$procesoEtapa || !$procesoEtapa->recibido ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                            {{ !$procesoEtapa || !$procesoEtapa->recibido ? 'disabled' : '' }}>
-                                            <span class="inline-block w-5">{{ $c->checked ? '✅' : '⬜' }}</span>
-                                            <span class="font-medium">{{ $c->label }}</span>
-                                            @if($c->requerido)
-                                                <span class="text-xs text-gray-500"> (requerido)</span>
-                                            @endif
-                                        </button>
-                                    </form>
-                                @endforeach
-                            </div>
+                            @if(!$procesoEtapa)
+                                <div class="text-sm text-gray-600">
+                                    No se puede diligenciar checklist porque no existe la instancia de etapa para este proceso.
+                                </div>
+                            @else
+                                <div class="space-y-2">
+                                    @forelse($checks as $c)
+                                        <form method="POST" action="{{ route('workflow.checks.toggle', [$proceso->id, $c->check_id]) }}">
+                                            @csrf
+                                            <input type="hidden" name="area_role" value="{{ $areaRole }}">
+                                            <button type="submit"
+                                                class="w-full text-left px-3 py-2 rounded border
+                                                {{ $c->checked ? 'bg-green-50' : '' }}
+                                                {{ !$procesoEtapa->recibido ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                {{ !$procesoEtapa->recibido ? 'disabled' : '' }}>
+                                                <span class="inline-block w-5">{{ $c->checked ? '✅' : '⬜' }}</span>
+                                                <span class="font-medium">{{ $c->label }}</span>
+                                                @if($c->requerido)
+                                                    <span class="text-xs text-gray-500"> (requerido)</span>
+                                                @endif
+                                            </button>
+                                        </form>
+                                    @empty
+                                        <div class="text-sm text-gray-600">No hay ítems de checklist para esta etapa.</div>
+                                    @endforelse
+                                </div>
+                            @endif
                         </div>
 
+                        {{-- ENVIÉ --}}
                         <form method="POST" action="{{ route('workflow.enviar', $proceso->id) }}" class="pt-2">
                             @csrf
                             <input type="hidden" name="area_role" value="{{ $areaRole }}">

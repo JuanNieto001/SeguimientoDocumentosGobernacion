@@ -2,112 +2,138 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Proceso;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProcesoController extends Controller
 {
-    // Admin ve todos; áreas ven solo los que están en su rol
     public function index()
     {
-        $user = Auth::user();
+        $user = auth()->user();
 
-        if ($user->hasRole('admin')) {
-            $procesos = DB::table('procesos')
-                ->orderByDesc('id')
-                ->get();
-        } else {
-            // toma el primer rol "de área"
-            $role = $user->getRoleNames()->first();
+        $query = DB::table('procesos')
+            ->leftJoin('workflows', 'workflows.id', '=', 'procesos.workflow_id')
+            ->select([
+                'procesos.*',
+                'workflows.nombre as workflow_nombre',
+                'workflows.codigo as workflow_codigo',
+            ])
+            ->orderByDesc('procesos.id');
 
-            $procesos = DB::table('procesos')
-                ->where('area_actual_role', $role)
-                ->orderByDesc('id')
-                ->get();
+        // Admin ve todo
+        if (!$user->hasRole('admin')) {
+
+            // Si es unidad_solicitante: ve los procesos que creó
+            if ($user->hasRole('unidad_solicitante')) {
+                $query->where('procesos.created_by', $user->id);
+            } else {
+                // Si es un área (planeacion, hacienda, juridica, secop):
+                // ve lo que esté en su bandeja (area_actual_role)
+                $rolesArea = ['planeacion', 'hacienda', 'juridica', 'secop'];
+
+                $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));
+
+                // Si no tiene ninguno de esos roles, no ve nada
+                if (!$miRolArea) {
+                    $query->whereRaw('1=0');
+                } else {
+                    $query->where('procesos.area_actual_role', $miRolArea);
+                }
+            }
         }
+
+        $procesos = $query->get();
 
         return view('procesos.index', compact('procesos'));
     }
 
     public function create()
     {
-        return view('procesos.create');
+        $user = auth()->user();
+        abort_unless($user->hasRole('admin') || $user->hasRole('unidad_solicitante'), 403);
+
+        $workflows = DB::table('workflows')
+            ->where('activo', 1)
+            ->orderBy('nombre')
+            ->get();
+
+        return view('procesos.create', compact('workflows'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'codigo' => ['required', 'string', 'max:50', 'unique:procesos,codigo'],
-            'objeto' => ['required', 'string', 'max:255'],
+        $user = auth()->user();
+        abort_unless($user->hasRole('admin') || $user->hasRole('unidad_solicitante'), 403);
+
+        $data = $request->validate([
+            'workflow_id' => ['required', 'exists:workflows,id'],
+            'codigo'      => ['required', 'string', 'max:60', 'unique:procesos,codigo'],
+            'objeto'      => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string'],
         ]);
 
-        $userId = Auth::id();
+        return DB::transaction(function () use ($data, $user) {
 
-        return DB::transaction(function () use ($request, $userId) {
-
-            // 1) primera etapa (orden 1)
-            $firstEtapa = DB::table('etapas')
+            // 1) Buscar etapa inicial del workflow: la de menor orden (incluye 0 si existe)
+            $primeraEtapa = DB::table('etapas')
+                ->where('workflow_id', $data['workflow_id'])
                 ->where('activa', 1)
                 ->orderBy('orden')
                 ->first();
 
-            if (!$firstEtapa) {
-                abort(500, 'No hay etapas configuradas. Ejecuta el WorkflowSeeder.');
+            if (!$primeraEtapa) {
+                abort(422, 'El workflow seleccionado no tiene etapas activas.');
             }
 
-            // 2) crear proceso
+            // 2) Crear proceso
             $procesoId = DB::table('procesos')->insertGetId([
-                'codigo' => $request->codigo,
-                'objeto' => $request->objeto,
-                'descripcion' => $request->descripcion,
-                'estado' => 'EN_CURSO',
-                'etapa_actual_id' => $firstEtapa->id,
-                'area_actual_role' => $firstEtapa->area_role,
-                'created_by' => $userId,
+                'workflow_id'      => $data['workflow_id'],
+                'codigo'           => $data['codigo'],
+                'objeto'           => $data['objeto'],
+                'descripcion'      => $data['descripcion'] ?? null,
+                'estado'           => 'EN_CURSO',
+                'etapa_actual_id'  => $primeraEtapa->id,
+                'area_actual_role' => $primeraEtapa->area_role,
+                'created_by'       => $user->id,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
+
+            // 3) Crear instancia de etapa inicial
+            $procesoEtapaId = DB::table('proceso_etapas')->insertGetId([
+                'proceso_id' => $procesoId,
+                'etapa_id'   => $primeraEtapa->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // 3) crear proceso_etapas por cada etapa
-            $etapas = DB::table('etapas')
-                ->where('activa', 1)
+            // 4) Crear checks de esa etapa
+            $items = DB::table('etapa_items')
+                ->where('etapa_id', $primeraEtapa->id)
                 ->orderBy('orden')
-                ->get();
+                ->get(['id']);
 
-            foreach ($etapas as $etapa) {
-                $procesoEtapaId = DB::table('proceso_etapas')->insertGetId([
-                    'proceso_id' => $procesoId,
-                    'etapa_id' => $etapa->id,
-                    'recibido' => false,
-                    'enviado' => false,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+            foreach ($items as $item) {
+                DB::table('proceso_etapa_checks')->insert([
+                    'proceso_etapa_id' => $procesoEtapaId,
+                    'etapa_item_id'    => $item->id,
+                    'checked'          => false,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
                 ]);
-
-                // 4) crear checks por cada item de la etapa
-                $items = DB::table('etapa_items')
-                    ->where('etapa_id', $etapa->id)
-                    ->orderBy('orden')
-                    ->get();
-
-                foreach ($items as $item) {
-                    DB::table('proceso_etapa_checks')->insert([
-                        'proceso_etapa_id' => $procesoEtapaId,
-                        'etapa_item_id' => $item->id,
-                        'checked' => false,
-                        'checked_by' => null,
-                        'checked_at' => null,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
             }
 
-            return redirect()->route('procesos.index')
-                ->with('success', 'Proceso creado y flujo instanciado correctamente.');
+            // 5) Redirigir a la bandeja correcta (según el área actual)
+            $url = match ($primeraEtapa->area_role) {
+                'unidad_solicitante' => url('/unidad?proceso_id=' . $procesoId),
+                'planeacion'         => url('/planeacion?proceso_id=' . $procesoId),
+                'hacienda'           => url('/hacienda?proceso_id=' . $procesoId),
+                'juridica'           => url('/juridica?proceso_id=' . $procesoId),
+                'secop'              => url('/secop?proceso_id=' . $procesoId),
+                default              => route('procesos.index'),
+            };
+
+            return redirect($url)->with('success', 'Solicitud creada correctamente.');
         });
     }
 }

@@ -25,6 +25,18 @@
                         @csrf
 
                         <div>
+                            <label class="block text-sm font-medium mb-1">Tipo de proceso (Workflow)</label>
+                            <select name="workflow_id" class="w-full rounded border-gray-300" required>
+                                <option value="">-- Selecciona --</option>
+                                @foreach($workflows as $w)
+                                    <option value="{{ $w->id }}" @selected(old('workflow_id') == $w->id)>
+                                        {{ $w->nombre }} ({{ $w->codigo }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
                             <label class="block text-sm font-medium mb-1">Código</label>
                             <input name="codigo" value="{{ old('codigo') }}"
                                    class="w-full rounded border-gray-300" placeholder="CD-2026-0001" required>

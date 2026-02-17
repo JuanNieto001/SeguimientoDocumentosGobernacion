@@ -9,115 +9,586 @@ class WorkflowSeeder extends Seeder
 {
     public function run(): void
     {
-        // Para poder limpiar sin romper llaves foráneas
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        // Para MySQL. Si algún día cambias DB, esto no rompe.
+        $driver = DB::getDriverName();
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
 
-        // Limpieza en orden (si ya existiera data)
-        DB::table('proceso_etapa_checks')->delete();
-        DB::table('proceso_etapas')->delete();
-        DB::table('etapa_items')->delete();
-        DB::table('etapas')->delete();
+        // Limpieza total (mejor TRUNCATE en escenario fresh+seed)
+        $this->truncateIfExists('proceso_etapa_checks');
+        $this->truncateIfExists('proceso_etapas');
+        $this->truncateIfExists('etapa_items');
+        $this->truncateIfExists('etapas');
+        $this->truncateIfExists('procesos');
+        $this->truncateIfExists('workflows');
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
 
-        $etapas = [
+        $workflows = [
 
+            /**
+             * 7.1 CONTRATACIÓN DIRECTA – PERSONA NATURAL
+             */
             [
-                'orden' => 1,
-                'nombre' => 'Unidad Solicitante',
-                'area_role' => 'unidad_solicitante',
-                'items' => [
-                    'Elaboré Estudios Previos',
-                    'Elaboré Estudio de Mercado',
-                    'Elaboré Análisis del Sector',
-                    'Adjunté Cotizaciones',
-                    'Proyecté Invitación Pública (si aplica)',
-                    'Proyecté Prepliegos (si aplica)',
-                    'Elaboré Solicitud de contratación',
-                    'Designé supervisor',
-                ]
+                'codigo' => 'CD_PN',
+                'nombre' => 'Contratación Directa - Persona Natural',
+                'activo' => true,
+                'etapas' => [
+                    [
+                        'orden' => 0,
+                        'nombre' => 'Planeación anual - PAA',
+                        'area_role' => 'planeacion',
+                        'items' => [
+                            'Formato de necesidades',
+                            'Plan Anual de Adquisiciones (PAA)',
+                            'Acta de aprobación del PAA',
+                        ],
+                    ],
+                    [
+                        'orden' => 1,
+                        'nombre' => 'Validación inclusión en PAA',
+                        'area_role' => 'planeacion',
+                        'items' => [
+                            'Certificado de inclusión en PAA',
+                            'Acta de modificación del PAA (si aplica)',
+                        ],
+                    ],
+                    [
+                        'orden' => 2,
+                        'nombre' => 'Autorización formal de inicio',
+                        'area_role' => 'planeacion',
+                        'items' => [
+                            'Acto de autorización de inicio de contratación',
+                        ],
+                    ],
+                    [
+                        'orden' => 3,
+                        'nombre' => 'Preparación inicial de Estudios Previos',
+                        'area_role' => 'unidad_solicitante',
+                        'items' => [
+                            'Estudio de Mercado (cuando aplique)',
+                            'Análisis del Sector',
+                            'Estudios Previos (borrador/proyectados)',
+                        ],
+                    ],
+                    [
+                        'orden' => 4,
+                        'nombre' => 'Solicitud de documentos presupuestales iniciales',
+                        'area_role' => 'planeacion',
+                        'items' => [
+                            'CDP',
+                            'PAA',
+                            'Certificado de compatibilidad del gasto',
+                        ],
+                    ],
+                    [
+                        'orden' => 5,
+                        'nombre' => 'Solicitud de viabilidad económica',
+                        'area_role' => 'hacienda',
+                        'items' => [
+                            'Viabilidad económica',
+                        ],
+                    ],
+                    [
+                        'orden' => 6,
+                        'nombre' => 'Verificación del contratista',
+                        'area_role' => 'juridica',
+                        'items' => [
+                            'Hoja de vida y soportes (SIGEP)',
+                            'Certificados de experiencia',
+                            'Antecedentes Procuraduría (SIRI)',
+                            'Antecedentes Policía',
+                            'Antecedentes Contraloría',
+                            'Verificación de inhabilidades e incompatibilidades',
+                            'Aportes a seguridad social al día',
+                            'Checklist precontractual completo',
+                        ],
+                    ],
+                    [
+                        'orden' => 7,
+                        'nombre' => 'Proyección del contrato',
+                        'area_role' => 'unidad_solicitante',
+                        'items' => [
+                            'Minuta del contrato (borrador)',
+                            'Solicitud de contratación',
+                            'Designación de supervisor',
+                        ],
+                    ],
+                    [
+                        'orden' => 8,
+                        'nombre' => 'Revisión y aprobación Secretaría de Planeación',
+                        'area_role' => 'planeacion',
+                        'items' => [
+                            'Estudios previos firmados/aprobados',
+                            'Minuta revisada y aprobada',
+                            'Solicitud de contratación firmada',
+                            'Designación de supervisor firmada',
+                        ],
+                    ],
+                    [
+                        'orden' => 9,
+                        'nombre' => 'Ajustado a Derecho (Secretaría Jurídica)',
+                        'area_role' => 'juridica',
+                        'items' => [
+                            'Cotizaciones y correos',
+                            'Análisis del Sector',
+                            'CDP',
+                            'PAA',
+                            'Certificado de compatibilidad',
+                            'Viabilidad económica',
+                            'Estudios previos',
+                            'Minuta del contrato',
+                            'Solicitud y designación de supervisor',
+                            'Ajustado a Derecho',
+                        ],
+                    ],
+                    [
+                        'orden' => 10,
+                        'nombre' => 'Estructuración en SECOP',
+                        'area_role' => 'secop',
+                        'items' => [
+                            'Proceso estructurado en SECOP',
+                            'Carga de documentos en SECOP',
+                            'Contrato electrónico generado/descargado',
+                        ],
+                    ],
+                    [
+                        'orden' => 11,
+                        'nombre' => 'Firma del contrato',
+                        'area_role' => 'secop',
+                        'items' => [
+                            'Contrato firmado',
+                            'Contrato cargado en SECOP',
+                        ],
+                    ],
+                    [
+                        'orden' => 12,
+                        'nombre' => 'Registro Presupuestal (RP)',
+                        'area_role' => 'hacienda',
+                        'items' => [
+                            'Solicitud de RP',
+                            'RP emitido',
+                        ],
+                    ],
+                    [
+                        'orden' => 13,
+                        'nombre' => 'Radicación expediente físico',
+                        'area_role' => 'juridica',
+                        'items' => [
+                            'Expediente físico organizado',
+                            'Comprobante de radicación',
+                        ],
+                    ],
+                    [
+                        'orden' => 14,
+                        'nombre' => 'Pólizas',
+                        'area_role' => 'juridica',
+                        'items' => [
+                            'Pólizas cargadas en SECOP',
+                            'Pólizas aprobadas',
+                        ],
+                    ],
+                    [
+                        'orden' => 15,
+                        'nombre' => 'Acta de inicio',
+                        'area_role' => 'secop',
+                        'items' => [
+                            'Acta de inicio firmada',
+                            'Registro en sistema',
+                        ],
+                    ],
+                    [
+                        'orden' => 16,
+                        'nombre' => 'Ejecución y cierre',
+                        'area_role' => 'secop',
+                        'items' => [
+                            'Informes de supervisión',
+                            'Pagos tramitados',
+                            'Acta de terminación (si aplica)',
+                            'Liquidación (si aplica)',
+                            'Cierre en SECOP',
+                        ],
+                    ],
+                ],
             ],
 
+            /**
+             * 7.2 CONTRATACIÓN MÍNIMA CUANTÍA
+             */
             [
-                'orden' => 2,
-                'nombre' => 'Secretaría de Planeación',
-                'area_role' => 'planeacion',
-                'items' => [
-                    'Solicité CDP',
-                    'Solicité PAA',
-                    'Solicité Certificado de Compatibilidad',
-                    'Solicité Viabilidad Económica',
-                    'Solicité Indicadores Financieros (si aplica)',
-                    'Revisé documentación completa',
-                ]
+                'codigo' => 'MC',
+                'nombre' => 'Mínima Cuantía',
+                'activo' => true,
+                'etapas' => [
+                    
+                    ['orden'=>0,'nombre'=>'Planeación anual - PAA','area_role'=>'planeacion','items'=>[
+                        'PAA','Acta aprobación PAA'
+                    ]],
+                    ['orden'=>1,'nombre'=>'Validación inclusión en PAA','area_role'=>'planeacion','items'=>[
+                        'Certificado inclusión en PAA','Acta modificación PAA (si aplica)'
+                    ]],
+                    ['orden'=>2,'nombre'=>'Autorización formal de inicio','area_role'=>'planeacion','items'=>[
+                        'Acto de autorización de inicio'
+                    ]],
+                    ['orden'=>3,'nombre'=>'Identificación de la necesidad','area_role'=>'unidad_solicitante','items'=>[
+                        'Solicitud de contratación','Justificación técnica'
+                    ]],
+                    ['orden'=>4,'nombre'=>'Estudio de mercado','area_role'=>'unidad_solicitante','items'=>[
+                        '3 cotizaciones (mínimo)','Precios históricos SECOP (si aplica)','Análisis del sector','Informe estudio de mercado'
+                    ]],
+                    ['orden'=>5,'nombre'=>'CDP','area_role'=>'hacienda','items'=>[
+                        'CDP'
+                    ]],
+                    ['orden'=>6,'nombre'=>'Estudios previos','area_role'=>'unidad_solicitante','items'=>[
+                        'Estudios previos completos','Análisis de riesgo','Garantías (si aplica)','Supervisor'
+                    ]],
+                    ['orden'=>7,'nombre'=>'Revisión jurídica','area_role'=>'juridica','items'=>[
+                        'Concepto jurídico / Ajustado a Derecho'
+                    ]],
+                    ['orden'=>8,'nombre'=>'Proyección invitación pública','area_role'=>'unidad_solicitante','items'=>[
+                        'Invitación pública'
+                    ]],
+                    ['orden'=>9,'nombre'=>'Publicación en SECOP','area_role'=>'secop','items'=>[
+                        'Invitación publicada en SECOP'
+                    ]],
+                    ['orden'=>10,'nombre'=>'Recepción de ofertas','area_role'=>'secop','items'=>[
+                        'Ofertas recibidas'
+                    ]],
+                    ['orden'=>11,'nombre'=>'Evaluación de ofertas','area_role'=>'secop','items'=>[
+                        'Verificación jurídica habilitante','Comparación de precios','Informe de evaluación'
+                    ]],
+                    ['orden'=>12,'nombre'=>'Acta de selección','area_role'=>'secop','items'=>[
+                        'Acta de selección'
+                    ]],
+                    ['orden'=>13,'nombre'=>'Aceptación de la oferta','area_role'=>'planeacion','items'=>[
+                        'Comunicación de aceptación'
+                    ]],
+                    ['orden'=>14,'nombre'=>'Contrato formal (si aplica)','area_role'=>'juridica','items'=>[
+                        'Contrato firmado (si aplica)'
+                    ]],
+                    ['orden'=>15,'nombre'=>'Registro Presupuestal (RP)','area_role'=>'hacienda','items'=>[
+                        'RP'
+                    ]],
+                    ['orden'=>16,'nombre'=>'Pólizas (si aplica)','area_role'=>'juridica','items'=>[
+                        'Pólizas aprobadas (si aplica)'
+                    ]],
+                    ['orden'=>17,'nombre'=>'Acta de inicio','area_role'=>'secop','items'=>[
+                        'Acta de inicio firmada'
+                    ]],
+                    ['orden'=>18,'nombre'=>'Ejecución y cierre','area_role'=>'secop','items'=>[
+                        'Informes','Pagos','Acta terminación','Cierre en SECOP'
+                    ]],
+                ],
             ],
 
+            /**
+             * 7.3 CONTRATACIÓN SELECCIÓN ABREVIADA
+             */
             [
-                'orden' => 3,
-                'nombre' => 'Secretaría de Hacienda',
-                'area_role' => 'hacienda',
-                'items' => [
-                    'Emití CDP',
-                    'Emití Certificado de Compatibilidad',
-                    'Emití Viabilidad Económica',
-                    'Emití Indicadores Financieros (si aplica)',
-                    'Emití Registro Presupuestal (RP)',
-                ]
+                'codigo' => 'SA',
+                'nombre' => 'Selección Abreviada',
+                'activo' => true,
+                'etapas' => [
+                    ['orden'=>0,'nombre'=>'Planeación anual - PAA','area_role'=>'planeacion','items'=>[
+                        'Formato de necesidades','PAA','Acta aprobación PAA'
+                    ]],
+                    ['orden'=>1,'nombre'=>'Validación inclusión en PAA','area_role'=>'planeacion','items'=>[
+                        'Certificado inclusión en PAA','Acta modificación PAA (si aplica)'
+                    ]],
+                    ['orden'=>2,'nombre'=>'Autorización formal de inicio','area_role'=>'planeacion','items'=>[
+                        'Acto de autorización de inicio'
+                    ]],
+                    ['orden'=>3,'nombre'=>'Identificación de la necesidad','area_role'=>'unidad_solicitante','items'=>[
+                        'Solicitud de contratación','Justificación técnica'
+                    ]],
+                    ['orden'=>4,'nombre'=>'Estudio de mercado','area_role'=>'unidad_solicitante','items'=>[
+                        '3 cotizaciones (mínimo)','Precios históricos SECOP (si aplica)','Análisis del sector','Informe estudio de mercado'
+                    ]],
+                    ['orden'=>5,'nombre'=>'CDP y documentos presupuestales','area_role'=>'hacienda','items'=>[
+                        'CDP','PAA','Certificado de compatibilidad'
+                    ]],
+                    ['orden'=>6,'nombre'=>'Viabilidad económica e indicadores','area_role'=>'hacienda','items'=>[
+                        'Viabilidad económica','Indicadores financieros'
+                    ]],
+                    ['orden'=>7,'nombre'=>'Estudios previos','area_role'=>'unidad_solicitante','items'=>[
+                        'Estudios previos completos','Análisis de riesgo','Garantías','Supervisor'
+                    ]],
+                    ['orden'=>8,'nombre'=>'Revisión jurídica','area_role'=>'juridica','items'=>[
+                        'Concepto jurídico / Ajustado a Derecho'
+                    ]],
+                    ['orden'=>9,'nombre'=>'Prepliegos','area_role'=>'secop','items'=>[
+                        'Proyecto de pliego publicado (prepliegos)'
+                    ]],
+                    ['orden'=>10,'nombre'=>'Período de observaciones','area_role'=>'secop','items'=>[
+                        'Observaciones recibidas','Respuestas publicadas'
+                    ]],
+                    ['orden'=>11,'nombre'=>'Pliegos definitivos','area_role'=>'secop','items'=>[
+                        'Pliego definitivo publicado'
+                    ]],
+                    ['orden'=>12,'nombre'=>'Apertura oficial del proceso','area_role'=>'secop','items'=>[
+                        'Apertura publicada'
+                    ]],
+                    ['orden'=>13,'nombre'=>'Recepción de propuestas','area_role'=>'secop','items'=>[
+                        'Propuestas recibidas'
+                    ]],
+                    ['orden'=>14,'nombre'=>'Evaluación por comité evaluador','area_role'=>'secop','items'=>[
+                        'Informe evaluación preliminar','Declaraciones sin impedimentos'
+                    ]],
+                    ['orden'=>15,'nombre'=>'Publicación informe de evaluación','area_role'=>'secop','items'=>[
+                        'Informe publicado','Respuestas a observaciones'
+                    ]],
+                    ['orden'=>16,'nombre'=>'Adjudicación','area_role'=>'planeacion','items'=>[
+                        'Resolución de adjudicación'
+                    ]],
+                    ['orden'=>17,'nombre'=>'Firma del contrato','area_role'=>'juridica','items'=>[
+                        'Contrato firmado','Cargue en SECOP'
+                    ]],
+                    ['orden'=>18,'nombre'=>'Registro Presupuestal (RP)','area_role'=>'hacienda','items'=>[
+                        'RP'
+                    ]],
+                    ['orden'=>19,'nombre'=>'Pólizas','area_role'=>'juridica','items'=>[
+                        'Pólizas aprobadas'
+                    ]],
+                    ['orden'=>20,'nombre'=>'Acta de inicio','area_role'=>'secop','items'=>[
+                        'Acta de inicio firmada'
+                    ]],
+                    ['orden'=>21,'nombre'=>'Ejecución y cierre','area_role'=>'secop','items'=>[
+                        'Informes','Pagos','Acta terminación','Cierre SECOP'
+                    ]],
+                ],
             ],
 
+            /**
+             * 7.4 LICITACIÓN PÚBLICA
+             */
             [
-                'orden' => 4,
-                'nombre' => 'Secretaría Jurídica',
-                'area_role' => 'juridica',
-                'items' => [
-                    'Verifiqué Cotizaciones',
-                    'Verifiqué Análisis del Sector',
-                    'Verifiqué CDP',
-                    'Verifiqué PAA',
-                    'Verifiqué Certificado de Compatibilidad',
-                    'Revisé Estudios Previos',
-                    'Emití documento Ajustado a Derecho',
-                    'Revisé pólizas',
-                    'Radicación física completada',
-                ]
+                'codigo' => 'LP',
+                'nombre' => 'Licitación Pública',
+                'activo' => true,
+                'etapas' => [
+                    ['orden'=>0,'nombre'=>'Planeación anual - PAA','area_role'=>'planeacion','items'=>[
+                        'Formato de necesidades','PAA','Acta aprobación PAA'
+                    ]],
+                    ['orden'=>1,'nombre'=>'Validación inclusión en PAA','area_role'=>'planeacion','items'=>[
+                        'Certificado inclusión en PAA','Acta modificación PAA (si aplica)'
+                    ]],
+                    ['orden'=>2,'nombre'=>'Autorización formal de inicio','area_role'=>'planeacion','items'=>[
+                        'Acto de autorización de inicio'
+                    ]],
+                    ['orden'=>3,'nombre'=>'Identificación de la necesidad','area_role'=>'unidad_solicitante','items'=>[
+                        'Solicitud de contratación','Justificación técnica'
+                    ]],
+                    ['orden'=>4,'nombre'=>'Estudio de mercado','area_role'=>'unidad_solicitante','items'=>[
+                        '3 cotizaciones (mínimo)','Precios históricos SECOP (si aplica)','Análisis del sector','Informe estudio de mercado'
+                    ]],
+                    ['orden'=>5,'nombre'=>'CDP y documentos presupuestales','area_role'=>'hacienda','items'=>[
+                        'CDP','PAA','Certificado compatibilidad'
+                    ]],
+                    ['orden'=>6,'nombre'=>'Viabilidad económica e indicadores','area_role'=>'hacienda','items'=>[
+                        'Viabilidad económica','Indicadores financieros'
+                    ]],
+                    ['orden'=>7,'nombre'=>'Estudios previos','area_role'=>'unidad_solicitante','items'=>[
+                        'Estudios previos completos','Análisis de riesgo','Garantías','Supervisor'
+                    ]],
+                    ['orden'=>8,'nombre'=>'Revisión jurídica','area_role'=>'juridica','items'=>[
+                        'Concepto jurídico / Ajustado a Derecho'
+                    ]],
+                    ['orden'=>9,'nombre'=>'Prepliegos','area_role'=>'secop','items'=>[
+                        'Proyecto de pliego publicado (prepliegos)'
+                    ]],
+                    ['orden'=>10,'nombre'=>'Período de observaciones','area_role'=>'secop','items'=>[
+                        'Observaciones recibidas','Respuestas publicadas'
+                    ]],
+                    ['orden'=>11,'nombre'=>'Pliegos definitivos','area_role'=>'secop','items'=>[
+                        'Pliego definitivo publicado'
+                    ]],
+                    ['orden'=>12,'nombre'=>'Audiencia de riesgos','area_role'=>'secop','items'=>[
+                        'Acta audiencia de riesgos','Ajuste matriz de riesgos (si aplica)'
+                    ]],
+                    ['orden'=>13,'nombre'=>'Apertura oficial del proceso','area_role'=>'secop','items'=>[
+                        'Apertura publicada'
+                    ]],
+                    ['orden'=>14,'nombre'=>'Recepción de propuestas','area_role'=>'secop','items'=>[
+                        'Propuestas recibidas'
+                    ]],
+                    ['orden'=>15,'nombre'=>'Evaluación por comité evaluador','area_role'=>'secop','items'=>[
+                        'Informe evaluación preliminar'
+                    ]],
+                    ['orden'=>16,'nombre'=>'Publicación informe de evaluación','area_role'=>'secop','items'=>[
+                        'Informe publicado','Respuestas a observaciones'
+                    ]],
+                    ['orden'=>17,'nombre'=>'Audiencia pública de adjudicación','area_role'=>'planeacion','items'=>[
+                        'Resolución de adjudicación en audiencia','Acta de audiencia'
+                    ]],
+                    ['orden'=>18,'nombre'=>'Firma del contrato','area_role'=>'juridica','items'=>[
+                        'Contrato firmado','Cargue en SECOP'
+                    ]],
+                    ['orden'=>19,'nombre'=>'Registro Presupuestal (RP)','area_role'=>'hacienda','items'=>[
+                        'RP'
+                    ]],
+                    ['orden'=>20,'nombre'=>'Pólizas','area_role'=>'juridica','items'=>[
+                        'Pólizas aprobadas'
+                    ]],
+                    ['orden'=>21,'nombre'=>'Acta de inicio','area_role'=>'secop','items'=>[
+                        'Acta de inicio firmada'
+                    ]],
+                    ['orden'=>22,'nombre'=>'Ejecución y cierre','area_role'=>'secop','items'=>[
+                        'Informes','Pagos','Acta terminación','Cierre SECOP'
+                    ]],
+                ],
             ],
 
+            /**
+             * 7.5 CONCURSO DE MÉRITOS
+             */
             [
-                'orden' => 5,
-                'nombre' => 'SECOP',
-                'area_role' => 'secop',
-                'items' => [
-                    'Estructuré proceso en SECOP',
-                    'Publiqué documentos en SECOP',
-                    'Registré contrato electrónico',
-                    'Confirmé adjudicación',
-                ]
+                'codigo' => 'CM',
+                'nombre' => 'Concurso de Méritos',
+                'activo' => true,
+                'etapas' => [
+                    ['orden'=>0,'nombre'=>'Planeación anual - PAA','area_role'=>'planeacion','items'=>[
+                        'Formato de necesidades','PAA','Acta aprobación PAA'
+                    ]],
+                    ['orden'=>1,'nombre'=>'Validación inclusión en PAA','area_role'=>'planeacion','items'=>[
+                        'Certificado inclusión en PAA','Acta modificación PAA (si aplica)'
+                    ]],
+                    ['orden'=>2,'nombre'=>'Autorización formal de inicio','area_role'=>'planeacion','items'=>[
+                        'Acto de autorización de inicio'
+                    ]],
+                    ['orden'=>3,'nombre'=>'Identificación de la necesidad','area_role'=>'unidad_solicitante','items'=>[
+                        'Solicitud de contratación','Justificación técnica'
+                    ]],
+                    ['orden'=>4,'nombre'=>'Estudio de mercado','area_role'=>'unidad_solicitante','items'=>[
+                        '3 cotizaciones (mínimo)','Precios históricos SECOP (si aplica)','Análisis del sector','Informe estudio de mercado'
+                    ]],
+                    ['orden'=>5,'nombre'=>'CDP y documentos presupuestales','area_role'=>'hacienda','items'=>[
+                        'CDP','PAA','Certificado compatibilidad'
+                    ]],
+                    ['orden'=>6,'nombre'=>'Estudios previos','area_role'=>'unidad_solicitante','items'=>[
+                        'Estudios previos completos','Criterios de calidad técnica','Análisis de riesgo','Garantías','Supervisor'
+                    ]],
+                    ['orden'=>7,'nombre'=>'Revisión jurídica','area_role'=>'juridica','items'=>[
+                        'Concepto jurídico / Ajustado a Derecho'
+                    ]],
+                    ['orden'=>8,'nombre'=>'Prepliegos','area_role'=>'secop','items'=>[
+                        'Proyecto de pliego publicado (prepliegos)'
+                    ]],
+                    ['orden'=>9,'nombre'=>'Período de observaciones','area_role'=>'secop','items'=>[
+                        'Observaciones recibidas','Respuestas publicadas'
+                    ]],
+                    ['orden'=>10,'nombre'=>'Pliegos definitivos','area_role'=>'secop','items'=>[
+                        'Pliego definitivo publicado'
+                    ]],
+                    ['orden'=>11,'nombre'=>'Evaluación técnica','area_role'=>'secop','items'=>[
+                        'Informe evaluación técnica con puntajes'
+                    ]],
+                    ['orden'=>12,'nombre'=>'Lista corta','area_role'=>'secop','items'=>[
+                        'Acta conformación lista corta','Publicación en SECOP'
+                    ]],
+                    ['orden'=>13,'nombre'=>'Negociación económica','area_role'=>'secop','items'=>[
+                        'Propuesta económica','Acta de negociación'
+                    ]],
+                    ['orden'=>14,'nombre'=>'Adjudicación','area_role'=>'planeacion','items'=>[
+                        'Acto administrativo de adjudicación'
+                    ]],
+                    ['orden'=>15,'nombre'=>'Firma del contrato','area_role'=>'juridica','items'=>[
+                        'Contrato firmado','Cargue en SECOP'
+                    ]],
+                    ['orden'=>16,'nombre'=>'Registro Presupuestal (RP)','area_role'=>'hacienda','items'=>[
+                        'RP'
+                    ]],
+                    ['orden'=>17,'nombre'=>'Pólizas','area_role'=>'juridica','items'=>[
+                        'Pólizas aprobadas'
+                    ]],
+                    ['orden'=>18,'nombre'=>'Acta de inicio','area_role'=>'secop','items'=>[
+                        'Acta de inicio firmada'
+                    ]],
+                    ['orden'=>19,'nombre'=>'Ejecución y cierre','area_role'=>'secop','items'=>[
+                        'Informes','Pagos','Acta terminación','Cierre SECOP'
+                    ]],
+                ],
             ],
         ];
 
+        foreach ($workflows as $wf) {
+            $this->seedWorkflow(
+                $wf['codigo'],
+                $wf['nombre'],
+                (bool)($wf['activo'] ?? true),
+                $wf['etapas'] ?? []
+            );
+        }
+    }
+
+    private function seedWorkflow(string $codigo, string $nombre, bool $activo, array $etapas): void
+    {
+        $workflowId = DB::table('workflows')->insertGetId([
+            'codigo'     => $codigo,
+            'nombre'     => $nombre,
+            'activo'     => $activo,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $insertedEtapas = [];
+
         foreach ($etapas as $etapaData) {
             $etapaId = DB::table('etapas')->insertGetId([
-                'orden' => $etapaData['orden'],
-                'nombre' => $etapaData['nombre'],
-                'area_role' => $etapaData['area_role'],
-                'next_etapa_id' => null, // lo llenamos luego si quieres
-                'activa' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'workflow_id'   => $workflowId,
+                'orden'         => (int)$etapaData['orden'],
+                'nombre'        => $etapaData['nombre'],
+                'area_role'     => $etapaData['area_role'],
+                'next_etapa_id' => null,
+                'activa'        => true,
+                'created_at'    => now(),
+                'updated_at'    => now(),
             ]);
 
+            $insertedEtapas[] = ['orden' => (int)$etapaData['orden'], 'id' => $etapaId];
+
             $ordenItem = 1;
-            foreach ($etapaData['items'] as $label) {
+            foreach (($etapaData['items'] ?? []) as $label) {
                 DB::table('etapa_items')->insert([
-                    'etapa_id' => $etapaId,
-                    'orden' => $ordenItem++,
-                    'label' => $label,
-                    'requerido' => true,
+                    'etapa_id'   => $etapaId,
+                    'orden'      => $ordenItem++,
+                    'label'      => $label,
+                    'requerido'  => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
         }
+
+        usort($insertedEtapas, fn($a, $b) => $a['orden'] <=> $b['orden']);
+
+        $count = count($insertedEtapas);
+        for ($i = 0; $i < $count; $i++) {
+            $currentId = $insertedEtapas[$i]['id'];
+            $nextId    = ($i < $count - 1) ? $insertedEtapas[$i + 1]['id'] : null;
+
+            DB::table('etapas')->where('id', $currentId)->update([
+                'next_etapa_id' => $nextId,
+                'updated_at'    => now(),
+            ]);
+        }
+    }
+
+    private function truncateIfExists(string $table): void
+    {
+        // Evita romper si una tabla no existe en algún ambiente
+        $driver = DB::getDriverName();
+
+        try {
+            if ($driver === 'sqlite') {
+                DB::table($table)->delete();
+            } else {
+                DB::table($table)->truncate();
+            }
+        } catch (\Throwable $e) {
+            // Si no existe, no hacemos nada
+        }
     }
 }
-

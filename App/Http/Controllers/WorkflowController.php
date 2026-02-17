@@ -3,181 +3,208 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class WorkflowController extends Controller
 {
-    private function assertCanTouchProceso(object $proceso, string $areaRole): void
+    private function loadProcesoOrFail(int $procesoId)
     {
-        $user = Auth::user();
+        $proceso = DB::table('procesos')->where('id', $procesoId)->first();
+        abort_unless($proceso, 404, 'Proceso no encontrado.');
+        return $proceso;
+    }
 
-        // Admin puede todo
+    private function authorizeAreaOrAdmin($proceso): void
+    {
+        $user = auth()->user();
         if ($user->hasRole('admin')) return;
 
-        // El usuario debe tener el rol del área actual del proceso
-        if (!$user->hasRole($areaRole) || $proceso->area_actual_role !== $areaRole) {
-            abort(403);
+        // Solo el rol del área actual puede operar el workflow de ese proceso
+        abort_unless($proceso->area_actual_role && $user->hasRole($proceso->area_actual_role), 403);
+    }
+
+    private function getProcesoEtapaActual($proceso)
+    {
+        // Trae la instancia de la etapa actual (si no existe, la crea)
+        $procesoEtapa = DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $proceso->etapa_actual_id)
+            ->first();
+
+        if ($procesoEtapa) return $procesoEtapa;
+
+        $id = DB::table('proceso_etapas')->insertGetId([
+            'proceso_id' => $proceso->id,
+            'etapa_id'   => $proceso->etapa_actual_id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return DB::table('proceso_etapas')->where('id', $id)->first();
+    }
+
+    private function seedChecksSiFaltan($procesoEtapaId, $etapaId): void
+    {
+        $count = DB::table('proceso_etapa_checks')
+            ->where('proceso_etapa_id', $procesoEtapaId)
+            ->count();
+
+        if ($count > 0) return;
+
+        $items = DB::table('etapa_items')->where('etapa_id', $etapaId)->orderBy('orden')->get(['id']);
+
+        foreach ($items as $item) {
+            DB::table('proceso_etapa_checks')->insert([
+                'proceso_etapa_id' => $procesoEtapaId,
+                'etapa_item_id'    => $item->id,
+                'checked'          => false,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
         }
     }
 
-    // Marcar "Recibí el documento"
     public function recibir(Request $request, int $proceso)
     {
-        $areaRole = $request->input('area_role');
-        if (!$areaRole) abort(400, 'area_role requerido');
+        $proceso = $this->loadProcesoOrFail($proceso);
+        $this->authorizeAreaOrAdmin($proceso);
 
-        $proc = DB::table('procesos')->where('id', $proceso)->first();
-        if (!$proc) abort(404);
+        return DB::transaction(function () use ($proceso) {
 
-        $this->assertCanTouchProceso($proc, $areaRole);
+            $procesoEtapa = $this->getProcesoEtapaActual($proceso);
 
-        return DB::transaction(function () use ($proc) {
-            $pe = DB::table('proceso_etapas')
-                ->where('proceso_id', $proc->id)
-                ->where('etapa_id', $proc->etapa_actual_id)
-                ->first();
+            // Crear checks si faltan
+            $this->seedChecksSiFaltan($procesoEtapa->id, $proceso->etapa_actual_id);
 
-            if (!$pe) abort(500, 'proceso_etapa no existe');
-
-            if (!$pe->recibido) {
-                DB::table('proceso_etapas')
-                    ->where('id', $pe->id)
-                    ->update([
-                        'recibido' => true,
-                        'recibido_por' => Auth::id(),
-                        'recibido_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+            // Marcar recibido si no lo está
+            if (!$procesoEtapa->recibido) {
+                DB::table('proceso_etapas')->where('id', $procesoEtapa->id)->update([
+                    'recibido'     => true,
+                    'recibido_por' => auth()->id(),
+                    'recibido_at'  => now(),
+                    'updated_at'   => now(),
+                ]);
             }
 
-            return back()->with('success', 'Marcado como recibido.');
+            return back()->with('success', 'Documento recibido.');
         });
     }
 
-    // Toggle check item
     public function toggleCheck(Request $request, int $proceso, int $check)
     {
-        $areaRole = $request->input('area_role');
-        if (!$areaRole) abort(400, 'area_role requerido');
+        $proceso = $this->loadProcesoOrFail($proceso);
+        $this->authorizeAreaOrAdmin($proceso);
 
-        $proc = DB::table('procesos')->where('id', $proceso)->first();
-        if (!$proc) abort(404);
+        return DB::transaction(function () use ($proceso, $check) {
 
-        $this->assertCanTouchProceso($proc, $areaRole);
+            $procesoEtapa = $this->getProcesoEtapaActual($proceso);
 
-        return DB::transaction(function () use ($proc, $check) {
-
-            $pe = DB::table('proceso_etapas')
-                ->where('proceso_id', $proc->id)
-                ->where('etapa_id', $proc->etapa_actual_id)
-                ->first();
-
-            if (!$pe) abort(500, 'proceso_etapa no existe');
-
-            // Regla: no se puede marcar checklist si no ha recibido
-            if (!$pe->recibido) {
-                return back()->with('error', 'Primero debes marcar "Recibí el documento".');
-            }
-
+            // Verifica que el check pertenezca a la etapa actual
             $row = DB::table('proceso_etapa_checks')
                 ->where('id', $check)
-                ->where('proceso_etapa_id', $pe->id)
+                ->where('proceso_etapa_id', $procesoEtapa->id)
                 ->first();
 
-            if (!$row) abort(404);
+            abort_unless($row, 404, 'Check no encontrado para esta etapa.');
 
-            $new = !$row->checked;
+            $newValue = !$row->checked;
 
-            DB::table('proceso_etapa_checks')
-                ->where('id', $row->id)
-                ->update([
-                    'checked' => $new,
-                    'checked_by' => $new ? Auth::id() : null,
-                    'checked_at' => $new ? now() : null,
-                    'updated_at' => now(),
-                ]);
-
-            return back();
-        });
-    }
-
-    // Marcar "Envié" y avanzar a la siguiente etapa
-    public function enviar(Request $request, int $proceso)
-    {
-        $areaRole = $request->input('area_role');
-        if (!$areaRole) abort(400, 'area_role requerido');
-
-        $proc = DB::table('procesos')->where('id', $proceso)->first();
-        if (!$proc) abort(404);
-
-        $this->assertCanTouchProceso($proc, $areaRole);
-
-        return DB::transaction(function () use ($proc) {
-
-            $pe = DB::table('proceso_etapas')
-                ->where('proceso_id', $proc->id)
-                ->where('etapa_id', $proc->etapa_actual_id)
-                ->first();
-
-            if (!$pe) abort(500, 'proceso_etapa no existe');
-
-            // Regla: debe estar recibido
-            if (!$pe->recibido) {
-                return back()->with('error', 'Primero marca "Recibí el documento".');
-            }
-
-            // Regla: todos los items requeridos deben estar checked
-            $faltantes = DB::table('proceso_etapa_checks as pc')
-                ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
-                ->where('pc.proceso_etapa_id', $pe->id)
-                ->where('ei.requerido', 1)
-                ->where('pc.checked', 0)
-                ->count();
-
-            if ($faltantes > 0) {
-                return back()->with('error', 'Completa el checklist requerido antes de enviar.');
-            }
-
-            // Marcar enviado en la etapa actual
-            if (!$pe->enviado) {
-                DB::table('proceso_etapas')
-                    ->where('id', $pe->id)
-                    ->update([
-                        'enviado' => true,
-                        'enviado_por' => Auth::id(),
-                        'enviado_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-            }
-
-            // Buscar siguiente etapa por orden
-            $etapaActual = DB::table('etapas')->where('id', $proc->etapa_actual_id)->first();
-            if (!$etapaActual) abort(500);
-
-            $next = DB::table('etapas')
-                ->where('activa', 1)
-                ->where('orden', '>', $etapaActual->orden)
-                ->orderBy('orden')
-                ->first();
-
-            // Si no hay siguiente, finaliza
-            if (!$next) {
-                DB::table('procesos')->where('id', $proc->id)->update([
-                    'estado' => 'FINALIZADO',
-                    'updated_at' => now(),
-                ]);
-                return back()->with('success', 'Proceso finalizado.');
-            }
-
-            // Mover proceso a la siguiente etapa
-            DB::table('procesos')->where('id', $proc->id)->update([
-                'etapa_actual_id' => $next->id,
-                'area_actual_role' => $next->area_role,
+            DB::table('proceso_etapa_checks')->where('id', $check)->update([
+                'checked'    => $newValue,
+                'checked_by' => auth()->id(),
+                'checked_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            return redirect()->route('dashboard')->with('success', 'Enviado a la siguiente secretaría.');
+            return back()->with('success', $newValue ? 'Check marcado.' : 'Check desmarcado.');
+        });
+    }
+
+    public function enviar(Request $request, int $proceso)
+    {
+        $proceso = $this->loadProcesoOrFail($proceso);
+        $this->authorizeAreaOrAdmin($proceso);
+
+        return DB::transaction(function () use ($proceso) {
+
+            $procesoEtapa = $this->getProcesoEtapaActual($proceso);
+
+            // Debe estar recibido
+            abort_unless((bool)$procesoEtapa->recibido, 422, 'No puedes enviar: primero debes marcar "Recibí".');
+
+            // Validar checks requeridos
+            $faltantes = DB::table('proceso_etapa_checks as pec')
+                ->join('etapa_items as ei', 'ei.id', '=', 'pec.etapa_item_id')
+                ->where('pec.proceso_etapa_id', $procesoEtapa->id)
+                ->where('ei.requerido', 1)
+                ->where('pec.checked', 0)
+                ->count();
+
+            abort_unless($faltantes === 0, 422, 'No puedes enviar: faltan checks requeridos.');
+
+            // Marcar enviado si no lo está
+            if (!$procesoEtapa->enviado) {
+                DB::table('proceso_etapas')->where('id', $procesoEtapa->id)->update([
+                    'enviado'     => true,
+                    'enviado_por' => auth()->id(),
+                    'enviado_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            }
+
+            // Buscar etapa actual y siguiente
+            $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+            abort_unless($etapaActual, 422, 'Etapa actual inválida.');
+
+            // ✅ Seguridad: el proceso debe pertenecer al mismo workflow
+            abort_unless((int)$etapaActual->workflow_id === (int)$proceso->workflow_id, 422, 'Inconsistencia: workflow no coincide.');
+
+            $nextEtapaId = $etapaActual->next_etapa_id;
+
+            // Si no hay siguiente, se finaliza
+            if (!$nextEtapaId) {
+                DB::table('procesos')->where('id', $proceso->id)->update([
+                    'estado'     => 'FINALIZADO',
+                    'updated_at' => now(),
+                ]);
+
+                return back()->with('success', 'Proceso finalizado.');
+            }
+
+            $nextEtapa = DB::table('etapas')->where('id', $nextEtapaId)->first();
+            abort_unless($nextEtapa, 422, 'Siguiente etapa inválida.');
+
+            // ✅ Seguridad: la siguiente etapa debe ser del mismo workflow
+            abort_unless((int)$nextEtapa->workflow_id === (int)$proceso->workflow_id, 422, 'Inconsistencia: siguiente etapa de otro workflow.');
+
+            // Crear proceso_etapa de la siguiente etapa si no existe
+            $nextProcesoEtapa = DB::table('proceso_etapas')
+                ->where('proceso_id', $proceso->id)
+                ->where('etapa_id', $nextEtapa->id)
+                ->first();
+
+            if (!$nextProcesoEtapa) {
+                $nextProcesoEtapaId = DB::table('proceso_etapas')->insertGetId([
+                    'proceso_id' => $proceso->id,
+                    'etapa_id'   => $nextEtapa->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                $nextProcesoEtapaId = $nextProcesoEtapa->id;
+            }
+
+            // Seed de checks para la nueva etapa
+            $this->seedChecksSiFaltan($nextProcesoEtapaId, $nextEtapa->id);
+
+            // Actualizar proceso a la siguiente etapa
+            DB::table('procesos')->where('id', $proceso->id)->update([
+                'etapa_actual_id'  => $nextEtapa->id,
+                'area_actual_role' => $nextEtapa->area_role,
+                'updated_at'       => now(),
+            ]);
+
+            return back()->with('success', 'Enviado y avanzado a la siguiente etapa.');
         });
     }
 }

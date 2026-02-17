@@ -13,34 +13,18 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\WorkflowController;
 
-Route::middleware(['auth'])->group(function () {
-
-    // Marcar "Recibí"
-    Route::post('/workflow/procesos/{proceso}/recibir', [WorkflowController::class, 'recibir'])
-        ->name('workflow.recibir');
-
-    // Toggle de un item del checklist
-    Route::post('/workflow/procesos/{proceso}/checks/{check}/toggle', [WorkflowController::class, 'toggleCheck'])
-        ->name('workflow.checks.toggle');
-
-    // Marcar "Envié" y avanzar etapa
-    Route::post('/workflow/procesos/{proceso}/enviar', [WorkflowController::class, 'enviar'])
-        ->name('workflow.enviar');
-});
-
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/procesos', [ProcesoController::class, 'index'])->name('procesos.index');
-    Route::get('/procesos/crear', [ProcesoController::class, 'create'])->name('procesos.create');
-    Route::post('/procesos', [ProcesoController::class, 'store'])->name('procesos.store');
-});
-
+/*
+|--------------------------------------------------------------------------
+| Inicio
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return view('welcome');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard base (redirige según rol)
+| Dashboard base
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -50,7 +34,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Admin (solo rol admin)
+| PROCESOS (crear solicitud)
+|--------------------------------------------------------------------------
+| Admin y Unidad pueden crear procesos
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin|unidad_solicitante'])->group(function () {
+
+    Route::get('/procesos', [ProcesoController::class, 'index'])
+        ->name('procesos.index');
+
+    Route::get('/procesos/crear', [ProcesoController::class, 'create'])
+        ->name('procesos.create');
+
+    Route::post('/procesos', [ProcesoController::class, 'store'])
+        ->name('procesos.store');
+});
+
+/*
+|--------------------------------------------------------------------------
+| WORKFLOW (acciones internas del flujo)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+
+    Route::post('/workflow/procesos/{proceso}/recibir',
+        [WorkflowController::class, 'recibir'])
+        ->name('workflow.recibir');
+
+    Route::post('/workflow/procesos/{proceso}/checks/{check}/toggle',
+        [WorkflowController::class, 'toggleCheck'])
+        ->name('workflow.checks.toggle');
+
+    Route::post('/workflow/procesos/{proceso}/enviar',
+        [WorkflowController::class, 'enviar'])
+        ->name('workflow.enviar');
+});
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])
@@ -61,23 +84,13 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('usuarios', UserController::class)->except(['show']);
         Route::resource('roles', RoleController::class)->except(['show']);
         Route::resource('permisos', PermissionController::class)->except(['show']);
-
-        // (Opcional) Vista de admin para ver "todas las bandejas"
-        // Route::get('bandeja', [AdminInboxController::class, 'index'])->name('bandeja');
     });
 
 /*
 |--------------------------------------------------------------------------
-| Áreas / Secretarías (cada una con su vista)
+| ÁREAS / SECRETARÍAS
 |--------------------------------------------------------------------------
-| Roles definidos:
-| - unidad_solicitante
-| - planeacion
-| - hacienda
-| - juridica
-| - secop
-|
-| Regla: solo pueden entrar a SU prefijo.
+| Cada área solo puede entrar a su bandeja
 |--------------------------------------------------------------------------
 */
 

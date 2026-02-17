@@ -17,7 +17,18 @@
 
             <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
                 <div class="p-6">
-                    <div class="font-semibold">Procesos en Unidad Solicitante</div>
+
+                    {{-- Header + botón crear --}}
+                    <div class="flex items-center justify-between">
+                        <div class="font-semibold">Procesos en Unidad Solicitante</div>
+
+                        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('unidad_solicitante'))
+                            <a href="{{ route('procesos.create') }}"
+                               class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">
+                                Crear solicitud
+                            </a>
+                        @endif
+                    </div>
 
                     <div class="mt-4">
                         @forelse($procesos as $p)

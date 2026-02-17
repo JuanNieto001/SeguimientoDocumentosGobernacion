@@ -23,8 +23,7 @@
 
                     <div class="mt-4">
                         @forelse($procesos as $p)
-                            <a class="block px-3 py-2 rounded border mb-2
-                                {{ $proceso && $proceso->id == $p->id ? 'bg-gray-100' : '' }}"
+                            <a class="block px-3 py-2 rounded border mb-2 {{ $proceso && $proceso->id == $p->id ? 'bg-gray-100' : '' }}"
                                href="{{ url('/planeacion?proceso_id='.$p->id) }}">
                                 <div class="text-sm font-medium">{{ $p->codigo }} — {{ $p->objeto }}</div>
                                 <div class="text-xs text-gray-500">Estado: {{ $p->estado }}</div>
@@ -45,6 +44,13 @@
                             <div class="text-gray-600">{{ $proceso->objeto }}</div>
                         </div>
 
+                        {{-- Si aún no existe instancia de etapa --}}
+                        @if(!$procesoEtapa)
+                            <div class="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-900">
+                                Este proceso aún no tiene etapa-instancia cargada. Marca <b>“Recibí”</b> para inicializar el checklist.
+                            </div>
+                        @endif
+
                         {{-- RECIBÍ --}}
                         <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
                             @csrf
@@ -60,25 +66,31 @@
                         <div class="border-t pt-4">
                             <div class="font-semibold mb-3">Checklist</div>
 
-                            <div class="space-y-2">
-                                @foreach($checks as $c)
-                                    <form method="POST" action="{{ route('workflow.checks.toggle', [$proceso->id, $c->check_id]) }}">
-                                        @csrf
-                                        <input type="hidden" name="area_role" value="{{ $areaRole }}">
-                                        <button type="submit"
-                                            class="w-full text-left px-3 py-2 rounded border
-                                            {{ $c->checked ? 'bg-green-50' : '' }}
-                                            {{ !$procesoEtapa || !$procesoEtapa->recibido ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                            {{ !$procesoEtapa || !$procesoEtapa->recibido ? 'disabled' : '' }}>
-                                            <span class="inline-block w-5">{{ $c->checked ? '✅' : '⬜' }}</span>
-                                            <span class="font-medium">{{ $c->label }}</span>
-                                            @if($c->requerido)
-                                                <span class="text-xs text-gray-500"> (requerido)</span>
-                                            @endif
-                                        </button>
-                                    </form>
-                                @endforeach
-                            </div>
+                            @if($checks->count() === 0)
+                                <div class="text-sm text-gray-600">
+                                    No hay checklist cargado todavía. Marca <b>“Recibí”</b> para generar los ítems de esta etapa.
+                                </div>
+                            @else
+                                <div class="space-y-2">
+                                    @foreach($checks as $c)
+                                        <form method="POST" action="{{ route('workflow.checks.toggle', [$proceso->id, $c->check_id]) }}">
+                                            @csrf
+                                            <input type="hidden" name="area_role" value="{{ $areaRole }}">
+                                            <button type="submit"
+                                                class="w-full text-left px-3 py-2 rounded border
+                                                {{ $c->checked ? 'bg-green-50' : '' }}
+                                                {{ !$procesoEtapa || !$procesoEtapa->recibido ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                {{ !$procesoEtapa || !$procesoEtapa->recibido ? 'disabled' : '' }}>
+                                                <span class="inline-block w-5">{{ $c->checked ? '✅' : '⬜' }}</span>
+                                                <span class="font-medium">{{ $c->label }}</span>
+                                                @if($c->requerido)
+                                                    <span class="text-xs text-gray-500"> (requerido)</span>
+                                                @endif
+                                            </button>
+                                        </form>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
 
                         {{-- ENVIÉ --}}

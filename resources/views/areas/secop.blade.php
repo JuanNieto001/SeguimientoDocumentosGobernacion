@@ -80,7 +80,7 @@
                             <input type="hidden" name="area_role" value="{{ $areaRole }}">
                             <button class="px-4 py-2 rounded text-white {{ $enviarHabilitado ? 'bg-gray-800' : 'bg-gray-400' }}"
                                     {{ $enviarHabilitado ? '' : 'disabled' }}>
-                                Enviar a la siguiente secretaría
+                                Finalizar Proceso
                             </button>
                         </form>
 

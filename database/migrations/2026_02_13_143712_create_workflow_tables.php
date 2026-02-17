@@ -8,85 +8,72 @@ return new class extends Migration
 {
     public function up(): void
     {
-        /**
-         * =========================
-         * 1) PROCESOS (expedientes)
-         * =========================
-         */
+        // 0) Workflows (tipos)
+        Schema::create('workflows', function (Blueprint $table) {
+            $table->id();
+            $table->string('codigo')->unique(); // CD, MC, LP...
+            $table->string('nombre');
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+        });
+
+        // 1) Procesos
         Schema::create('procesos', function (Blueprint $table) {
             $table->id();
 
-            $table->string('codigo')->unique();          // ej: CD-2026-0001
-            $table->string('objeto');                    // nombre / objeto del proceso
+            $table->foreignId('workflow_id')->constrained('workflows')->cascadeOnDelete();
+
+            $table->string('codigo')->unique();
+            $table->string('objeto');
             $table->text('descripcion')->nullable();
+            $table->string('estado')->default('EN_CURSO');
 
-            // Estado "global" del expediente
-            $table->string('estado')->default('EN_CURSO'); // EN_CURSO | FINALIZADO | ANULADO
-
-            // En qué etapa / secretaría está actualmente (FK se agrega después)
             $table->unsignedBigInteger('etapa_actual_id')->nullable();
-            $table->string('area_actual_role')->nullable(); // 'planeacion', 'juridica', etc.
+            $table->string('area_actual_role')->nullable();
 
-            // Quién creó el proceso
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
         });
 
-        /**
-         * ==================================
-         * 2) ETAPAS (plantilla del flujo)
-         * ==================================
-         */
+        // 2) Etapas (por workflow)
         Schema::create('etapas', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedInteger('orden'); // 1..N
-            $table->string('nombre');         // "Solicitante / Estudios previos", etc.
-            $table->string('area_role');      // 'unidad_solicitante', 'planeacion', 'hacienda', 'juridica', 'secop'
+            $table->foreignId('workflow_id')->constrained('workflows')->cascadeOnDelete();
 
-            // Siguiente etapa (self FK: está ok porque 'etapas' ya existe al final del create)
+            $table->unsignedInteger('orden');
+            $table->string('nombre');
+            $table->string('area_role');
+
             $table->foreignId('next_etapa_id')->nullable()->constrained('etapas')->nullOnDelete();
 
             $table->boolean('activa')->default(true);
 
             $table->timestamps();
 
-            $table->unique(['orden']);
+            $table->unique(['workflow_id', 'orden']);
         });
 
-        /**
-         * ✅ Ahora sí: FK de procesos.etapa_actual_id (etapas ya existe)
-         */
+        // FK procesos -> etapas
         Schema::table('procesos', function (Blueprint $table) {
-            $table->foreign('etapa_actual_id')
-                ->references('id')
-                ->on('etapas')
-                ->nullOnDelete();
+            $table->foreign('etapa_actual_id')->references('id')->on('etapas')->nullOnDelete();
         });
 
-        /**
-         * ==========================================
-         * 3) ITEMS DE CHECKLIST (plantilla por etapa)
-         * ==========================================
-         */
+        // 3) Items por etapa
         Schema::create('etapa_items', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('etapa_id')->constrained('etapas')->cascadeOnDelete();
             $table->unsignedInteger('orden')->default(1);
 
-            $table->string('label');              // texto del checkbox
+            $table->string('label');
             $table->boolean('requerido')->default(true);
 
             $table->timestamps();
         });
 
-        /**
-         * ===================================================
-         * 4) PROCESO_ETAPAS (instancia por proceso y por etapa)
-         * ===================================================
-         */
+        // 4) Instancia etapa por proceso
         Schema::create('proceso_etapas', function (Blueprint $table) {
             $table->id();
 
@@ -106,11 +93,7 @@ return new class extends Migration
             $table->unique(['proceso_id', 'etapa_id']);
         });
 
-        /**
-         * ==========================================================
-         * 5) PROCESO_ETAPA_CHECKS (respuesta a checklist por proceso)
-         * ==========================================================
-         */
+        // 5) Checks por proceso_etapa
         Schema::create('proceso_etapa_checks', function (Blueprint $table) {
             $table->id();
 
@@ -133,17 +116,12 @@ return new class extends Migration
         Schema::dropIfExists('proceso_etapas');
         Schema::dropIfExists('etapa_items');
 
-        // 🔻 Primero elimina la FK antes de borrar tablas
         Schema::table('procesos', function (Blueprint $table) {
-            // por si quedó creada
-            try {
-                $table->dropForeign(['etapa_actual_id']);
-            } catch (\Throwable $e) {
-                // no hacer nada si no existe
-            }
+            try { $table->dropForeign(['etapa_actual_id']); } catch (\Throwable $e) {}
         });
 
         Schema::dropIfExists('etapas');
         Schema::dropIfExists('procesos');
+        Schema::dropIfExists('workflows');
     }
 };
