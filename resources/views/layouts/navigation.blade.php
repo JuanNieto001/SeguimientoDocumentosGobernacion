@@ -16,8 +16,13 @@
                         Dashboard
                     </x-nav-link>
 
-                    {{-- Procesos: Admin y Unidad pueden entrar --}}
-                    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('unidad_solicitante'))
+                    {{-- Procesos: visible para Admin y Unidad (y si quieres, áreas también) --}}
+                    @if(auth()->user()->hasRole('admin')
+                        || auth()->user()->hasRole('unidad_solicitante')
+                        || auth()->user()->hasRole('planeacion')
+                        || auth()->user()->hasRole('hacienda')
+                        || auth()->user()->hasRole('juridica')
+                        || auth()->user()->hasRole('secop'))
                         <x-nav-link :href="route('procesos.index')" :active="request()->routeIs('procesos.*')">
                             Procesos
                         </x-nav-link>
@@ -83,8 +88,12 @@
                 Dashboard
             </x-responsive-nav-link>
 
-            {{-- Procesos: Admin y Unidad pueden entrar --}}
-            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('unidad_solicitante'))
+            @if(auth()->user()->hasRole('admin')
+                || auth()->user()->hasRole('unidad_solicitante')
+                || auth()->user()->hasRole('planeacion')
+                || auth()->user()->hasRole('hacienda')
+                || auth()->user()->hasRole('juridica')
+                || auth()->user()->hasRole('secop'))
                 <x-responsive-nav-link :href="route('procesos.index')" :active="request()->routeIs('procesos.*')">
                     Procesos
                 </x-responsive-nav-link>

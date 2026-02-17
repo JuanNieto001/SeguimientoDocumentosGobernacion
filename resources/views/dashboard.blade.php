@@ -4,13 +4,6 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Dashboard
             </h2>
-
-            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('unidad_solicitante'))
-                <a href="{{ route('procesos.create') }}"
-                   class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">
-                    Crear solicitud
-                </a>
-            @endif
         </div>
     </x-slot>
 
