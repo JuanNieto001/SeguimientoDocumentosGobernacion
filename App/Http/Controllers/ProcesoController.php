@@ -20,20 +20,14 @@ class ProcesoController extends Controller
             ])
             ->orderByDesc('procesos.id');
 
-        // Admin ve todo
         if (!$user->hasRole('admin')) {
 
-            // Si es unidad_solicitante: ve los procesos que creó
             if ($user->hasRole('unidad_solicitante')) {
                 $query->where('procesos.created_by', $user->id);
             } else {
-                // Si es un área (planeacion, hacienda, juridica, secop):
-                // ve lo que esté en su bandeja (area_actual_role)
                 $rolesArea = ['planeacion', 'hacienda', 'juridica', 'secop'];
-
                 $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));
 
-                // Si no tiene ninguno de esos roles, no ve nada
                 if (!$miRolArea) {
                     $query->whereRaw('1=0');
                 } else {
@@ -43,7 +37,6 @@ class ProcesoController extends Controller
         }
 
         $procesos = $query->get();
-
         return view('procesos.index', compact('procesos'));
     }
 
@@ -74,18 +67,25 @@ class ProcesoController extends Controller
 
         return DB::transaction(function () use ($data, $user) {
 
-            // 1) Buscar etapa inicial del workflow: la de menor orden (incluye 0 si existe)
+            // Siempre iniciar en la primera etapa de Unidad; si no existe, fallback a la primera por orden
             $primeraEtapa = DB::table('etapas')
                 ->where('workflow_id', $data['workflow_id'])
                 ->where('activa', 1)
+                ->where('area_role', 'unidad_solicitante')
                 ->orderBy('orden')
                 ->first();
 
             if (!$primeraEtapa) {
-                abort(422, 'El workflow seleccionado no tiene etapas activas.');
+                $primeraEtapa = DB::table('etapas')
+                    ->where('workflow_id', $data['workflow_id'])
+                    ->where('activa', 1)
+                    ->orderBy('orden')
+                    ->first();
             }
 
-            // 2) Crear proceso
+            abort_unless($primeraEtapa, 422, 'El workflow seleccionado no tiene etapas activas.');
+
+            // Crear proceso
             $procesoId = DB::table('procesos')->insertGetId([
                 'workflow_id'      => $data['workflow_id'],
                 'codigo'           => $data['codigo'],
@@ -99,31 +99,15 @@ class ProcesoController extends Controller
                 'updated_at'       => now(),
             ]);
 
-            // 3) Crear instancia de etapa inicial
-            $procesoEtapaId = DB::table('proceso_etapas')->insertGetId([
+            // Crear instancia de etapa inicial
+            DB::table('proceso_etapas')->insert([
                 'proceso_id' => $procesoId,
                 'etapa_id'   => $primeraEtapa->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // 4) Crear checks de esa etapa
-            $items = DB::table('etapa_items')
-                ->where('etapa_id', $primeraEtapa->id)
-                ->orderBy('orden')
-                ->get(['id']);
-
-            foreach ($items as $item) {
-                DB::table('proceso_etapa_checks')->insert([
-                    'proceso_etapa_id' => $procesoEtapaId,
-                    'etapa_item_id'    => $item->id,
-                    'checked'          => false,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
-                ]);
-            }
-
-            // 5) Redirigir a la bandeja correcta (según el área actual)
+            // Redirigir a la bandeja
             $url = match ($primeraEtapa->area_role) {
                 'unidad_solicitante' => url('/unidad?proceso_id=' . $procesoId),
                 'planeacion'         => url('/planeacion?proceso_id=' . $procesoId),

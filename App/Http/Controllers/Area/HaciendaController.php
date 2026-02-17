@@ -13,6 +13,7 @@ class HaciendaController extends Controller
 
         $procesos = DB::table('procesos')
             ->where('area_actual_role', $areaRole)
+            ->where('estado', 'EN_CURSO')
             ->orderByDesc('id')
             ->get();
 
@@ -32,7 +33,6 @@ class HaciendaController extends Controller
                 ->where('etapa_id', $proceso->etapa_actual_id)
                 ->first();
 
-            // ✅ si aún no existe instancia de etapa, no consultes checks
             if ($procesoEtapa) {
                 $checks = DB::table('proceso_etapa_checks as pc')
                     ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')

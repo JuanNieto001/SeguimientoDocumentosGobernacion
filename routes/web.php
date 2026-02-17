@@ -4,14 +4,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+
 use App\Http\Controllers\Area\UnidadController;
 use App\Http\Controllers\Area\PlaneacionController;
 use App\Http\Controllers\Area\HaciendaController;
 use App\Http\Controllers\Area\JuridicaController;
 use App\Http\Controllers\Area\SecopController;
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\WorkflowController;
+use App\Http\Controllers\WorkflowFilesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +72,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/workflow/procesos/{proceso}/enviar',
         [WorkflowController::class, 'enviar'])
         ->name('workflow.enviar');
+
+    // Archivos del workflow (PROTEGIDOS por auth)
+    Route::post('/workflow/procesos/{proceso}/archivos',
+        [WorkflowFilesController::class, 'store'])
+        ->name('workflow.archivos.store');
+
+    Route::get('/workflow/procesos/{proceso}/archivos/{archivo}',
+        [WorkflowFilesController::class, 'download'])
+        ->name('workflow.archivos.download');
+
+    Route::delete('/workflow/procesos/{proceso}/archivos/{archivo}',
+        [WorkflowFilesController::class, 'destroy'])
+        ->name('workflow.archivos.destroy');
 });
 
 /*
@@ -80,7 +96,6 @@ Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-
         Route::resource('usuarios', UserController::class)->except(['show']);
         Route::resource('roles', RoleController::class)->except(['show']);
         Route::resource('permisos', PermissionController::class)->except(['show']);
@@ -90,10 +105,7 @@ Route::middleware(['auth', 'role:admin'])
 |--------------------------------------------------------------------------
 | ÁREAS / SECRETARÍAS
 |--------------------------------------------------------------------------
-| Cada área solo puede entrar a su bandeja
-|--------------------------------------------------------------------------
 */
-
 Route::middleware(['auth', 'role:admin|unidad_solicitante'])
     ->prefix('unidad')
     ->name('unidad.')

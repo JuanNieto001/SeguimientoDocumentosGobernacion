@@ -16,6 +16,13 @@
                         Dashboard
                     </x-nav-link>
 
+                    {{-- Procesos: Admin y Unidad pueden entrar --}}
+                    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('unidad_solicitante'))
+                        <x-nav-link :href="route('procesos.index')" :active="request()->routeIs('procesos.*')">
+                            Procesos
+                        </x-nav-link>
+                    @endif
+
                     @role('admin')
                         <x-nav-link :href="url('/admin/usuarios')" :active="request()->is('admin/usuarios*')">
                             Usuarios
@@ -75,6 +82,13 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 Dashboard
             </x-responsive-nav-link>
+
+            {{-- Procesos: Admin y Unidad pueden entrar --}}
+            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('unidad_solicitante'))
+                <x-responsive-nav-link :href="route('procesos.index')" :active="request()->routeIs('procesos.*')">
+                    Procesos
+                </x-responsive-nav-link>
+            @endif
 
             @role('admin')
                 <x-responsive-nav-link :href="url('/admin/usuarios')" :active="request()->is('admin/usuarios*')">

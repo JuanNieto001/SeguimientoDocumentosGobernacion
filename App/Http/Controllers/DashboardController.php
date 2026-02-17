@@ -2,42 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        $user = auth()->user();
 
-        // Admin: vista principal del sistema (procesos)
-        if ($user->hasRole('admin')) {
-            return redirect()->route('procesos.index');
+        $base = DB::table('procesos')
+            ->leftJoin('workflows', 'workflows.id', '=', 'procesos.workflow_id')
+            ->select([
+                'procesos.*',
+                'workflows.nombre as workflow_nombre',
+            ])
+            ->orderByDesc('procesos.id');
+
+        // Admin ve todo. Unidad ve lo suyo. Áreas ven lo que esté en su bandeja.
+        if (!$user->hasRole('admin')) {
+            if ($user->hasRole('unidad_solicitante')) {
+                $base->where('procesos.created_by', $user->id);
+            } else {
+                $rolesArea = ['planeacion', 'hacienda', 'juridica', 'secop'];
+                $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));
+                if ($miRolArea) {
+                    $base->where('procesos.area_actual_role', $miRolArea);
+                } else {
+                    $base->whereRaw('1=0');
+                }
+            }
         }
 
-        // Áreas (cada una a su bandeja)
-        if ($user->hasRole('unidad_solicitante')) {
-            return redirect()->route('unidad.index');
-        }
+        $all = $base->get();
 
-        if ($user->hasRole('planeacion')) {
-            return redirect()->route('planeacion.index');
-        }
+        $enCurso = $all->where('estado', 'EN_CURSO')->values();
+        $finalizados = $all->where('estado', 'FINALIZADO')->values();
 
-        if ($user->hasRole('hacienda')) {
-            return redirect()->route('hacienda.index');
-        }
-
-        if ($user->hasRole('juridica')) {
-            return redirect()->route('juridica.index');
-        }
-
-        if ($user->hasRole('secop')) {
-            return redirect()->route('secop.index');
-        }
-
-        // Si entra aquí: no tiene rol asignado
-        abort(403, 'No tienes un rol asignado.');
+        return view('dashboard', compact('enCurso', 'finalizados'));
     }
 }
-

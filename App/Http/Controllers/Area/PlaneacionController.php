@@ -11,9 +11,9 @@ class PlaneacionController extends Controller
     {
         $areaRole = 'planeacion';
 
-        // Procesos en esta bandeja
         $procesos = DB::table('procesos')
             ->where('area_actual_role', $areaRole)
+            ->where('estado', 'EN_CURSO')
             ->orderByDesc('id')
             ->get();
 
@@ -28,8 +28,6 @@ class PlaneacionController extends Controller
         $enviarHabilitado = false;
 
         if ($proceso) {
-
-            // Instancia de la etapa actual (puede no existir todavía)
             $procesoEtapa = DB::table('proceso_etapas')
                 ->where('proceso_id', $proceso->id)
                 ->where('etapa_id', $proceso->etapa_actual_id)
@@ -49,13 +47,7 @@ class PlaneacionController extends Controller
         }
 
         return view('areas.planeacion', compact(
-            'areaRole',
-            'procesos',
-            'proceso',
-            'procesoEtapa',
-            'checks',
-            'enviarHabilitado'
+            'areaRole', 'procesos', 'proceso', 'procesoEtapa', 'checks', 'enviarHabilitado'
         ));
     }
 }
-
