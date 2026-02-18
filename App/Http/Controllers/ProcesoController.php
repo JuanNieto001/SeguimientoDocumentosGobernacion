@@ -20,14 +20,20 @@ class ProcesoController extends Controller
             ])
             ->orderByDesc('procesos.id');
 
+        // Admin ve todo
         if (!$user->hasRole('admin')) {
 
+            // Si es unidad_solicitante: ve los procesos que creó
             if ($user->hasRole('unidad_solicitante')) {
                 $query->where('procesos.created_by', $user->id);
             } else {
+                // Si es un área (planeacion, hacienda, juridica, secop):
+                // ve lo que esté en su bandeja (area_actual_role)
                 $rolesArea = ['planeacion', 'hacienda', 'juridica', 'secop'];
+
                 $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));
 
+                // Si no tiene ninguno de esos roles, no ve nada
                 if (!$miRolArea) {
                     $query->whereRaw('1=0');
                 } else {
@@ -37,6 +43,7 @@ class ProcesoController extends Controller
         }
 
         $procesos = $query->get();
+
         return view('procesos.index', compact('procesos'));
     }
 
@@ -60,32 +67,27 @@ class ProcesoController extends Controller
 
         $data = $request->validate([
             'workflow_id' => ['required', 'exists:workflows,id'],
-            'codigo'      => ['required', 'string', 'max:60', 'unique:procesos,codigo'],
             'objeto'      => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string'],
         ]);
 
+        // Autogenerar código consecutivo por workflow y año
+        $data['codigo'] = $this->generarCodigoConsecutivo((int) $data['workflow_id']);
+
         return DB::transaction(function () use ($data, $user) {
 
-            // Siempre iniciar en la primera etapa de Unidad; si no existe, fallback a la primera por orden
+            // 1) Buscar etapa inicial del workflow: la de menor orden (incluye 0 si existe)
             $primeraEtapa = DB::table('etapas')
                 ->where('workflow_id', $data['workflow_id'])
                 ->where('activa', 1)
-                ->where('area_role', 'unidad_solicitante')
                 ->orderBy('orden')
                 ->first();
 
             if (!$primeraEtapa) {
-                $primeraEtapa = DB::table('etapas')
-                    ->where('workflow_id', $data['workflow_id'])
-                    ->where('activa', 1)
-                    ->orderBy('orden')
-                    ->first();
+                abort(422, 'El workflow seleccionado no tiene etapas activas.');
             }
 
-            abort_unless($primeraEtapa, 422, 'El workflow seleccionado no tiene etapas activas.');
-
-            // Crear proceso
+            // 2) Crear proceso
             $procesoId = DB::table('procesos')->insertGetId([
                 'workflow_id'      => $data['workflow_id'],
                 'codigo'           => $data['codigo'],
@@ -99,15 +101,35 @@ class ProcesoController extends Controller
                 'updated_at'       => now(),
             ]);
 
-            // Crear instancia de etapa inicial
-            DB::table('proceso_etapas')->insert([
-                'proceso_id' => $procesoId,
-                'etapa_id'   => $primeraEtapa->id,
-                'created_at' => now(),
-                'updated_at' => now(),
+            // 3) Crear instancia de etapa inicial
+            $creadoPorUnidad = $user->hasRole('unidad_solicitante') && $primeraEtapa->area_role === 'unidad_solicitante';
+            $procesoEtapaId = DB::table('proceso_etapas')->insertGetId([
+                'proceso_id'   => $procesoId,
+                'etapa_id'     => $primeraEtapa->id,
+                'recibido'     => $creadoPorUnidad,
+                'recibido_por' => $creadoPorUnidad ? $user->id : null,
+                'recibido_at'  => $creadoPorUnidad ? now() : null,
+                'created_at'   => now(),
+                'updated_at'   => now(),
             ]);
 
-            // Redirigir a la bandeja
+            // 4) Crear checks de esa etapa
+            $items = DB::table('etapa_items')
+                ->where('etapa_id', $primeraEtapa->id)
+                ->orderBy('orden')
+                ->get(['id']);
+
+            foreach ($items as $item) {
+                DB::table('proceso_etapa_checks')->insert([
+                    'proceso_etapa_id' => $procesoEtapaId,
+                    'etapa_item_id'    => $item->id,
+                    'checked'          => false,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
+            }
+
+            // 5) Redirigir a la bandeja correcta (según el área actual)
             $url = match ($primeraEtapa->area_role) {
                 'unidad_solicitante' => url('/unidad?proceso_id=' . $procesoId),
                 'planeacion'         => url('/planeacion?proceso_id=' . $procesoId),
@@ -120,4 +142,34 @@ class ProcesoController extends Controller
             return redirect($url)->with('success', 'Solicitud creada correctamente.');
         });
     }
+
+        /**
+         * Genera un código único: PREFIJO-AAAA-#### por workflow y año.
+         */
+        private function generarCodigoConsecutivo(int $workflowId): string
+        {
+            $workflow = DB::table('workflows')->where('id', $workflowId)->first();
+            abort_unless($workflow, 422, 'Workflow inválido.');
+
+            $prefijo = $workflow->codigo ?? 'WF';
+            $year = now()->year;
+
+            // Buscar el mayor consecutivo existente para ese prefijo-año
+            $like = $prefijo . '-' . $year . '-%';
+            $ultimo = DB::table('procesos')
+                ->where('codigo', 'like', $like)
+                ->orderByDesc('codigo')
+                ->value('codigo');
+
+            $siguiente = 1;
+            if ($ultimo) {
+                // Extraer la última parte numérica
+                $partes = explode('-', $ultimo);
+                $numero = (int) end($partes);
+                $siguiente = $numero + 1;
+            }
+
+            $numeroFmt = str_pad((string) $siguiente, 4, '0', STR_PAD_LEFT);
+            return "$prefijo-$year-$numeroFmt";
+        }
 }

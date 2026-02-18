@@ -1,132 +1,54 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-                    </a>
-                </div>
+﻿@php
+    $r = request();
+    $user = auth()->user();
+    function sideLink(string $href, string $label, string $icon, bool $active): string {
+        $cls = $active ? 'sidebar-link active' : 'sidebar-link';
+        return "<a href=\"{$href}\" class=\"{$cls}\"><svg fill='none' stroke='currentColor' viewBox='0 0 24 24'>{$icon}</svg>{$label}</a>";
+    }
+@endphp
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        Dashboard
-                    </x-nav-link>
+{{-- Dashboard siempre visible --}}
+{!! sideLink(route('dashboard'),'Panel principal','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',$r->routeIs('dashboard')) !!}
 
-                    {{-- Procesos: visible para Admin y Unidad (y si quieres, áreas también) --}}
-                    @if(auth()->user()->hasRole('admin')
-                        || auth()->user()->hasRole('unidad_solicitante')
-                        || auth()->user()->hasRole('planeacion')
-                        || auth()->user()->hasRole('hacienda')
-                        || auth()->user()->hasRole('juridica')
-                        || auth()->user()->hasRole('secop'))
-                        <x-nav-link :href="route('procesos.index')" :active="request()->routeIs('procesos.*')">
-                            Procesos
-                        </x-nav-link>
-                    @endif
+@role('admin')
+<p class="sidebar-section">Administración</p>
+{!! sideLink(url('/admin/usuarios'),'Usuarios','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>',$r->is('admin/usuarios*')) !!}
+{!! sideLink(url('/admin/roles'),'Roles','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>',$r->is('admin/roles*')) !!}
 
-                    @role('admin')
-                        <x-nav-link :href="url('/admin/usuarios')" :active="request()->is('admin/usuarios*')">
-                            Usuarios
-                        </x-nav-link>
-                        <x-nav-link :href="url('/admin/roles')" :active="request()->is('admin/roles*')">
-                            Roles
-                        </x-nav-link>
-                        <x-nav-link :href="url('/admin/permisos')" :active="request()->is('admin/permisos*')">
-                            Permisos
-                        </x-nav-link>
-                    @endrole
-                </div>
-            </div>
+<p class="sidebar-section">Bandeja por Área</p>
+{!! sideLink(url('/unidad'),'Unidad Solicitante','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('unidad*')) !!}
+{!! sideLink(url('/planeacion'),'Planeación','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>',$r->is('planeacion*')) !!}
+{!! sideLink(url('/hacienda'),'Hacienda','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',$r->is('hacienda*')) !!}
+{!! sideLink(url('/juridica'),'Jurídica','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>',$r->is('juridica*')) !!}
+{!! sideLink(url('/secop'),'SECOP','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',$r->is('secop*')) !!}
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+<p class="sidebar-section">Procesos</p>
+{!! sideLink(route('procesos.create'),'Nueva solicitud','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',$r->routeIs('procesos.create')) !!}
+{!! sideLink(route('procesos.index'),'Ver todos','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',$r->routeIs('procesos.index')) !!}
+@endrole
 
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
+@role('unidad_solicitante')
+<p class="sidebar-section">Mi Área</p>
+{!! sideLink(route('unidad.index'),'Mi bandeja','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>',$r->is('unidad*')) !!}
+{!! sideLink(route('procesos.create'),'Nueva solicitud','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',$r->routeIs('procesos.create')) !!}
+@endrole
 
-                    <x-slot name="content">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault(); this.closest('form').submit();">
-                                Cerrar sesión
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
+@role('planeacion')
+<p class="sidebar-section">Mi Área</p>
+{!! sideLink(route('planeacion.index'),'Mi bandeja','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>',$r->is('planeacion*')) !!}
+@endrole
 
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
+@role('hacienda')
+<p class="sidebar-section">Mi Área</p>
+{!! sideLink(route('hacienda.index'),'Mi bandeja','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>',$r->is('hacienda*')) !!}
+@endrole
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                Dashboard
-            </x-responsive-nav-link>
+@role('juridica')
+<p class="sidebar-section">Mi Área</p>
+{!! sideLink(route('juridica.index'),'Mi bandeja','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>',$r->is('juridica*')) !!}
+@endrole
 
-            @if(auth()->user()->hasRole('admin')
-                || auth()->user()->hasRole('unidad_solicitante')
-                || auth()->user()->hasRole('planeacion')
-                || auth()->user()->hasRole('hacienda')
-                || auth()->user()->hasRole('juridica')
-                || auth()->user()->hasRole('secop'))
-                <x-responsive-nav-link :href="route('procesos.index')" :active="request()->routeIs('procesos.*')">
-                    Procesos
-                </x-responsive-nav-link>
-            @endif
-
-            @role('admin')
-                <x-responsive-nav-link :href="url('/admin/usuarios')" :active="request()->is('admin/usuarios*')">
-                    Usuarios
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="url('/admin/roles')" :active="request()->is('admin/roles*')">
-                    Roles
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="url('/admin/permisos')" :active="request()->is('admin/permisos*')">
-                    Permisos
-                </x-responsive-nav-link>
-            @endrole
-        </div>
-
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')"
-                        onclick="event.preventDefault(); this.closest('form').submit();">
-                        Cerrar sesión
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+@role('secop')
+<p class="sidebar-section">Mi Área</p>
+{!! sideLink(route('secop.index'),'Mi bandeja','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>',$r->is('secop*')) !!}
+@endrole

@@ -1,47 +1,57 @@
 <x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Iniciar sesión</h2>
+        <p class="text-gray-500 text-sm mt-1">Ingresa tus credenciales institucionales para continuar</p>
+    </div>
 
-    <form method="POST" action="{{ route('login') }}">
+    <x-auth-session-status class="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm" :status="session('status')" />
+
+    @if($errors->any())
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('login') }}" class="space-y-5">
         @csrf
 
-        <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
+                Correo electrónico
             </label>
+            <input id="email" type="email" name="email" value="{{ old('email') }}"
+                   class="w-full px-4 py-3 rounded-xl border text-sm transition bg-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent {{ $errors->get('email') ? 'border-red-300' : 'border-gray-200' }}"
+                   placeholder="usuario@gobernacion.gov.co" required autofocus autocomplete="username">
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
-
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
+        <div>
+            <div class="flex items-center justify-between mb-1.5">
+                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" class="text-xs font-medium hover:underline" style="color:#166534">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                @endif
+            </div>
+            <input id="password" type="password" name="password"
+                   class="w-full px-4 py-3 rounded-xl border text-sm transition bg-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent {{ $errors->get('password') ? 'border-red-300' : 'border-gray-200' }}"
+                   placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
         </div>
+
+        <div class="flex items-center gap-2.5">
+            <input id="remember_me" type="checkbox" name="remember"
+                   class="w-4 h-4 rounded border-gray-300 text-green-700 focus:ring-green-600">
+            <label for="remember_me" class="text-sm text-gray-600">Mantener sesión iniciada</label>
+        </div>
+
+        <button type="submit"
+                class="w-full py-3 px-4 text-white font-semibold rounded-xl text-sm transition-all duration-150 hover:opacity-90 active:scale-[.98]"
+                style="background:#14532d">
+            Ingresar al sistema
+        </button>
     </form>
+
+    <p class="mt-8 text-center text-xs text-gray-400">
+        Gobernación de Manizales &mdash; Acceso restringido a usuarios autorizados
+    </p>
 </x-guest-layout>

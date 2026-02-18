@@ -5,9 +5,229 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Models\ProcesoAuditoria;
+use App\Models\ProcesoEtapaArchivo;
+use App\Services\AlertaService;
 
 class WorkflowFilesController extends Controller
 {
+    /**
+     * Subir archivo a una etapa de un proceso
+     * Solo admin o el área actual puede subir
+     */
+    public function store(Request $request, int $proceso)
+    {
+        $proceso = $this->loadProcesoOrFail($proceso);
+        $this->authorizeAreaOrAdmin($proceso);
+
+        $request->validate([
+            'archivo' => ['required', 'file', 'max:10240'], // 10MB máximo
+            'tipo_archivo' => ['required', 'string', 'in:' . implode(',', [
+                // Unidad Solicitante
+                'borrador_estudios_previos',
+                'formato_necesidades',
+                'cotizacion',
+                // Planeación
+                'concepto_favorable',
+                'verificacion_paa',
+                'solicitud_cdp',
+                'estudios_previos_revisados',
+                'aval_planeacion',
+                // Hacienda
+                'certificado_cdp',
+                'certificado_rp',
+                'disponibilidad_presupuestal',
+                // Jurídica
+                'minuta_contrato',
+                'poliza',
+                'certificado_antecedentes',
+                'rut',
+                'cedula_contratista',
+                'estudios_previos_finales',
+                'pliego_condiciones',
+                // SECOP
+                'publicacion_secop',
+                'acta_inicio',
+                'contrato_firmado',
+                'registro_presupuestal',
+                // General
+                'anexo',
+                'otro',
+            ])],
+        ]);
+
+        return DB::transaction(function () use ($request, $proceso) {
+
+            $file = $request->file('archivo');
+            $tipoArchivo = $request->input('tipo_archivo');
+
+            // Obtener o crear proceso_etapa actual
+            $procesoEtapa = $this->getProcesoEtapaActual($proceso);
+
+            // Generar nombre único
+            $extension = $file->getClientOriginalExtension();
+            $nombreGuardado = Str::uuid() . '.' . $extension;
+
+            // Ruta: procesos/{proceso_id}/etapa_{etapa_id}/{nombre}
+            $ruta = "procesos/{$proceso->id}/etapa_{$proceso->etapa_actual_id}/{$nombreGuardado}";
+
+            // Guardar en storage/app/public
+            $file->storeAs('public/' . dirname($ruta), basename($ruta));
+
+            // Registrar en BD
+            DB::table('proceso_etapa_archivos')->insert([
+                'proceso_id'       => $proceso->id,
+                'proceso_etapa_id' => $procesoEtapa->id,
+                'etapa_id'         => $proceso->etapa_actual_id,
+                'tipo_archivo'     => $tipoArchivo,
+                'nombre_original'  => $file->getClientOriginalName(),
+                'nombre_guardado'  => $nombreGuardado,
+                'ruta'             => $ruta,
+                'mime_type'        => $file->getMimeType(),
+                'tamanio'          => $file->getSize(),
+                // Para flujos donde no hay fase de aprobación, se marca aprobado por defecto
+                'estado'           => 'aprobado',
+                'uploaded_by'      => auth()->id(),
+                'uploaded_at'      => now(),
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
+            
+            // Registrar auditoría
+            $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+            ProcesoAuditoria::registrar(
+                $proceso->id,
+                'archivo_subido',
+                ucfirst($proceso->area_actual_role),
+                $etapa->nombre,
+                null,
+                "Archivo subido: {$file->getClientOriginalName()} (tipo: {$tipoArchivo})"
+            );
+
+            return back()->with('success', 'Archivo subido correctamente.');
+        });
+    }
+
+    /**
+     * Descargar archivo
+     * Admin, creador del proceso o área actual pueden descargar
+     */
+    public function download(int $archivo)
+    {
+        $archivo = DB::table('proceso_etapa_archivos')->where('id', $archivo)->first();
+        abort_unless($archivo, 404, 'Archivo no encontrado.');
+
+        // Autorización
+        $proceso = DB::table('procesos')->where('id', $archivo->proceso_id)->first();
+        $user = auth()->user();
+
+        if (!$user->hasRole('admin')) {
+            // El creador del proceso puede descargar cualquier archivo de su proceso
+            if ($proceso->created_by !== $user->id) {
+                // Si no es el creador, debe ser del área actual
+                abort_unless(
+                    $proceso->area_actual_role && $user->hasRole($proceso->area_actual_role),
+                    403,
+                    'No tienes permiso para descargar este archivo.'
+                );
+            }
+        }
+
+        // Verificar que el archivo existe físicamente
+        $fullPath = 'public/' . $archivo->ruta;
+        abort_unless(Storage::exists($fullPath), 404, 'El archivo no existe en el servidor.');
+
+        return Storage::download($fullPath, $archivo->nombre_original);
+    }
+
+    /**
+     * Eliminar archivo
+     * Admin puede eliminar cualquiera
+     * Usuario no-admin solo puede eliminar de la etapa ACTUAL de su área
+     */
+    public function destroy(int $archivo)
+    {
+        $archivo = DB::table('proceso_etapa_archivos')->where('id', $archivo)->first();
+        abort_unless($archivo, 404, 'Archivo no encontrado.');
+
+        $proceso = DB::table('procesos')->where('id', $archivo->proceso_id)->first();
+        $user = auth()->user();
+
+        if (!$user->hasRole('admin')) {
+            // Solo puede eliminar si:
+            // 1) El archivo es de la etapa actual del proceso
+            // 2) El usuario tiene el rol del área actual
+            abort_unless(
+                (int)$archivo->etapa_id === (int)$proceso->etapa_actual_id
+                && $proceso->area_actual_role
+                && $user->hasRole($proceso->area_actual_role),
+                403,
+                'Solo puedes eliminar archivos de la etapa actual de tu área.'
+            );
+        }
+
+        return DB::transaction(function () use ($archivo) {
+
+            // Eliminar archivo físico
+            $fullPath = 'public/' . $archivo->ruta;
+            if (Storage::exists($fullPath)) {
+                Storage::delete($fullPath);
+            }
+
+            // Eliminar registro de BD
+            DB::table('proceso_etapa_archivos')->where('id', $archivo->id)->delete();
+            
+            // Registrar auditoría
+            $proceso = DB::table('procesos')->where('id', $archivo->proceso_id)->first();
+            $etapa = DB::table('etapas')->where('id', $archivo->etapa_id)->first();
+            ProcesoAuditoria::registrar(
+                $archivo->proceso_id,
+                'archivo_eliminado',
+                ucfirst($proceso->area_actual_role),
+                $etapa->nombre,
+                null,
+                "Archivo eliminado: {$archivo->nombre_original} (tipo: {$archivo->tipo_archivo})"
+            );
+
+            return back()->with('success', 'Archivo eliminado correctamente.');
+        });
+    }
+
+    /**
+     * Listar archivos de un proceso (para una etapa específica o todas)
+     */
+    public function index(int $proceso, int $etapa = null)
+    {
+        $proceso = $this->loadProcesoOrFail($proceso);
+        $this->authorizeViewFiles($proceso);
+
+        $query = DB::table('proceso_etapa_archivos as pea')
+            ->join('users as u', 'u.id', '=', 'pea.uploaded_by')
+            ->join('etapas as e', 'e.id', '=', 'pea.etapa_id')
+            ->select([
+                'pea.*',
+                'u.name as uploaded_by_name',
+                'e.nombre as etapa_nombre',
+                'e.area_role as etapa_area'
+            ])
+            ->where('pea.proceso_id', $proceso)
+            ->orderByDesc('pea.uploaded_at');
+
+        if ($etapa) {
+            $query->where('pea.etapa_id', $etapa);
+        }
+
+        $archivos = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'archivos' => $archivos
+        ]);
+    }
+
+    // ======== MÉTODOS PRIVADOS ========
+
     private function loadProcesoOrFail(int $procesoId)
     {
         $proceso = DB::table('procesos')->where('id', $procesoId)->first();
@@ -18,16 +238,35 @@ class WorkflowFilesController extends Controller
     private function authorizeAreaOrAdmin($proceso): void
     {
         $user = auth()->user();
-        abort_unless($user, 403);
-
         if ($user->hasRole('admin')) return;
 
-        // Solo el rol del área actual puede operar sobre el proceso
-        abort_unless($proceso->area_actual_role && $user->hasRole($proceso->area_actual_role), 403);
+        // Solo el rol del área actual puede subir/eliminar archivos en ese proceso
+        abort_unless(
+            $proceso->area_actual_role && $user->hasRole($proceso->area_actual_role),
+            403,
+            'No tienes permiso para realizar esta acción en este proceso.'
+        );
+    }
+
+    private function authorizeViewFiles($proceso): void
+    {
+        $user = auth()->user();
+        if ($user->hasRole('admin')) return;
+
+        // El creador puede ver archivos de su proceso
+        if ($proceso->created_by === $user->id) return;
+
+        // O el área actual puede ver
+        abort_unless(
+            $proceso->area_actual_role && $user->hasRole($proceso->area_actual_role),
+            403,
+            'No tienes permiso para ver archivos de este proceso.'
+        );
     }
 
     private function getProcesoEtapaActual($proceso)
     {
+        // Trae la instancia de la etapa actual (si no existe, la crea)
         $procesoEtapa = DB::table('proceso_etapas')
             ->where('proceso_id', $proceso->id)
             ->where('etapa_id', $proceso->etapa_actual_id)
@@ -46,132 +285,143 @@ class WorkflowFilesController extends Controller
     }
 
     /**
-     * POST /workflow/procesos/{proceso}/archivos
-     * Unidad sube: formato_necesidades | borrador_estudios | anexo
+     * Aprobar archivo
      */
-    public function store(Request $request, int $proceso)
+    public function aprobar(Request $request, int $archivo)
     {
-        $proceso = $this->loadProcesoOrFail($proceso);
-        $this->authorizeAreaOrAdmin($proceso);
+        $archivo = ProcesoEtapaArchivo::with(['proceso', 'etapa'])->findOrFail($archivo);
+        
+        // Verificar permisos (solo el área responsable puede aprobar)
+        $this->authorizeAreaOrAdmin($archivo->proceso);
 
-        $user = auth()->user();
-
-        // ✅ Por ahora SOLO Unidad (o admin) puede subir
-        if (!$user->hasRole('admin')) {
-            abort_unless(
-                $proceso->area_actual_role === 'unidad_solicitante',
-                403,
-                'Solo Unidad puede cargar archivos en este momento.'
-            );
-        }
-
-        // ✅ Validaciones
-        $data = $request->validate([
-            'tipo'    => ['required', 'in:formato_necesidades,borrador_estudios,anexo'],
-            'files'   => ['required', 'array'],
-            'files.*' => [
-                'file',
-                'max:10240', // 10MB
-                // básico anti-ejecutables: deja docs e imágenes comunes
-                'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,txt,zip,rar',
-            ],
+        $archivo->update([
+            'estado' => 'aprobado',
+            'aprobado_por' => auth()->id(),
+            'aprobado_at' => now(),
+            'observaciones' => $request->input('observaciones'),
         ]);
 
-        return DB::transaction(function () use ($proceso, $data, $request, $user) {
+        // Registrar auditoría
+        ProcesoAuditoria::registrar(
+            $archivo->proceso_id,
+            'documento_aprobado',
+            $archivo->etapa->area_responsable,
+            $archivo->etapa->nombre,
+            null,
+            "Documento aprobado: {$archivo->nombre_original}"
+        );
 
-            $procesoEtapa = $this->getProcesoEtapaActual($proceso);
-
-            $stored = 0;
-
-            foreach ($request->file('files') as $file) {
-                if (!$file || !$file->isValid()) {
-                    continue;
-                }
-
-                // Ruta ordenada
-                $path = $file->store(
-                    "workflow/procesos/{$proceso->id}/etapa/{$procesoEtapa->id}",
-                    'public'
-                );
-
-                DB::table('proceso_etapa_archivos')->insert([
-                    'proceso_etapa_id' => $procesoEtapa->id,
-                    'tipo'             => $data['tipo'],
-                    'nombre_original'  => $file->getClientOriginalName(),
-                    'path'             => $path,
-                    'mime'             => $file->getClientMimeType(),
-                    'size'             => (int)$file->getSize(),
-                    'uploaded_by'      => $user->id,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
-                ]);
-
-                $stored++;
-            }
-
-            abort_unless($stored > 0, 422, 'No se pudo cargar ningún archivo.');
-
-            return back()->with('success', "Archivos cargados: {$stored}.");
-        });
+        return redirect()->back()->with('success', 'Documento aprobado correctamente');
     }
 
-    public function download(Request $request, int $proceso, int $archivo)
+    /**
+     * Rechazar archivo
+     */
+    public function rechazar(Request $request, int $archivo)
     {
-        $proceso = $this->loadProcesoOrFail($proceso);
-        $this->authorizeAreaOrAdmin($proceso);
+        $request->validate([
+            'observaciones' => 'required|string|min:10',
+        ]);
 
-        $row = DB::table('proceso_etapa_archivos as pea')
-            ->join('proceso_etapas as pe', 'pe.id', '=', 'pea.proceso_etapa_id')
-            ->where('pea.id', $archivo)
-            ->where('pe.proceso_id', $proceso->id)
-            ->select('pea.*')
-            ->first();
+        $archivo = ProcesoEtapaArchivo::with(['proceso', 'etapa', 'uploadedBy'])->findOrFail($archivo);
+        
+        // Verificar permisos
+        $this->authorizeAreaOrAdmin($archivo->proceso);
 
-        abort_unless($row, 404, 'Archivo no encontrado.');
+        $archivo->update([
+            'estado' => 'rechazado',
+            'aprobado_por' => auth()->id(),
+            'aprobado_at' => now(),
+            'observaciones' => $request->input('observaciones'),
+        ]);
 
-        abort_unless(Storage::disk('public')->exists($row->path), 404, 'El archivo no existe en storage.');
+        // Registrar auditoría
+        ProcesoAuditoria::registrar(
+            $archivo->proceso_id,
+            'documento_rechazado',
+            $archivo->etapa->area_responsable,
+            $archivo->etapa->nombre,
+            null,
+            "Documento rechazado: {$archivo->nombre_original}. Motivo: {$request->observaciones}"
+        );
 
-        return Storage::disk('public')->download($row->path, $row->nombre_original);
+        // Crear alerta para el usuario que subió el archivo
+        AlertaService::crear(
+            proceso: $archivo->proceso,
+            tipo: 'documento_rechazado',
+            titulo: 'Documento rechazado',
+            mensaje: "Tu documento '{$archivo->nombre_original}' fue rechazado",
+            prioridad: 'alta',
+            area_responsable: 'unidad_solicitante',
+            user_id: $archivo->uploaded_by,
+            metadata: [
+                'archivo_id' => $archivo->id,
+                'archivo_nombre' => $archivo->nombre_original,
+                'observaciones' => $request->observaciones,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Documento rechazado. Se ha notificado al responsable');
     }
 
-    public function destroy(Request $request, int $proceso, int $archivo)
+    /**
+     * Reemplazar archivo (nueva versión)
+     */
+    public function reemplazar(Request $request, int $archivo)
     {
-        $proceso = $this->loadProcesoOrFail($proceso);
-        $this->authorizeAreaOrAdmin($proceso);
+        $request->validate([
+            'archivo' => ['required', 'file', 'max:10240'], // 10MB
+        ]);
 
-        $user = auth()->user();
-
-        $row = DB::table('proceso_etapa_archivos as pea')
-            ->join('proceso_etapas as pe', 'pe.id', '=', 'pea.proceso_etapa_id')
-            ->where('pea.id', $archivo)
-            ->where('pe.proceso_id', $proceso->id)
-            ->select('pea.*', 'pe.etapa_id')
-            ->first();
-
-        abort_unless($row, 404, 'Archivo no encontrado.');
-
-        // ✅ Por ahora SOLO Unidad (o admin) puede eliminar
-        if (!$user->hasRole('admin')) {
-            abort_unless(
-                $proceso->area_actual_role === 'unidad_solicitante',
-                403,
-                'Solo Unidad puede eliminar archivos en este momento.'
-            );
-
-            // no-admin solo puede borrar en la etapa actual (seguridad extra)
-            abort_unless((int)$row->etapa_id === (int)$proceso->etapa_actual_id, 403);
+        $archivoAnterior = ProcesoEtapaArchivo::with(['proceso', 'etapa'])->findOrFail($archivo);
+        
+        // Solo el usuario que subió el archivo puede reemplazarlo
+        if ($archivoAnterior->uploaded_by !== auth()->id() && !auth()->user()->hasRole('admin')) {
+            abort(403, 'Solo puedes reemplazar tus propios archivos');
         }
 
-        return DB::transaction(function () use ($row) {
-            try {
-                Storage::disk('public')->delete($row->path);
-            } catch (\Throwable $e) {
-                // no rompe si el archivo ya no existe
-            }
+        return DB::transaction(function () use ($request, $archivoAnterior) {
+            $file = $request->file('archivo');
 
-            DB::table('proceso_etapa_archivos')->where('id', $row->id)->delete();
+            // Generar nombre único
+            $extension = $file->getClientOriginalExtension();
+            $nombreGuardado = Str::uuid() . '.' . $extension;
 
-            return back()->with('success', 'Archivo eliminado.');
+            // Ruta: procesos/{proceso_id}/etapa_{etapa_id}/{nombre}
+            $ruta = "procesos/{$archivoAnterior->proceso_id}/etapa_{$archivoAnterior->etapa_id}/{$nombreGuardado}";
+
+            // Guardar nuevo archivo
+            $file->storeAs('public/' . dirname($ruta), basename($ruta));
+
+            // Crear nuevo registro
+            $nuevoArchivo = ProcesoEtapaArchivo::create([
+                'proceso_id'       => $archivoAnterior->proceso_id,
+                'proceso_etapa_id' => $archivoAnterior->proceso_etapa_id,
+                'etapa_id'         => $archivoAnterior->etapa_id,
+                'tipo_archivo'     => $archivoAnterior->tipo_archivo,
+                'nombre_original'  => $file->getClientOriginalName(),
+                'nombre_guardado'  => $nombreGuardado,
+                'ruta'             => $ruta,
+                'mime_type'        => $file->getMimeType(),
+                'tamanio'          => $file->getSize(),
+                'uploaded_by'      => auth()->id(),
+                'uploaded_at'      => now(),
+                'estado'           => 'pendiente',
+                'version'          => $archivoAnterior->version + 1,
+                'archivo_anterior_id' => $archivoAnterior->id,
+            ]);
+
+            // Registrar auditoría
+            ProcesoAuditoria::registrar(
+                $archivoAnterior->proceso_id,
+                'documento_reemplazado',
+                $archivoAnterior->etapa->area_responsable,
+                $archivoAnterior->etapa->nombre,
+                null,
+                "Documento reemplazado: {$archivoAnterior->nombre_original} (v{$archivoAnterior->version}) → {$file->getClientOriginalName()} (v{$nuevoArchivo->version})"
+            );
+
+            return redirect()->back()->with('success', 'Archivo reemplazado. Nueva versión en revisión');
         });
     }
 }
