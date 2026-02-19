@@ -14,7 +14,12 @@ class Etapa extends Model
         'workflow_id',
         'orden',
         'nombre',
+        'descripcion',
         'area_role',
+        'responsable_unidad',
+        'responsable_secretaria',
+        'es_paralelo',
+        'notas',
         'next_etapa_id',
         'activa',
         'dias_estimados',
@@ -22,7 +27,8 @@ class Etapa extends Model
     ];
 
     protected $casts = [
-        'activa' => 'boolean',
+        'activa'      => 'boolean',
+        'es_paralelo' => 'boolean',
     ];
 
     /**

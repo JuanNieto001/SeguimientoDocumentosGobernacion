@@ -65,7 +65,7 @@
                         <td class="px-5 py-3.5">
                             @if($rol)
                             <span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium" style="background:{{ $rc['bg'] }};color:{{ $rc['text'] }}">
-                                {{ $rol }}
+                                {{ \App\Support\RoleLabels::label($rol) }}
                             </span>
                             @else
                             <span class="text-gray-400 text-xs">Sin rol</span>

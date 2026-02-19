@@ -22,7 +22,7 @@ class HaciendaController extends Controller
             abort(403, 'No tienes acceso a esta área');
         }
 
-        $estado = $request->get('estado', 'pendiente');
+        $estado = $request->get('estado', 'EN_CURSO');
         
         $procesos = Proceso::with(['workflow', 'etapaActual', 'procesoEtapas', 'creador', 'paa'])
             ->whereHas('etapaActual', function($query) {
@@ -35,11 +35,11 @@ class HaciendaController extends Controller
             ->paginate(20);
 
         $stats = [
-            'total' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'hacienda'))->count(),
+            'total'    => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'hacienda'))->count(),
             'pendiente' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'hacienda'))
-                ->where('estado', 'pendiente')->count(),
+                ->where('estado', 'EN_CURSO')->count(),
             'en_curso' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'hacienda'))
-                ->where('estado', 'en_curso')->count(),
+                ->where('estado', 'EN_REVISION')->count(),
             'rechazado' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'hacienda'))
                 ->where('estado', 'rechazado')->count(),
         ];

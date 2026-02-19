@@ -15,6 +15,10 @@ class EtapaItem extends Model
         'orden',
         'label',
         'requerido',
+        'responsable_unidad',
+        'responsable_secretaria',
+        'notas',
+        'tipo_documento',
     ];
 
     protected $casts = [

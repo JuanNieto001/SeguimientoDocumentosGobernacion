@@ -212,7 +212,9 @@ class WorkflowController extends Controller
                 // 2) OTRAS ÁREAS: validar recibido + checks + archivos aprobados
                 
                 // Debe estar recibido
-                abort_unless((bool)$procesoEtapa->recibido, 422, 'No puedes enviar: primero debes marcar "Recibí".');
+                if (!(bool)$procesoEtapa->recibido) {
+                    return redirect()->back()->with('error', 'Debes marcar "Recibí" antes de poder enviar a la siguiente secretaría.');
+                }
 
                 // Validar checks requeridos
                 $faltantes = DB::table('proceso_etapa_checks as pec')
@@ -222,7 +224,9 @@ class WorkflowController extends Controller
                     ->where('pec.checked', 0)
                     ->count();
 
-                abort_unless($faltantes === 0, 422, 'No puedes enviar: faltan checks requeridos.');
+                if ($faltantes > 0) {
+                    return redirect()->back()->with('error', "No puedes enviar: faltan {$faltantes} ítem(s) requerido(s) en el checklist.");
+                }
                 
                 // Validar que todos los archivos de la etapa estén aprobados
                 $archivosNoAprobados = DB::table('proceso_etapa_archivos')
@@ -232,7 +236,7 @@ class WorkflowController extends Controller
                     ->count();
                 
                 if ($archivosNoAprobados > 0) {
-                    abort(422, 'No puedes enviar: hay documentos pendientes de aprobación o rechazados.');
+                    return redirect()->back()->with('error', 'No puedes enviar: hay documentos pendientes de aprobación o rechazados.');
                 }
             }
 
@@ -318,7 +322,15 @@ class WorkflowController extends Controller
                 ['etapa_siguiente' => $nextEtapa->nombre, 'area_siguiente' => $nextEtapa->area_role]
             );
 
-            return back()->with('success', 'Enviado y avanzado a la siguiente etapa.');
+            $areaLabel = match($nextEtapa->area_role) {
+                'unidad_solicitante' => 'Unidad Solicitante',
+                'planeacion'         => 'Planeación',
+                'hacienda'           => 'Hacienda',
+                'juridica'           => 'Jurídica',
+                'secop'              => 'SECOP',
+                default              => ucfirst($nextEtapa->area_role),
+            };
+            return back()->with('success', "Proceso enviado a: {$nextEtapa->nombre} → Área: {$areaLabel}.");
         });
     }
 }

@@ -48,7 +48,7 @@
                             class="w-full rounded-xl px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all"
                             style="border:1px solid #e2e8f0">
                             @foreach($roles as $role)
-                                <option value="{{ $role->name }}" @selected(old('role', $currentRole) === $role->name)>{{ $role->name }}</option>
+                                <option value="{{ $role->name }}" @selected(old('role', $currentRole) === $role->name)>{{ \App\Support\RoleLabels::label($role->name) }}</option>
                             @endforeach
                         </select>
                         @error('role') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror

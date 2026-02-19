@@ -17,6 +17,7 @@ class SecopController extends Controller
 
         $procesos = \DB::table('procesos')
             ->where('area_actual_role', $areaRole)
+            ->where('estado', 'EN_CURSO')
             ->orderByDesc('id')
             ->get();
 
@@ -36,15 +37,17 @@ class SecopController extends Controller
                 ->where('etapa_id', $proceso->etapa_actual_id)
                 ->first();
 
-            $checks = \DB::table('proceso_etapa_checks as pc')
-                ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
-                ->select('pc.id as check_id', 'pc.checked', 'ei.label', 'ei.requerido')
-                ->where('pc.proceso_etapa_id', $procesoEtapa->id)
-                ->orderBy('ei.orden')
-                ->get();
+            if ($procesoEtapa) {
+                $checks = \DB::table('proceso_etapa_checks as pc')
+                    ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
+                    ->select('pc.id as check_id', 'pc.checked', 'ei.label', 'ei.requerido')
+                    ->where('pc.proceso_etapa_id', $procesoEtapa->id)
+                    ->orderBy('ei.orden')
+                    ->get();
 
-            $faltantes = $checks->where('requerido', 1)->where('checked', 0)->count();
-            $enviarHabilitado = $procesoEtapa->recibido && $faltantes === 0;
+                $faltantes = $checks->where('requerido', 1)->where('checked', 0)->count();
+                $enviarHabilitado = (bool)$procesoEtapa->recibido && $faltantes === 0;
+            }
         }
 
         return view('areas.secop', compact(

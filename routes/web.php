@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\SecretariaController;
+use App\Http\Controllers\Admin\UnidadController as AdminUnidadController;
 use App\Http\Controllers\Area\UnidadController;
 use App\Http\Controllers\Area\PlaneacionController;
 use App\Http\Controllers\Area\HaciendaController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\PAAController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ModificacionContractualController;
+use App\Http\Controllers\Admin\LogsController;
 use App\Http\Controllers\PlaneacionController as PlaneacionAreaController;
 use App\Http\Controllers\HaciendaController as HaciendaAreaController;
 use App\Http\Controllers\JuridicaController as JuridicaAreaController;
@@ -28,7 +31,9 @@ use App\Http\Controllers\SecopController as SecopAreaController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
 
 /*
@@ -57,15 +62,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin|planeacion'])->prefix('paa')->name('paa.')->group(function () {
-    Route::get('/', [PAAController::class, 'index'])->name('index');
-    Route::get('/crear', [PAAController::class, 'create'])->name('create');
-    Route::post('/', [PAAController::class, 'store'])->name('store');
-    Route::get('/{paa}', [PAAController::class, 'show'])->name('show');
-    Route::get('/{paa}/editar', [PAAController::class, 'edit'])->name('edit');
-    Route::put('/{paa}', [PAAController::class, 'update'])->name('update');
+    Route::get('/',              [PAAController::class, 'index'])->name('index');
+    Route::get('/crear',         [PAAController::class, 'create'])->name('create');
+    Route::post('/',             [PAAController::class, 'store'])->name('store');
+    Route::get('/exportar/csv',  [PAAController::class, 'exportarCSV'])->name('exportar.csv');
+    Route::get('/exportar/pdf',  [PAAController::class, 'exportarPDF'])->name('exportar.pdf');
+    Route::post('/verificar',    [PAAController::class, 'verificarInclusion'])->name('verificar');
+    Route::get('/{paa}',         [PAAController::class, 'show'])->name('show');
+    Route::get('/{paa}/editar',  [PAAController::class, 'edit'])->name('edit');
+    Route::put('/{paa}',         [PAAController::class, 'update'])->name('update');
     Route::get('/{paa}/certificado', [PAAController::class, 'certificadoInclusion'])->name('certificado');
-    Route::post('/verificar', [PAAController::class, 'verificarInclusion'])->name('verificar');
-    Route::get('/exportar/{vigencia}', [PAAController::class, 'exportarPDF'])->name('exportar');
 });
 
 /*
@@ -98,21 +104,40 @@ Route::middleware(['auth'])->prefix('reportes')->name('reportes.')->group(functi
 
 /*
 |--------------------------------------------------------------------------
-| PROCESOS (crear solicitud)
+| PROCESOS
 |--------------------------------------------------------------------------
-| Admin y Unidad pueden crear procesos
+| - Crear/store: Planeación, Unidad Solicitante y Admin
+| - Index/show:  Todos los autenticados (cada rol ve lo suyo)
+| NOTA: /procesos/crear debe definirse ANTES de /procesos/{id}
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin|unidad_solicitante'])->group(function () {
 
-    Route::get('/procesos', [ProcesoController::class, 'index'])
-        ->name('procesos.index');
-
+// Crear solicitud (solo Planeación y Admin)
+Route::middleware(['auth', 'role:admin|planeacion|unidad_solicitante'])->group(function () {
     Route::get('/procesos/crear', [ProcesoController::class, 'create'])
         ->name('procesos.create');
-
     Route::post('/procesos', [ProcesoController::class, 'store'])
         ->name('procesos.store');
+});
+
+// Ver lista y detalle: todos los usuarios autenticados
+Route::middleware(['auth'])->group(function () {
+    Route::get('/procesos', [ProcesoController::class, 'index'])
+        ->name('procesos.index');
+    Route::get('/procesos/{id}', [ProcesoController::class, 'show'])
+        ->name('procesos.show');
+});
+
+// API interna: unidades por secretaría (para selects dinámicos)
+// Nota: también disponible en routes/api.php como api.secretarias.unidades
+Route::middleware(['auth'])->get('/api/secretarias/{secretariaId}/unidades', function ($secretariaId) {
+    return response()->json(
+        \Illuminate\Support\Facades\DB::table('unidades')
+            ->where('secretaria_id', $secretariaId)
+            ->where('activo', 1)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre'])
+    );
 });
 
 /*
@@ -177,7 +202,7 @@ Route::middleware(['auth'])->prefix('workflow/procesos')->name('workflow.files.'
 | ADMIN
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin'])
+Route::middleware(['auth', 'role:admin|admin_general'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -185,6 +210,15 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('usuarios', UserController::class)->except(['show']);
         Route::resource('roles', RoleController::class)->except(['show']);
         Route::resource('permisos', PermissionController::class)->except(['show']);
+        Route::resource('secretarias', SecretariaController::class)->except(['show']);
+        Route::resource('unidades', AdminUnidadController::class)->except(['show']);
+
+        // AJAX: unidades por secretaría (para selects dinámicos)
+        Route::get('secretarias/{secretaria}/unidades', [AdminUnidadController::class, 'porSecretaria'])
+            ->name('secretarias.unidades');
+
+        Route::get('logs', [LogsController::class, 'index'])->name('logs');
+        Route::get('logs/proceso/{proceso}', [LogsController::class, 'show'])->name('logs.proceso');
     });
 
 /*

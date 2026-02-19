@@ -19,68 +19,53 @@ class PlanAnualAdquisicion extends Model
         'dependencia_solicitante',
         'estado',
         'activo',
-        'fecha_modificacion',
-        'observaciones',
     ];
 
     protected $casts = [
         'valor_estimado' => 'decimal:2',
-        'activo' => 'boolean',
-        'fecha_modificacion' => 'datetime',
+        'activo'         => 'boolean',
+        'anio'           => 'integer',
+        'trimestre_estimado' => 'integer',
     ];
 
-    /**
-     * Relación: Workflow asociado a la modalidad
-     */
-    public function workflow(): BelongsTo
+    /* ---------------------------------------------------------------- */
+    /* RELACIONES                                                         */
+    /* ---------------------------------------------------------------- */
+
+    /** Procesos que referencian este ítem del PAA */
+    public function procesos()
     {
-        return $this->belongsTo(Workflow::class, 'modalidad_contratacion', 'codigo');
+        return $this->hasMany(\App\Models\Proceso::class, 'paa_id');
     }
 
-    /**
-     * Verificar si la necesidad está vigente
-     */
+    /* ---------------------------------------------------------------- */
+    /* HELPERS                                                            */
+    /* ---------------------------------------------------------------- */
+
     public function esVigente(): bool
     {
         return $this->estado === 'vigente' && $this->activo;
     }
 
-    /**
-     * Verificar si la necesidad está en uso (tiene procesos asociados)
-     */
-    public function tieneProcesoAsociado(): bool
-    {
-        // Esta relación debe implementarse cuando se vinculen procesos con PAA
-        return false; // TODO: implementar
-    }
-
-    /**
-     * Generar código de certificado de inclusión
-     */
-    public function generarCertificadoInclusionAttribute(): string
+    public function getCertificadoCodeAttribute(): string
     {
         return "CERT-PAA-{$this->anio}-{$this->id}";
     }
 
-    /**
-     * Scope: PAA del año vigente
-     */
+    /* ---------------------------------------------------------------- */
+    /* SCOPES                                                             */
+    /* ---------------------------------------------------------------- */
+
     public function scopeAnioVigente($query)
     {
         return $query->where('anio', date('Y'));
     }
 
-    /**
-     * Scope: PAA activos
-     */
     public function scopeActivos($query)
     {
         return $query->where('activo', true);
     }
 
-    /**
-     * Scope: PAA vigentes
-     */
     public function scopeVigentes($query)
     {
         return $query->where('estado', 'vigente');

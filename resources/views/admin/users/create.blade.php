@@ -48,7 +48,7 @@
                             style="border:1px solid #e2e8f0">
                             <option value="">— Selecciona un rol —</option>
                             @foreach($roles as $role)
-                                <option value="{{ $role->name }}" @selected(old('role') === $role->name)>{{ $role->name }}</option>
+                                <option value="{{ $role->name }}" @selected(old('role') === $role->name)>{{ \App\Support\RoleLabels::label($role->name) }}</option>
                             @endforeach
                         </select>
                         @error('role') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror

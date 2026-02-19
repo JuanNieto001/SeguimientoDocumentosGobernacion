@@ -98,10 +98,15 @@
                             @csrf
                             <input type="hidden" name="area_role" value="{{ $areaRole }}">
                             <button
-                                class="px-4 py-2 rounded text-white {{ $enviarHabilitado ? 'bg-gray-800' : 'bg-gray-400' }}"
+                                class="px-4 py-2 rounded text-white {{ $enviarHabilitado ? 'bg-gray-800' : 'bg-gray-400 cursor-not-allowed' }}"
                                 {{ $enviarHabilitado ? '' : 'disabled' }}>
                                 Enviar a la siguiente secretaría
                             </button>
+                            @if(!$procesoEtapa || !$procesoEtapa->recibido)
+                                <p class="text-xs text-red-600 mt-1">⚠ Debes marcar "Recibí" antes de enviar.</p>
+                            @elseif(!$enviarHabilitado)
+                                <p class="text-xs text-amber-600 mt-1">⚠ Completa todos los ítems requeridos del checklist.</p>
+                            @endif
                         </form>
 
                     </div>

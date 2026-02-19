@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('proceso_etapa_archivos')) {
+            return;
+        }
+
         Schema::create('proceso_etapa_archivos', function (Blueprint $table) {
             $table->id();
 
