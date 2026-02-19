@@ -51,16 +51,61 @@
                             </div>
                         @endif
 
-                        {{-- RECIBÍ --}}
-                        <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
-                            @csrf
-                            <input type="hidden" name="area_role" value="{{ $areaRole }}">
-                            <button
-                                class="px-4 py-2 rounded text-white {{ $procesoEtapa && $procesoEtapa->recibido ? 'bg-gray-400' : 'bg-gray-800' }}"
-                                {{ $procesoEtapa && $procesoEtapa->recibido ? 'disabled' : '' }}>
-                                {{ $procesoEtapa && $procesoEtapa->recibido ? 'Documento recibido' : 'Marcar como recibido' }}
-                            </button>
-                        </form>
+                        {{-- RECIBÍ Y VISUALIZAR DOCUMENTO --}}
+                        @php
+                            $documentoEstudiosPrevios = DB::table('proceso_etapa_archivos')
+                                ->where('proceso_id', $proceso->id)
+                                ->where('tipo_archivo', 'estudios_previos')
+                                ->first();
+                        @endphp
+                        
+                        <div class="border-t pt-4 space-y-4">
+                            <div class="font-semibold text-lg">📄 Documento de Estudios Previos</div>
+                            
+                            @if($documentoEstudiosPrevios)
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-800">{{ $documentoEstudiosPrevios->nombre_original }}</p>
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                Subido el {{ \Carbon\Carbon::parse($documentoEstudiosPrevios->uploaded_at)->format('d/m/Y H:i') }}
+                                            </p>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <a href="{{ route('workflow.files.download', $documentoEstudiosPrevios->id) }}" 
+                                               class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                               target="_blank">
+                                                📥 Descargar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-900">
+                                    ⚠️ No se encontró el documento de Estudios Previos
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- BOTÓN RECIBIR --}}
+                        @if(!$procesoEtapa || !$procesoEtapa->recibido)
+                            <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
+                                @csrf
+                                <input type="hidden" name="area_role" value="{{ $areaRole }}">
+                                <button
+                                    class="px-4 py-2 rounded text-white bg-blue-600 hover:bg-blue-700"
+                                    @if(!$documentoEstudiosPrevios) disabled title="Debes visualizar/descargar el documento primero" @endif>
+                                    ✓ Confirmar Recepción del Documento
+                                </button>
+                                @if(!$documentoEstudiosPrevios)
+                                    <p class="text-xs text-red-600 mt-1">⚠️ Primero debes verificar que el documento esté disponible</p>
+                                @endif
+                            </form>
+                        @else
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+                                ✅ Documento recibido el {{ \Carbon\Carbon::parse($procesoEtapa->recibido_at)->format('d/m/Y H:i') }}
+                            </div>
+                        @endif
 
                         {{-- CHECKLIST --}}
                         <div class="border-t pt-4">
@@ -92,6 +137,70 @@
                                 </div>
                             @endif
                         </div>
+
+                        {{-- SOLICITUDES DOCUMENTALES (solo Etapa 1) --}}
+                        @if(isset($solicitudesPendientes) && $solicitudesPendientes->isNotEmpty())
+                        <div class="mb-6 bg-white rounded-lg shadow p-4 border border-gray-300">
+                            <h3 class="text-lg font-bold mb-4 text-gray-800">📋 Documentos Solicitados a Otras Áreas</h3>
+                            
+                            <div class="mb-4 text-sm text-gray-600">
+                                <strong>{{ $solicitudesSubidas ?? 0 }}</strong> de <strong>{{ $totalSolicitudes ?? 0 }}</strong> documentos subidos
+                            </div>
+
+                            <div class="space-y-2">
+                                @foreach($solicitudesPendientes as $sol)
+                                    <div class="px-3 py-2 rounded border
+                                        @if($sol->estado === 'subido') bg-green-50 border-green-300
+                                        @elseif($sol->puede_subir) bg-gray-50 border-gray-300
+                                        @else bg-yellow-50 border-yellow-300
+                                        @endif">
+                                        
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2">
+                                                    @if($sol->estado === 'subido')
+                                                        <span class="text-green-600 text-lg">✅</span>
+                                                    @elseif($sol->puede_subir)
+                                                        <span class="text-gray-500 text-lg">⏳</span>
+                                                    @else
+                                                        <span class="text-yellow-600 text-lg">🔒</span>
+                                                    @endif
+                                                    
+                                                    <span class="font-medium text-gray-800">{{ $sol->nombre_documento }}</span>
+                                                </div>
+                                                
+                                                <div class="text-xs text-gray-600 mt-1 ml-7">
+                                                    Área responsable: <strong>{{ $sol->area_responsable_nombre }}</strong>
+                                                </div>
+
+                                                @if(!$sol->puede_subir && $sol->estado !== 'subido')
+                                                    <div class="text-xs text-yellow-700 mt-1 ml-7 italic">
+                                                        🔒 Bloqueado hasta que suban "Compatibilidad del Gasto"
+                                                    </div>
+                                                @endif
+
+                                                @if($sol->estado === 'subido' && $sol->archivo_id)
+                                                    <div class="text-xs text-green-700 mt-1 ml-7">
+                                                        ✓ Subido correctamente
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            @if($solicitudesSubidas === $totalSolicitudes)
+                                <div class="mt-4 p-3 bg-green-100 border border-green-400 rounded text-green-800 text-sm">
+                                    ✅ <strong>¡Todos los documentos están completos!</strong> Puedes enviar el proceso a la siguiente etapa.
+                                </div>
+                            @else
+                                <div class="mt-4 p-3 bg-blue-50 border border-blue-300 rounded text-blue-800 text-sm">
+                                    ℹ️ Esperando que las áreas responsables suban los documentos solicitados.
+                                </div>
+                            @endif
+                        </div>
+                        @endif
 
                         {{-- ENVIÉ --}}
                         <form method="POST" action="{{ route('workflow.enviar', $proceso->id) }}" class="pt-2">

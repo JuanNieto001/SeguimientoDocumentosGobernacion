@@ -128,6 +128,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'hacienda',
             'juridica',
             'secop',
+            'talento_humano',  // Nuevo rol para Talento Humano (Certificado No Planta)
         ];
 
         foreach ($workflowRoles as $roleName) {
@@ -258,7 +259,116 @@ class RolesAndPermissionsSeeder extends Seeder
             ]);
         }
 
+        // ── ROLES DE WORKFLOW → Permisos específicos por rol ─────────────────────
+
+        // unidad_solicitante → Crea procesos, gestiona documentos
+        $unidadSolicitante = Role::where('name', 'unidad_solicitante')->first();
+        if ($unidadSolicitante) {
+            $unidadSolicitante->syncPermissions([
+                'procesos.ver',
+                'procesos.crear',
+                'procesos.editar',
+                'procesos.enviar',
+                'archivos.subir',
+                'archivos.descargar',
+                'archivos.reemplazar',
+                'paa.ver',
+                'alertas.ver',
+                'alertas.leer',
+                'modificaciones.ver',
+                'modificaciones.crear',
+                'dashboard.ver',
+            ]);
+        }
+
+        // planeacion → Gestiona solicitudes de documentos, RPC
+        $planeacionRole = Role::where('name', 'planeacion')->first();
+        if ($planeacionRole) {
+            $planeacionRole->syncPermissions([
+                'procesos.ver',
+                'procesos.recibir',
+                'procesos.enviar',
+                'archivos.subir',
+                'archivos.descargar',
+                'paa.ver',
+                'paa.verificar',
+                'alertas.ver',
+                'alertas.leer',
+                'dashboard.ver',
+            ]);
+        }
+
+        // hacienda → Expide CDP, RPC, paz y salvos
+        $haciendaRole = Role::where('name', 'hacienda')->first();
+        if ($haciendaRole) {
+            $haciendaRole->syncPermissions([
+                'procesos.ver',
+                'procesos.recibir',
+                'archivos.subir',
+                'archivos.descargar',
+                'alertas.ver',
+                'alertas.leer',
+                'dashboard.ver',
+            ]);
+        }
+
+        // juridica → Revisa, aprueba, asigna número de contrato
+        $juridicaRole = Role::where('name', 'juridica')->first();
+        if ($juridicaRole) {
+            $juridicaRole->syncPermissions([
+                'procesos.ver',
+                'procesos.recibir',
+                'procesos.aprobar',
+                'procesos.rechazar',
+                'procesos.enviar',
+                'archivos.subir',
+                'archivos.descargar',
+                'archivos.aprobar',
+                'archivos.rechazar',
+                'modificaciones.ver',
+                'modificaciones.aprobar',
+                'modificaciones.rechazar',
+                'alertas.ver',
+                'alertas.leer',
+                'reportes.ver',
+                'reportes.auditoria',
+                'dashboard.ver',
+            ]);
+        }
+
+        // secop → Publica en SECOP II, gestiona PAA
+        $secopRole = Role::where('name', 'secop')->first();
+        if ($secopRole) {
+            $secopRole->syncPermissions([
+                'procesos.ver',
+                'procesos.recibir',
+                'procesos.enviar',
+                'archivos.subir',
+                'archivos.descargar',
+                'paa.ver',
+                'paa.crear',
+                'paa.editar',
+                'paa.certificado',
+                'alertas.ver',
+                'alertas.leer',
+                'dashboard.ver',
+            ]);
+        }
+
+        // talento_humano → Expide certificado No Planta
+        $talentoHumano = Role::where('name', 'talento_humano')->first();
+        if ($talentoHumano) {
+            $talentoHumano->syncPermissions([
+                'procesos.ver',
+                'procesos.recibir',
+                'archivos.subir',
+                'archivos.descargar',
+                'alertas.ver',
+                'alertas.leer',
+                'dashboard.ver',
+            ]);
+        }
+
         $this->command->info('✅ Permisos y roles del sistema creados correctamente.');
     }
 }
-

@@ -105,17 +105,59 @@
                         <h3 class="text-sm font-semibold text-gray-700">Documentos requeridos</h3>
                     </div>
                     <div class="p-5 space-y-4">
+                        @if($puedeEditar)
+                        {{-- Solo mostrar formulario si puede editar (no ha enviado) --}}
                         <form method="POST" action="{{ route('workflow.files.store',$proceso->id) }}" enctype="multipart/form-data"
                               class="grid sm:grid-cols-3 gap-3 p-4 rounded-xl" style="background:#f8fafc;border:1px dashed #cbd5e1">
                             @csrf
                             <input type="hidden" name="area_role" value="{{ $areaRole }}">
+                            @php
+                                // Obtener número de etapa actual
+                                $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+                                $ordenEtapa = $etapaActual ? $etapaActual->orden : 0;
+                            @endphp
                             <select name="tipo_archivo" class="px-3 py-2.5 rounded-xl border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500" style="border-color:#e2e8f0" required>
                                 <option value="">Tipo de documento</option>
-                                <option value="borrador_estudios_previos">Borrador Estudios Previos</option>
-                                <option value="formato_necesidades">Formato de Necesidades</option>
-                                <option value="cotizacion">Cotización</option>
-                                <option value="anexo">Anexo</option>
-                                <option value="otro">Otro</option>
+                                @if($ordenEtapa == 0)
+                                    {{-- ETAPA 0: Solo Estudios Previos --}}
+                                    <option value="estudios_previos">Estudios Previos</option>
+                                @elseif($ordenEtapa == 2)
+                                    {{-- ETAPA 2: Documentos del contratista --}}
+                                    <option value="hoja_vida_sigep">Hoja de Vida SIGEP</option>
+                                    <option value="certificado_estudio">Certificado de Estudio</option>
+                                    <option value="certificado_experiencia">Certificado de Experiencia</option>
+                                    <option value="rut">RUT</option>
+                                    <option value="cedula_contratista">Cédula</option>
+                                    <option value="cuenta_bancaria">Cuenta Bancaria</option>
+                                    <option value="antecedentes">Certificados de Antecedentes</option>
+                                    <option value="seguridad_social">Seguridad Social (Salud/Pensión)</option>
+                                    <option value="certificado_medico">Certificado Médico</option>
+                                    <option value="tarjeta_profesional">Tarjeta Profesional</option>
+                                    <option value="redam">REDAM</option>
+                                @elseif($ordenEtapa == 3)
+                                    {{-- ETAPA 3: Documentos contractuales --}}
+                                    <option value="invitacion_oferta">Invitación a Presentar Oferta</option>
+                                    <option value="solicitud_contratacion">Solicitud de Contratación y Supervisión</option>
+                                    <option value="certificado_idoneidad">Certificado de Idoneidad</option>
+                                    <option value="estudios_previos_finales">Estudios Previos Finales</option>
+                                    <option value="analisis_sector">Análisis del Sector</option>
+                                    <option value="aceptacion_oferta">Aceptación de Oferta</option>
+                                    <option value="ficha_bpin">Ficha BPIN (opcional)</option>
+                                    <option value="excepcion_fiscal">Excepción Regla Fiscal (opcional)</option>
+                                @elseif($ordenEtapa == 4)
+                                    {{-- ETAPA 4: Carpeta precontractual --}}
+                                    <option value="carpeta_precontractual">Carpeta Precontractual Completa</option>
+                                    <option value="anexo">Anexo</option>
+                                @elseif($ordenEtapa == 9)
+                                    {{-- ETAPA 9: ARL y Acta de Inicio --}}
+                                    <option value="solicitud_arl">Solicitud ARL</option>
+                                    <option value="acta_inicio">Acta de Inicio</option>
+                                    <option value="registro_secop">Registro Inicio SECOP II</option>
+                                @else
+                                    {{-- Otras etapas --}}
+                                    <option value="anexo">Anexo</option>
+                                    <option value="otro">Otro</option>
+                                @endif
                             </select>
                             <input type="file" name="archivo" required
                                    class="px-3 py-2 rounded-xl border text-sm bg-white" style="border-color:#e2e8f0">
@@ -125,6 +167,15 @@
                                 Subir documento
                             </button>
                         </form>
+                        @else
+                        {{-- Mensaje si ya envió --}}
+                        <div class="p-4 rounded-xl flex items-center gap-3" style="background:#fef3c7;border:1px solid #fcd34d">
+                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <p class="text-sm font-medium text-yellow-800">Esta etapa ya fue enviada. No puedes agregar más documentos.</p>
+                        </div>
+                        @endif
 
                         <div class="space-y-2">
                             @forelse($archivos as $ar)
@@ -143,7 +194,8 @@
                                        class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                     </a>
-                                    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole($areaRole))
+                                    @if($puedeEditar && (auth()->user()->hasRole('admin') || auth()->user()->hasRole($areaRole)))
+                                    {{-- Solo mostrar botón eliminar si puede editar --}}
                                     <form method="POST" action="{{ route('workflow.files.destroy',$ar->id) }}" onsubmit="return confirm('\u00bfEliminar?')">
                                         @csrf @method('DELETE')
                                         <button class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
@@ -174,7 +226,7 @@
                             <button type="submit"
                                     class="w-full flex items-center gap-3 p-3 rounded-xl text-left text-sm transition-all"
                                     style="background:{{ $c->checked?'#f0fdf4':'#f8fafc' }};border:1px solid {{ $c->checked?'#bbf7d0':'#e2e8f0' }}"
-                                    {{ !$procesoEtapa||!$procesoEtapa->recibido?'disabled':'' }}>
+                                    {{ (!$procesoEtapa||!$procesoEtapa->recibido||!$puedeEditar)?'disabled':'' }}>
                                 <span class="text-base">{{ $c->checked?'\u2705':'\u2610' }}</span>
                                 <span class="font-medium text-gray-700">{{ $c->label }}</span>
                                 @if($c->requerido)<span class="ml-auto text-xs text-gray-400">(requerido)</span>@endif
@@ -186,15 +238,25 @@
                 @endif
 
                 {{-- Enviar --}}
+                @if($puedeEditar)
+                {{-- Solo mostrar botón enviar si puede editar --}}
                 <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
                     <form method="POST" action="{{ route('workflow.enviar',$proceso->id) }}">
                         @csrf
                         <input type="hidden" name="area_role" value="{{ $areaRole }}">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-sm font-semibold text-gray-700">Enviar a Planeación</h3>
+                                @php
+                                    $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+                                    $orden = $etapa ? $etapa->orden : 0;
+                                @endphp
+                                <h3 class="text-sm font-semibold text-gray-700">Enviar a siguiente etapa</h3>
                                 @if(!$enviarHabilitado)
-                                <p class="text-xs mt-0.5" style="color:#dc2626">Sube Borrador de Estudios Previos y Formato de Necesidades para habilitar el envío.</p>
+                                    @if($orden == 0)
+                                        <p class="text-xs mt-0.5" style="color:#dc2626">Debes subir los Estudios Previos para enviar a Descentralización.</p>
+                                    @else
+                                        <p class="text-xs mt-0.5" style="color:#dc2626">Debes subir al menos un documento para avanzar.</p>
+                                    @endif
                                 @endif
                             </div>
                             <button type="submit"
@@ -208,6 +270,17 @@
                         </div>
                     </form>
                 </div>
+                @else
+                {{-- Mensaje si ya envió --}}
+                <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
+                    <div class="flex items-center gap-3 p-4 rounded-xl" style="background:#dcfce7;border:1px solid #86efac">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p class="text-sm font-medium text-green-800">Este proceso ya fue enviado a la siguiente etapa.</p>
+                    </div>
+                </div>
+                @endif
 
             @else
                 <div class="bg-white rounded-2xl border flex flex-col items-center justify-center py-20" style="border-color:#e2e8f0">

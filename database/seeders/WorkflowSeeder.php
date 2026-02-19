@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\DB;
  *
  * FLUJO CORRECTO CD-PN: 10 ETAPAS (0 – 9)
  * ─────────────────────────────────────────────────────────────
- *   Etapa 0  │ unidad_solicitante │ Definición de la Necesidad
- *   Etapa 1  │ planeacion         │ Solicitud de Documentos Iniciales
+ *   Etapa 0  │ unidad_solicitante │ Definición Necesidad → envía a Descentralización
+ *   Etapa 1  │ planeacion         │ Descentralización solicita documentos
  *   Etapa 2  │ unidad_solicitante │ Validación del Contratista
- *   Etapa 3  │ unidad_solicitante │ Elaboración de Documentos Contractuales
- *   Etapa 4  │ unidad_solicitante │ Consolidación del Expediente Precontractual
+ *   Etapa 3  │ unidad_solicitante │ Elaboración Documentos Contractuales
+ *   Etapa 4  │ unidad_solicitante │ Consolidación Expediente Precontractual
  *   Etapa 5  │ juridica           │ Radicación en Sec. Jurídica + Ajustado a Derecho
  *   Etapa 6  │ secop              │ Publicación y Firma en SECOP II
  *   Etapa 7  │ planeacion         │ Solicitud de RPC (Hacienda expide)
@@ -26,11 +26,13 @@ use Illuminate\Support\Facades\DB;
  *   Etapa 9  │ unidad_solicitante │ ARL, Acta de Inicio e Inicio en SECOP II
  * ─────────────────────────────────────────────────────────────
  *
- * ACTORES:
- *   sistemas@demo.com   → Etapas 0, 2, 3, 4, 9  (unidad_solicitante)
- *   planeacion@demo.com → Etapas 1, 7             (planeacion)
- *   juridica@demo.com   → Etapas 5, 8             (juridica)
- *   secop@demo.com      → Etapa 6                 (secop)
+ * ACTORES POR ETAPA:
+ *   jefe.sistemas@demo.com          → Etapa 0 (elabora estudios previos)
+ *   descentralizacion@demo.com      → Etapa 1 (coordina solicitud docs)
+ *   abogado.sistemas@demo.com       → Etapas 2, 3, 4, 9 (validación y docs)
+ *   juridica@demo.com               → Etapas 5, 8 (jurídica)
+ *   secop@demo.com                  → Etapa 6 (SECOP II)
+ *   secretario.planeacion@demo.com  → Etapa 7 (firma solicitud RPC)
  *   hacienda participa  → sub-items de Etapa 7    (expedición RPC)
  */
 class WorkflowSeeder extends Seeder
@@ -71,8 +73,10 @@ class WorkflowSeeder extends Seeder
                 'requiere_viabilidad_economica_inicial' => false,
                 'requiere_estudios_previos_completos'   => true,
                 'observaciones' => 'Flujo CD-PN oficial de la Gobernación de Caldas. 10 etapas (0-9). '
-                    . 'sistemas@demo.com gestiona Etapas 0,2,3,4,9 | planeacion@demo.com gestiona Etapas 1,7 | '
-                    . 'juridica@demo.com gestiona Etapas 5,8 | secop@demo.com gestiona Etapa 6.',
+                    . 'Etapa 0: Jefe Unidad define necesidad y envía a Descentralización. '
+                    . 'Etapa 1: Descentralización coordina solicitud de documentos. '
+                    . 'Etapas 2-4,9: Abogado Unidad gestiona validación y docs. '
+                    . 'Etapas 5,8: Jurídica. Etapa 6: SECOP. Etapa 7: Planeación (RPC).',
                 'etapas' => [
 
                     // ═══════════════════════════════════════════════════════════
@@ -90,19 +94,11 @@ class WorkflowSeeder extends Seeder
                         'notas'       => 'El estudio previo es el insumo principal. Debe definir: objeto contractual, valor estimado, plazo de ejecución y perfil requerido del contratista.',
                         'items' => [
                             [
-                                'label'                   => 'Estudios Previos elaborados (objeto, valor y plazo definidos)',
+                                'label'                   => 'Estudios Previos elaborados y cargados en el sistema',
                                 'tipo_documento'          => 'documento',
                                 'responsable_unidad'      => 'Jefe de Unidad Solicitante',
                                 'responsable_secretaria'  => 'Secretaría de Planeación',
-                                'notas'                   => 'Insumo principal. Firmado por el jefe de la unidad.',
-                                'requerido'               => true,
-                            ],
-                            [
-                                'label'                   => 'Remisión del estudio previo a la Unidad de Descentralización',
-                                'tipo_documento'          => 'solicitud',
-                                'responsable_unidad'      => 'Jefe de Unidad Solicitante',
-                                'responsable_secretaria'  => 'Secretaría de Planeación',
-                                'notas'                   => 'Comunicación oficial a la Unidad de Descentralización para iniciar la solicitud de documentos.',
+                                'notas'                   => 'Documento obligatorio que se carga al crear la solicitud. Define objeto, valor y plazo.',
                                 'requerido'               => true,
                             ],
                         ],

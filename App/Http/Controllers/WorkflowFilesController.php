@@ -21,36 +21,82 @@ class WorkflowFilesController extends Controller
         $proceso = $this->loadProcesoOrFail($proceso);
         $this->authorizeAreaOrAdmin($proceso);
 
+        // ✅ NUEVO: Verificar que la etapa no haya sido enviada
+        $procesoEtapa = DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $proceso->etapa_actual_id)
+            ->first();
+
+        if ($procesoEtapa && $procesoEtapa->enviado) {
+            return back()->withErrors(['archivo' => 'No puedes subir archivos porque esta etapa ya fue enviada.']);
+        }
+
         $request->validate([
             'archivo' => ['required', 'file', 'max:10240'], // 10MB máximo
             'tipo_archivo' => ['required', 'string', 'in:' . implode(',', [
-                // Unidad Solicitante
-                'borrador_estudios_previos',
-                'formato_necesidades',
-                'cotizacion',
-                // Planeación
-                'concepto_favorable',
-                'verificacion_paa',
-                'solicitud_cdp',
-                'estudios_previos_revisados',
-                'aval_planeacion',
-                // Hacienda
-                'certificado_cdp',
-                'certificado_rp',
-                'disponibilidad_presupuestal',
-                // Jurídica
-                'minuta_contrato',
-                'poliza',
-                'certificado_antecedentes',
+                // ETAPA 0 - Definición Necesidad
+                'estudios_previos',
+                // ETAPA 1 - Documentos Iniciales
+                'paa',
+                'no_planta',
+                'paz_salvo_rentas',
+                'paz_salvo_contabilidad',
+                'compatibilidad_gasto',
+                'cdp',
+                'sigep',
+                // ETAPA 2 - Documentos Contratista
+                'hoja_vida_sigep',
+                'certificado_estudio',
+                'certificado_experiencia',
                 'rut',
                 'cedula_contratista',
+                'cuenta_bancaria',
+                'antecedentes',
+                'seguridad_social',
+                'certificado_medico',
+                'tarjeta_profesional',
+                'redam',
+                // ETAPA 3 - Documentos Contractuales
+                'invitacion_oferta',
+                'solicitud_contratacion',
+                'certificado_idoneidad',
                 'estudios_previos_finales',
-                'pliego_condiciones',
-                // SECOP
-                'publicacion_secop',
-                'acta_inicio',
+                'analisis_sector',
+                'aceptacion_oferta',
+                'ficha_bpin',
+                'excepcion_fiscal',
+                // ETAPA 4 - Carpeta Precontractual
+                'carpeta_precontractual',
+                // ETAPA 5 - Jurídica
+                'solicitud_sharepoint',
+                'numero_proceso',
+                'lista_chequeo',
+                'ajustado_derecho',
                 'contrato_firmado',
+                'minuta_contrato',
+                'poliza',
+                // ETAPA 6 - SECOP II
+                'contrato_secop',
+                'aprobacion_juridica',
+                'firma_contratista',
+                'firma_secretario',
+                'contrato_electronico',
+                'publicacion_secop',
+                // ETAPA 7 - RPC
+                'solicitud_rpc',
+                'firma_secretario_planeacion',
+                'radicado_hacienda',
+                'rpc_expedido',
+                'expediente_fisico',
+                'certificado_rp',
                 'registro_presupuestal',
+                // ETAPA 8 - Radicación Final
+                'radicado_final',
+                'numero_contrato',
+                // ETAPA 9 - Acta Inicio
+                'solicitud_arl',
+                'acta_inicio',
+                'registro_secop',
                 // General
                 'anexo',
                 'otro',
@@ -76,7 +122,7 @@ class WorkflowFilesController extends Controller
             $file->storeAs('public/' . dirname($ruta), basename($ruta));
 
             // Registrar en BD
-            DB::table('proceso_etapa_archivos')->insert([
+            $archivoId = DB::table('proceso_etapa_archivos')->insertGetId([
                 'proceso_id'       => $proceso->id,
                 'proceso_etapa_id' => $procesoEtapa->id,
                 'etapa_id'         => $proceso->etapa_actual_id,
@@ -94,7 +140,39 @@ class WorkflowFilesController extends Controller
                 'updated_at'       => now(),
             ]);
             
-            // Registrar auditoría
+            // ✅ NUEVO: Marcar solicitud como 'subido' si existe una pendiente para este tipo de documento
+            $solicitud = DB::table('proceso_documentos_solicitados')
+                ->where('proceso_id', $proceso->id)
+                ->where('tipo_documento', $tipoArchivo)
+                ->where('estado', 'pendiente')
+                ->first();
+
+            if ($solicitud) {
+                DB::table('proceso_documentos_solicitados')
+                    ->where('id', $solicitud->id)
+                    ->update([
+                        'estado' => 'subido',
+                        'archivo_id' => $archivoId,
+                        'subido_por' => auth()->id(),
+                        'updated_at' => now(),
+                    ]);
+
+                // ✅ HABILITAR DOCUMENTOS DEPENDIENTES (ej: CDP cuando se sube Compatibilidad)
+                $this->habilitarDocumentosDependientes($solicitud->id);
+
+                // Auditoría especial para solicitudes
+                $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+                ProcesoAuditoria::registrar(
+                    $proceso->id,
+                    'solicitud_completada',
+                    ucfirst(auth()->user()->roles->first()->name ?? 'Usuario'),
+                    $etapa->nombre,
+                    null,
+                    "Solicitud completada: {$solicitud->nombre_documento} por {$solicitud->area_responsable_nombre}"
+                );
+            }
+
+            // Registrar auditoría normal
             $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
             ProcesoAuditoria::registrar(
                 $proceso->id,
@@ -153,6 +231,16 @@ class WorkflowFilesController extends Controller
 
         $proceso = DB::table('procesos')->where('id', $archivo->proceso_id)->first();
         $user = auth()->user();
+
+        // ✅ NUEVO: Verificar que la etapa no haya sido enviada
+        $procesoEtapa = DB::table('proceso_etapas')
+            ->where('proceso_id', $archivo->proceso_id)
+            ->where('etapa_id', $archivo->etapa_id)
+            ->first();
+
+        if ($procesoEtapa && $procesoEtapa->enviado) {
+            return back()->withErrors(['archivo' => 'No puedes eliminar archivos porque esta etapa ya fue enviada.']);
+        }
 
         if (!$user->hasRole('admin')) {
             // Solo puede eliminar si:
@@ -240,12 +328,25 @@ class WorkflowFilesController extends Controller
         $user = auth()->user();
         if ($user->hasRole('admin')) return;
 
-        // Solo el rol del área actual puede subir/eliminar archivos en ese proceso
-        abort_unless(
-            $proceso->area_actual_role && $user->hasRole($proceso->area_actual_role),
-            403,
-            'No tienes permiso para realizar esta acción en este proceso.'
-        );
+        // ✅ CASO 1: Usuario es del área actual
+        if ($proceso->area_actual_role && $user->hasRole($proceso->area_actual_role)) {
+            return;
+        }
+
+        // ✅ CASO 2: Usuario tiene una solicitud pendiente para subir documento a este proceso
+        $tienesSolicitud = DB::table('proceso_documentos_solicitados')
+            ->where('proceso_id', $proceso->id)
+            ->where('area_responsable_rol', $user->roles->first()->name ?? '')
+            ->where('estado', 'pendiente')
+            ->where('puede_subir', true)
+            ->exists();
+
+        if ($tienesSolicitud) {
+            return;
+        }
+
+        // Si no cumple ninguna condición, denegar
+        abort(403, 'No tienes permiso para realizar esta acción en este proceso.');
     }
 
     private function authorizeViewFiles($proceso): void
@@ -423,5 +524,37 @@ class WorkflowFilesController extends Controller
 
             return redirect()->back()->with('success', 'Archivo reemplazado. Nueva versión en revisión');
         });
+    }
+
+    /**
+     * Habilitar documentos que dependen de una solicitud recién completada
+     * Ejemplo: cuando se sube "Compatibilidad del Gasto", habilita "CDP"
+     */
+    private function habilitarDocumentosDependientes(int $solicitudId): void
+    {
+        // Buscar todas las solicitudes que dependen de esta
+        $solicitudesDependientes = DB::table('proceso_documentos_solicitados')
+            ->where('depende_de_solicitud_id', $solicitudId)
+            ->where('puede_subir', false)
+            ->get();
+
+        foreach ($solicitudesDependientes as $dependiente) {
+            DB::table('proceso_documentos_solicitados')
+                ->where('id', $dependiente->id)
+                ->update([
+                    'puede_subir' => true,
+                    'updated_at' => now(),
+                ]);
+
+            // Registrar auditoría del desbloqueo
+            ProcesoAuditoria::registrar(
+                $dependiente->proceso_id,
+                'documento_desbloqueado',
+                'Sistema',
+                'Etapa 1',
+                null,
+                "Documento desbloqueado: {$dependiente->nombre_documento} - Ahora {$dependiente->area_responsable_nombre} puede subirlo"
+            );
+        }
     }
 }

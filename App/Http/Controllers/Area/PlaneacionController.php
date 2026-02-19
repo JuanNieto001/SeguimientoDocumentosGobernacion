@@ -30,12 +30,23 @@ class PlaneacionController extends Controller
         $procesoEtapa = null;
         $checks = collect();
         $enviarHabilitado = false;
+        $solicitudesPendientes = collect(); // ✅ NUEVO
 
         if ($proceso) {
             $procesoEtapa = DB::table('proceso_etapas')
                 ->where('proceso_id', $proceso->id)
                 ->where('etapa_id', $proceso->etapa_actual_id)
                 ->first();
+
+            // ✅ NUEVO: Cargar solicitudes de documentos si está en Etapa 1
+            $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+            if ($etapaActual && $etapaActual->orden == 1) {
+                $solicitudesPendientes = DB::table('proceso_documentos_solicitados')
+                    ->where('proceso_id', $proceso->id)
+                    ->where('etapa_id', $proceso->etapa_actual_id)
+                    ->orderBy('id')
+                    ->get();
+            }
 
             if ($procesoEtapa) {
                 $checks = DB::table('proceso_etapa_checks as pc')
@@ -45,13 +56,20 @@ class PlaneacionController extends Controller
                     ->orderBy('ei.orden')
                     ->get();
 
-                $faltantes = $checks->where('requerido', 1)->where('checked', 0)->count();
-                $enviarHabilitado = (bool)$procesoEtapa->recibido && $faltantes === 0;
+                // ✅ MODIFICADO: Habilitar envío si todas las solicitudes están subidas
+                if ($etapaActual && $etapaActual->orden == 1) {
+                    $totalSolicitudes = $solicitudesPendientes->count();
+                    $solicitudesSubidas = $solicitudesPendientes->where('estado', 'subido')->count();
+                    $enviarHabilitado = (bool)$procesoEtapa->recibido && $solicitudesSubidas === $totalSolicitudes;
+                } else {
+                    $faltantes = $checks->where('requerido', 1)->where('checked', 0)->count();
+                    $enviarHabilitado = (bool)$procesoEtapa->recibido && $faltantes === 0;
+                }
             }
         }
 
         return view('areas.planeacion', compact(
-            'areaRole', 'procesos', 'proceso', 'procesoEtapa', 'checks', 'enviarHabilitado'
+            'areaRole', 'procesos', 'proceso', 'procesoEtapa', 'checks', 'enviarHabilitado', 'solicitudesPendientes' // ✅ NUEVO
         ));
     }
 

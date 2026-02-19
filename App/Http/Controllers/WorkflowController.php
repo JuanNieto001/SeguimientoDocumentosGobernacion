@@ -20,8 +20,11 @@ class WorkflowController extends Controller
         $user = auth()->user();
         if ($user->hasRole('admin')) return;
 
+        // ✅ MODIFICADO: Permitir al creador operar si es su proceso
+        if ($proceso->created_by == $user->id) return;
+
         // Solo el rol del área actual puede operar el workflow de ese proceso
-        abort_unless($proceso->area_actual_role && $user->hasRole($proceso->area_actual_role), 403);
+        abort_unless($proceso->area_actual_role && $user->hasRole($proceso->area_actual_role), 403, 'Este proceso no está actualmente en tu área.');
     }
 
     private function getProcesoEtapaActual($proceso)
@@ -86,8 +89,13 @@ class WorkflowController extends Controller
                     'updated_at'   => now(),
                 ]);
                 
-                // Registrar auditoría
+                // ✅ NUEVO: Si es Etapa 1 (Descentralización), solicitar documentos automáticamente
                 $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+                if ($etapa && $etapa->orden == 1) {
+                    $this->solicitarDocumentosEtapa1($proceso);
+                }
+                
+                // Registrar auditoría
                 $descripcionAuditoria = "Documento recibido en {$etapa->nombre} ({$proceso->area_actual_role})";
                 ProcesoAuditoria::registrar(
                     $proceso->id,
@@ -159,48 +167,80 @@ class WorkflowController extends Controller
 
             // ========== VALIDACIONES ESPECÍFICAS POR ÁREA ==========
 
-            // 1) UNIDAD SOLICITANTE: validar archivos requeridos en vez de checks
+            // 1) UNIDAD SOLICITANTE: validar archivos requeridos según etapa
             if ($etapaActual->area_role === 'unidad_solicitante') {
                 
-                // Validar que existan archivos requeridos y estén APROBADOS
-                $tiposRequeridos = ['borrador_estudios_previos', 'formato_necesidades'];
+                // Determinar archivos requeridos según la etapa
+                $tiposRequeridos = [];
                 
-                foreach ($tiposRequeridos as $tipo) {
-                    $archivo = DB::table('proceso_etapa_archivos')
+                if ($etapaActual->orden == 0) {
+                    // ETAPA 0: Solo Estudios Previos
+                    $tiposRequeridos = ['estudios_previos'];
+                } elseif ($etapaActual->orden == 2) {
+                    // ETAPA 2: Documentos del contratista (al menos 1)
+                    $tiposRequeridos = []; // Validar que haya al menos 1 archivo
+                } elseif ($etapaActual->orden == 3) {
+                    // ETAPA 3: Documentos contractuales (al menos 1)
+                    $tiposRequeridos = []; // Validar que haya al menos 1 archivo
+                } elseif ($etapaActual->orden == 4) {
+                    // ETAPA 4: Carpeta precontractual
+                    $tiposRequeridos = ['carpeta_precontractual'];
+                } elseif ($etapaActual->orden == 9) {
+                    // ETAPA 9: ARL y Acta de Inicio
+                    $tiposRequeridos = ['acta_inicio'];
+                }
+                
+                // Si hay tipos específicos requeridos, validarlos
+                if (!empty($tiposRequeridos)) {
+                    foreach ($tiposRequeridos as $tipo) {
+                        $archivo = DB::table('proceso_etapa_archivos')
+                            ->where('proceso_id', $proceso->id)
+                            ->where('etapa_id', $proceso->etapa_actual_id)
+                            ->where('tipo_archivo', $tipo)
+                            ->first();
+                        
+                        if (!$archivo) {
+                            $label = match($tipo) {
+                                'estudios_previos' => 'Estudios Previos',
+                                'carpeta_precontractual' => 'Carpeta Precontractual',
+                                'acta_inicio' => 'Acta de Inicio',
+                                default => ucfirst(str_replace('_', ' ', $tipo))
+                            };
+                            abort(422, "No puedes enviar: falta el archivo requerido '{$label}'.");
+                        }
+                        // Si no hay flujo de aprobación, normalizar estado a aprobado
+                        if (!isset($archivo->estado) || $archivo->estado === null || $archivo->estado === 'pendiente') {
+                            DB::table('proceso_etapa_archivos')
+                                ->where('id', $archivo->id)
+                                ->update(['estado' => 'aprobado', 'updated_at' => now()]);
+                            $archivo->estado = 'aprobado';
+                        }
+                        
+                        // Validar que esté aprobado (si existe el campo estado)
+                        if (isset($archivo->estado) && $archivo->estado !== 'aprobado') {
+                            $label = match($tipo) {
+                                'estudios_previos' => 'Estudios Previos',
+                                'carpeta_precontractual' => 'Carpeta Precontractual',
+                                'acta_inicio' => 'Acta de Inicio',
+                                default => ucfirst(str_replace('_', ' ', $tipo))
+                            };
+                            
+                            if ($archivo->estado === 'rechazado') {
+                                abort(422, "No puedes enviar: el archivo '{$label}' fue rechazado. Debes reemplazarlo.");
+                            } else {
+                                abort(422, "No puedes enviar: el archivo '{$label}' está pendiente de aprobación.");
+                            }
+                        }
+                    }
+                } else {
+                    // Si no hay tipos específicos, validar que haya al menos 1 archivo
+                    $archivosCount = DB::table('proceso_etapa_archivos')
                         ->where('proceso_id', $proceso->id)
                         ->where('etapa_id', $proceso->etapa_actual_id)
-                        ->where('tipo_archivo', $tipo)
-                        ->first();
+                        ->count();
                     
-                    if (!$archivo) {
-                        $label = match($tipo) {
-                            'borrador_estudios_previos' => 'Borrador de Estudios Previos',
-                            'formato_necesidades' => 'Formato de Necesidades',
-                            default => $tipo
-                        };
-                        abort(422, "No puedes enviar: falta el archivo requerido '{$label}'.");
-                    }
-                    // Si no hay flujo de aprobación, normalizar estado a aprobado
-                    if (!isset($archivo->estado) || $archivo->estado === null || $archivo->estado === 'pendiente') {
-                        DB::table('proceso_etapa_archivos')
-                            ->where('id', $archivo->id)
-                            ->update(['estado' => 'aprobado', 'updated_at' => now()]);
-                        $archivo->estado = 'aprobado';
-                    }
-                    
-                    // Validar que esté aprobado (si existe el campo estado)
-                    if (isset($archivo->estado) && $archivo->estado !== 'aprobado') {
-                        $label = match($tipo) {
-                            'borrador_estudios_previos' => 'Borrador de Estudios Previos',
-                            'formato_necesidades' => 'Formato de Necesidades',
-                            default => $tipo
-                        };
-                        
-                        if ($archivo->estado === 'rechazado') {
-                            abort(422, "No puedes enviar: el archivo '{$label}' fue rechazado. Debes reemplazarlo.");
-                        } else {
-                            abort(422, "No puedes enviar: el archivo '{$label}' está pendiente de aprobación.");
-                        }
+                    if ($archivosCount === 0) {
+                        abort(422, "No puedes enviar: debes subir al menos un documento.");
                     }
                 }
                 
@@ -332,5 +372,127 @@ class WorkflowController extends Controller
             };
             return back()->with('success', "Proceso enviado a: {$nextEtapa->nombre} → Área: {$areaLabel}.");
         });
+    }
+
+    /**
+     * Solicitar documentos a múltiples áreas (Etapa 1)
+     * Descentralización coordina la solicitud de 7 documentos
+     */
+    private function solicitarDocumentosEtapa1($proceso): void
+    {
+        $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+        $user = auth()->user();
+
+        // Definir documentos a solicitar
+        $documentos = [
+            [
+                'tipo_documento' => 'paa',
+                'nombre_documento' => 'Plan Anual de Adquisiciones (PAA)',
+                'area_responsable_rol' => 'compras',
+                'area_responsable_nombre' => 'Unidad de Compras y Suministros',
+                'secretaria_nombre' => 'Secretaría General',
+                'puede_subir' => true,
+            ],
+            [
+                'tipo_documento' => 'no_planta',
+                'nombre_documento' => 'Certificado No Planta',
+                'area_responsable_rol' => 'talento_humano',
+                'area_responsable_nombre' => 'Jefatura de Gestión del Talento Humano',
+                'secretaria_nombre' => 'Secretaría General',
+                'puede_subir' => true,
+            ],
+            [
+                'tipo_documento' => 'paz_salvo_rentas',
+                'nombre_documento' => 'Paz y Salvo de Rentas',
+                'area_responsable_rol' => 'rentas',
+                'area_responsable_nombre' => 'Unidad de Rentas',
+                'secretaria_nombre' => 'Secretaría de Hacienda',
+                'puede_subir' => true,
+            ],
+            [
+                'tipo_documento' => 'paz_salvo_contabilidad',
+                'nombre_documento' => 'Paz y Salvo de Contabilidad',
+                'area_responsable_rol' => 'contabilidad',
+                'area_responsable_nombre' => 'Unidad de Contabilidad',
+                'secretaria_nombre' => 'Secretaría de Hacienda',
+                'puede_subir' => true,
+            ],
+            [
+                'tipo_documento' => 'compatibilidad_gasto',
+                'nombre_documento' => 'Compatibilidad del Gasto',
+                'area_responsable_rol' => 'inversiones_publicas',
+                'area_responsable_nombre' => 'Unidad de Regalías e Inversiones Públicas',
+                'secretaria_nombre' => 'Secretaría de Planeación',
+                'puede_subir' => true,
+                'es_requerido_para_cdp' => true, // Marcador especial
+            ],
+            [
+                'tipo_documento' => 'sigep',
+                'nombre_documento' => 'SIGEP Validado',
+                'area_responsable_rol' => 'juridica',
+                'area_responsable_nombre' => 'Oficina de Radicación',
+                'secretaria_nombre' => 'Secretaría Jurídica',
+                'puede_subir' => true,
+            ],
+        ];
+
+        // Insertar solicitudes (excepto CDP que se inserta después)
+        $solicitudCompatibilidadId = null;
+
+        foreach ($documentos as $doc) {
+            // Buscar secretaría por nombre
+            $secretaria = DB::table('secretarias')->where('nombre', 'like', '%' . $doc['secretaria_nombre'] . '%')->first();
+
+            $solicitudId = DB::table('proceso_documentos_solicitados')->insertGetId([
+                'proceso_id' => $proceso->id,
+                'etapa_id' => $etapa->id,
+                'tipo_documento' => $doc['tipo_documento'],
+                'nombre_documento' => $doc['nombre_documento'],
+                'area_responsable_rol' => $doc['area_responsable_rol'],
+                'area_responsable_nombre' => $doc['area_responsable_nombre'],
+                'secretaria_responsable_id' => $secretaria?->id,
+                'estado' => 'pendiente',
+                'puede_subir' => $doc['puede_subir'],
+                'solicitado_por' => $user->id,
+                'solicitado_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Guardar ID de Compatibilidad para usarlo en CDP
+            if (isset($doc['es_requerido_para_cdp']) && $doc['es_requerido_para_cdp']) {
+                $solicitudCompatibilidadId = $solicitudId;
+            }
+        }
+
+        // Ahora insertar CDP que DEPENDE de Compatibilidad
+        $secHacienda = DB::table('secretarias')->where('nombre', 'like', '%Hacienda%')->first();
+
+        DB::table('proceso_documentos_solicitados')->insert([
+            'proceso_id' => $proceso->id,
+            'etapa_id' => $etapa->id,
+            'tipo_documento' => 'cdp',
+            'nombre_documento' => 'Certificado de Disponibilidad Presupuestal (CDP)',
+            'area_responsable_rol' => 'presupuesto',
+            'area_responsable_nombre' => 'Unidad de Presupuesto',
+            'secretaria_responsable_id' => $secHacienda?->id,
+            'estado' => 'pendiente',
+            'depende_de_solicitud_id' => $solicitudCompatibilidadId, // ⚠️ DEPENDENCIA
+            'puede_subir' => false, // Bloqueado hasta que suban Compatibilidad
+            'solicitado_por' => $user->id,
+            'solicitado_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Registrar auditoría
+        ProcesoAuditoria::registrar(
+            $proceso->id,
+            'documentos_solicitados',
+            'Descentralización',
+            $etapa->nombre,
+            null,
+            'Se solicitaron 7 documentos a múltiples áreas: PAA, No Planta, Paz y Salvos, Compatibilidad, CDP, SIGEP'
+        );
     }
 }

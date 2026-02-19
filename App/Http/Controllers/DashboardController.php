@@ -22,6 +22,11 @@ class DashboardController extends Controller
         if ($user->hasRole('admin')) {
             return $this->dashboardAdmin();
         }
+        
+        // ✅ NUEVO: Redirigir Descentralización directamente a Mi Bandeja
+        if ($user->hasRole('planeacion')) {
+            return redirect()->route('planeacion.index');
+        }
 
         $base = DB::table('procesos')
             ->leftJoin('workflows', 'workflows.id', '=', 'procesos.workflow_id')

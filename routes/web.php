@@ -11,6 +11,7 @@ use App\Http\Controllers\Area\PlaneacionController;
 use App\Http\Controllers\Area\HaciendaController;
 use App\Http\Controllers\Area\JuridicaController;
 use App\Http\Controllers\Area\SecopController;
+use App\Http\Controllers\Area\SolicitudDocumentosController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\WorkflowController;
@@ -85,6 +86,17 @@ Route::middleware(['auth'])->prefix('alertas')->name('alertas.')->group(function
     Route::post('/leer-todas', [AlertaController::class, 'marcarTodasLeidas'])->name('leer.todas');
     Route::delete('/{alerta}', [AlertaController::class, 'destroy'])->name('destroy');
     Route::get('/widget', [AlertaController::class, 'widget'])->name('widget');
+});
+
+/*
+|--------------------------------------------------------------------------
+| SOLICITUDES DE DOCUMENTOS
+|--------------------------------------------------------------------------
+| Para áreas que reciben solicitudes de otras áreas (compras, contabilidad, etc.)
+*/
+Route::middleware(['auth'])->prefix('solicitudes')->name('solicitudes.')->group(function () {
+    Route::get('/', [SolicitudDocumentosController::class, 'index'])->name('index');
+    Route::get('/{proceso}', [SolicitudDocumentosController::class, 'detalle'])->name('detalle');
 });
 
 /*
@@ -307,5 +319,55 @@ Route::middleware(['auth'])->prefix('procesos')->name('modificaciones.')->group(
         ->middleware('role:admin|juridica');
     Route::get('/{proceso}/modificaciones/{modificacion}/descargar', [ModificacionContractualController::class, 'descargar'])->name('descargar');
 });
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO WORKFLOW - Contratación Directa Persona Natural
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\ContractProcessController;
+use App\Http\Controllers\ProcessDocumentController;
+
+Route::middleware(['auth'])->prefix('contract-processes')->name('contract-processes.')->group(function () {
+    // CRUD básico de procesos
+    Route::get('/', [ContractProcessController::class, 'index'])->name('index');
+    Route::get('/create', [ContractProcessController::class, 'create'])->name('create');
+    Route::post('/', [ContractProcessController::class, 'store'])->name('store');
+    Route::get('/{contractProcess}', [ContractProcessController::class, 'show'])->name('show');
+    Route::put('/{contractProcess}', [ContractProcessController::class, 'update'])->name('update');
+    
+    // Visualización por etapas
+    Route::get('/{contractProcess}/step/{step}', [ContractProcessController::class, 'showStep'])
+        ->name('step')
+        ->where('step', '[0-9]');
+    
+    // Acciones del workflow
+    Route::post('/{contractProcess}/advance', [ContractProcessController::class, 'advance'])->name('advance');
+    Route::post('/{contractProcess}/return', [ContractProcessController::class, 'returnToStep'])->name('return');
+    Route::post('/{contractProcess}/cancel', [ContractProcessController::class, 'cancel'])->name('cancel');
+    
+    // Auditoría y exportación
+    Route::get('/{contractProcess}/audit-log', [ContractProcessController::class, 'auditLog'])->name('audit-log');
+    Route::get('/{contractProcess}/export', [ContractProcessController::class, 'export'])->name('export');
+    
+    // Gestión de documentos
+    Route::post('/{contractProcess}/documents', [ProcessDocumentController::class, 'upload'])->name('documents.upload');
+    Route::get('/{contractProcess}/documents/{document}/download', [ProcessDocumentController::class, 'download'])->name('documents.download');
+    Route::delete('/{contractProcess}/documents/{document}', [ProcessDocumentController::class, 'destroy'])->name('documents.destroy');
+    Route::put('/{contractProcess}/documents/{document}/replace', [ProcessDocumentController::class, 'replace'])->name('documents.replace');
+    
+    // Aprobación de documentos
+    Route::post('/{contractProcess}/documents/{document}/approve', [ProcessDocumentController::class, 'approve'])->name('documents.approve');
+    Route::post('/{contractProcess}/documents/{document}/reject', [ProcessDocumentController::class, 'reject'])->name('documents.reject');
+    Route::post('/{contractProcess}/documents/{document}/request-fixes', [ProcessDocumentController::class, 'requestFixes'])->name('documents.request-fixes');
+    
+    // Firmas
+    Route::post('/{contractProcess}/documents/{document}/sign', [ProcessDocumentController::class, 'addSignature'])->name('documents.sign');
+});
+
+// Ruta global para documentos próximos a vencer
+Route::get('/documents/expiring', [ProcessDocumentController::class, 'expiring'])
+    ->middleware('auth')
+    ->name('documents.expiring');
 
 require __DIR__.'/auth.php';

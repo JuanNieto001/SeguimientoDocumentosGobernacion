@@ -26,7 +26,7 @@
             </div>
             @endif
 
-            <form method="POST" action="{{ route('procesos.store') }}" class="space-y-5">
+            <form method="POST" action="{{ route('procesos.store') }}" enctype="multipart/form-data" class="space-y-5">
                 @csrf
 
                 {{-- Sección 1: Identificación --}}
@@ -153,19 +153,37 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Plazo de ejecución <span class="font-normal text-gray-400">(opcional)</span></label>
-                            <input type="text" name="plazo_ejecucion" value="{{ old('plazo_ejecucion') }}" placeholder="Ej: 4 meses, 90 días..."
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Plazo de ejecución (meses) <span class="text-red-500">*</span></label>
+                            <input type="number" name="plazo_ejecucion_meses" value="{{ old('plazo_ejecucion_meses') }}" required min="1" max="60" placeholder="Ejemplo: 4"
                                 class="w-full rounded-xl px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all" style="border:1px solid #e2e8f0">
+                            <p class="text-xs text-gray-500 mt-1">Ingrese solo el número de meses (1-60)</p>
                         </div>
                     </div>
                 </div>
 
-                {{-- Sección 4: Datos del contratista (opcional/colapsable) --}}
+                {{-- Sección 4: Estudios Previos (OBLIGATORIO) --}}
+                <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">
+                    <div class="px-6 py-4 border-b flex items-center gap-2" style="border-color:#f1f5f9;background:#f8fafc">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-white" style="background:#dc2626">4</div>
+                        <h2 class="text-sm font-semibold text-gray-700">Estudios Previos <span class="text-red-500">*</span></h2>
+                    </div>
+                    <div class="p-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Cargar documento de Estudios Previos <span class="text-red-500">*</span></label>
+                            <input type="file" name="estudios_previos" required accept=".pdf,.doc,.docx"
+                                class="w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer"
+                                style="border:1px solid #e2e8f0; border-radius:12px; padding:8px">
+                            <p class="text-xs text-gray-500 mt-1.5">Formatos permitidos: PDF, DOC, DOCX. Este archivo es obligatorio para crear la solicitud.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Sección 5: Datos del contratista (opcional/colapsable) --}}
                 <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0" x-data="{ open: {{ old('contratista_nombre') ? 'true' : 'false' }} }">
                     <button type="button" @click="open=!open"
                         class="w-full px-6 py-4 border-b flex items-center justify-between text-left transition-colors hover:bg-gray-50" style="border-color:#f1f5f9;background:#f8fafc">
                         <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-white" style="background:#7c3aed">4</div>
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-white" style="background:#7c3aed">5</div>
                             <span class="text-sm font-semibold text-gray-700">Datos del contratista</span>
                             <span class="text-xs text-gray-400">(opcional — se puede completar después)</span>
                         </div>

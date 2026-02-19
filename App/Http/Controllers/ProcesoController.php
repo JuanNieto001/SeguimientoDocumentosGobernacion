@@ -116,16 +116,24 @@ class ProcesoController extends Controller
             'secretaria_origen_id'       => ['required', 'exists:secretarias,id'],
             'unidad_origen_id'           => ['required', 'exists:unidades,id'],
             'valor_estimado'             => ['nullable', 'numeric', 'min:0'],
-            'plazo_ejecucion'            => ['nullable', 'string', 'max:100'],
+            'plazo_ejecucion_meses'      => ['required', 'integer', 'min:1', 'max:60'],
             'contratista_nombre'         => ['nullable', 'string', 'max:255'],
             'contratista_documento'      => ['nullable', 'string', 'max:50'],
             'contratista_tipo_documento' => ['nullable', 'string', 'max:10'],
+            'estudios_previos'           => ['required', 'file', 'max:10240'],
+        ], [
+            'estudios_previos.required' => 'Debe cargar el archivo de Estudios Previos.',
+            'estudios_previos.file' => 'El archivo de Estudios Previos no es válido.',
+            'estudios_previos.max' => 'El archivo de Estudios Previos no puede superar los 10 MB.',
+            'plazo_ejecucion_meses.required' => 'El plazo de ejecución es obligatorio.',
+            'plazo_ejecucion_meses.min' => 'El plazo de ejecución debe ser al menos 1 mes.',
+            'plazo_ejecucion_meses.max' => 'El plazo de ejecución no puede superar 60 meses.',
         ]);
 
         // Autogenerar código consecutivo por workflow y año
         $data['codigo'] = $this->generarCodigoConsecutivo((int) $data['workflow_id']);
 
-        return DB::transaction(function () use ($data, $user) {
+        return DB::transaction(function () use ($data, $user, $request) {
 
             // 1) Buscar etapa inicial del workflow: la de menor orden (incluye 0 si existe)
             $primeraEtapa = DB::table('etapas')
@@ -137,8 +145,16 @@ class ProcesoController extends Controller
             if (!$primeraEtapa) {
                 abort(422, 'El workflow seleccionado no tiene etapas activas.');
             }
+            
+            // ✅ NUEVO: Buscar segunda etapa (Descentralización) para auto-envío
+            $segundaEtapa = DB::table('etapas')
+                ->where('workflow_id', $data['workflow_id'])
+                ->where('activa', 1)
+                ->orderBy('orden')
+                ->skip(1)
+                ->first();
 
-            // 2) Crear proceso
+            // 2) Crear proceso - AHORA EMPIEZA EN DESCENTRALIZACIÓN
             $procesoId = DB::table('procesos')->insertGetId([
                 'workflow_id'                => $data['workflow_id'],
                 'codigo'                     => $data['codigo'],
@@ -148,30 +164,32 @@ class ProcesoController extends Controller
                 'contratista_documento'      => $data['contratista_documento'] ?? null,
                 'contratista_tipo_documento' => $data['contratista_tipo_documento'] ?? null,
                 'valor_estimado'             => $data['valor_estimado'] ?? null,
-                'plazo_ejecucion'            => $data['plazo_ejecucion'] ?? null,
+                'plazo_ejecucion'            => $data['plazo_ejecucion_meses'] . ' meses',
                 'secretaria_origen_id'       => $data['secretaria_origen_id'],
                 'unidad_origen_id'           => $data['unidad_origen_id'],
                 'estado'                     => 'EN_CURSO',
-                'etapa_actual_id'            => $primeraEtapa->id,
-                'area_actual_role'           => $primeraEtapa->area_role,
+                'etapa_actual_id'            => $segundaEtapa ? $segundaEtapa->id : $primeraEtapa->id,
+                'area_actual_role'           => $segundaEtapa ? $segundaEtapa->area_role : $primeraEtapa->area_role,
                 'created_by'                 => $user->id,
                 'created_at'                 => now(),
                 'updated_at'                 => now(),
             ]);
 
-            // 3) Crear instancia de etapa inicial
-            $creadoPorUnidad = $user->hasRole('unidad_solicitante') && $primeraEtapa->area_role === 'unidad_solicitante';
-            $procesoEtapaId = DB::table('proceso_etapas')->insertGetId([
+            // 3) ✅ Crear instancia de Etapa 0 como COMPLETADA AUTOMÁTICAMENTE
+            $procesoEtapa0Id = DB::table('proceso_etapas')->insertGetId([
                 'proceso_id'   => $procesoId,
                 'etapa_id'     => $primeraEtapa->id,
-                'recibido'     => $creadoPorUnidad,
-                'recibido_por' => $creadoPorUnidad ? $user->id : null,
-                'recibido_at'  => $creadoPorUnidad ? now() : null,
+                'recibido'     => true,
+                'recibido_por' => $user->id,
+                'recibido_at'  => now(),
+                'enviado'      => true,
+                'enviado_por'  => $user->id,
+                'enviado_at'   => now(),
                 'created_at'   => now(),
                 'updated_at'   => now(),
             ]);
 
-            // 4) Crear checks de esa etapa
+            // 4) Crear checks de Etapa 0 TODOS MARCADOS
             $items = DB::table('etapa_items')
                 ->where('etapa_id', $primeraEtapa->id)
                 ->orderBy('orden')
@@ -179,25 +197,74 @@ class ProcesoController extends Controller
 
             foreach ($items as $item) {
                 DB::table('proceso_etapa_checks')->insert([
-                    'proceso_etapa_id' => $procesoEtapaId,
+                    'proceso_etapa_id' => $procesoEtapa0Id,
                     'etapa_item_id'    => $item->id,
-                    'checked'          => false,
+                    'checked'          => true,
+                    'checked_by'       => $user->id,
+                    'checked_at'       => now(),
                     'created_at'       => now(),
                     'updated_at'       => now(),
                 ]);
             }
+            
+            // 5) ✅ Subir archivo de Estudios Previos
+            if ($request->hasFile('estudios_previos')) {
+                $file = $request->file('estudios_previos');
+                $nombreGuardado = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $ruta = "procesos/{$procesoId}/etapa_{$primeraEtapa->id}/{$nombreGuardado}";
+                $file->storeAs('public/' . dirname($ruta), basename($ruta));
+                
+                DB::table('proceso_etapa_archivos')->insert([
+                    'proceso_id'       => $procesoId,
+                    'proceso_etapa_id' => $procesoEtapa0Id,
+                    'etapa_id'         => $primeraEtapa->id,
+                    'tipo_archivo'     => 'estudios_previos',
+                    'nombre_original'  => $file->getClientOriginalName(),
+                    'nombre_guardado'  => $nombreGuardado,
+                    'ruta'             => $ruta,
+                    'mime_type'        => $file->getMimeType(),
+                    'tamanio'          => $file->getSize(),
+                    'estado'           => 'aprobado',
+                    'uploaded_by'      => $user->id,
+                    'uploaded_at'      => now(),
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
+            }
+            
+            // 6) ✅ Crear instancia de Etapa 1 (Descentralización) si existe
+            if ($segundaEtapa) {
+                $procesoEtapa1Id = DB::table('proceso_etapas')->insertGetId([
+                    'proceso_id'   => $procesoId,
+                    'etapa_id'     => $segundaEtapa->id,
+                    'recibido'     => false,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
+                
+                // Crear checks de Etapa 1
+                $items1 = DB::table('etapa_items')
+                    ->where('etapa_id', $segundaEtapa->id)
+                    ->orderBy('orden')
+                    ->get(['id']);
 
-            // 5) Redirigir a la bandeja correcta (según el área actual)
-            $url = match ($primeraEtapa->area_role) {
-                'unidad_solicitante' => url('/unidad?proceso_id=' . $procesoId),
-                'planeacion'         => url('/planeacion?proceso_id=' . $procesoId),
-                'hacienda'           => url('/hacienda?proceso_id=' . $procesoId),
-                'juridica'           => url('/juridica?proceso_id=' . $procesoId),
-                'secop'              => url('/secop?proceso_id=' . $procesoId),
-                default              => route('procesos.index'),
-            };
+                foreach ($items1 as $item) {
+                    DB::table('proceso_etapa_checks')->insert([
+                        'proceso_etapa_id' => $procesoEtapa1Id,
+                        'etapa_item_id'    => $item->id,
+                        'checked'          => false,
+                        'created_at'       => now(),
+                        'updated_at'       => now(),
+                    ]);
+                }
+            }
 
-            return redirect($url)->with('success', 'Solicitud creada correctamente.');
+            // 7) Redirigir a la bandeja de Descentralización
+            $url = $segundaEtapa 
+                ? url('/planeacion?proceso_id=' . $procesoId)
+                : url('/unidad?proceso_id=' . $procesoId);
+
+            return redirect($url)->with('success', 'Solicitud creada y enviada a Descentralización correctamente.');
         });
     }
 
