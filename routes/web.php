@@ -21,10 +21,6 @@ use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ModificacionContractualController;
 use App\Http\Controllers\Admin\LogsController;
-use App\Http\Controllers\PlaneacionController as PlaneacionAreaController;
-use App\Http\Controllers\HaciendaController as HaciendaAreaController;
-use App\Http\Controllers\JuridicaController as JuridicaAreaController;
-use App\Http\Controllers\SecopController as SecopAreaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -255,52 +251,52 @@ Route::middleware(['auth', 'role:admin|planeacion'])
     ->prefix('planeacion')
     ->name('planeacion.')
     ->group(function () {
-        Route::get('/', [PlaneacionAreaController::class, 'index'])->name('index');
-        Route::get('/procesos/{proceso}', [PlaneacionAreaController::class, 'show'])->name('show');
-        Route::post('/procesos/{proceso}/aprobar', [PlaneacionAreaController::class, 'aprobar'])->name('aprobar');
-        Route::post('/procesos/{proceso}/rechazar', [PlaneacionAreaController::class, 'rechazar'])->name('rechazar');
-        Route::get('/reportes', [PlaneacionAreaController::class, 'reportes'])->name('reportes');
+        Route::get('/', [PlaneacionController::class, 'index'])->name('index');
+        Route::get('/procesos/{proceso}', [PlaneacionController::class, 'show'])->name('show');
+        Route::post('/procesos/{proceso}/aprobar', [PlaneacionController::class, 'aprobar'])->name('aprobar');
+        Route::post('/procesos/{proceso}/rechazar', [PlaneacionController::class, 'rechazar'])->name('rechazar');
+        Route::get('/reportes', [PlaneacionController::class, 'reportes'])->name('reportes');
     });
 
 Route::middleware(['auth', 'role:admin|hacienda'])
     ->prefix('hacienda')
     ->name('hacienda.')
     ->group(function () {
-        Route::get('/', [HaciendaAreaController::class, 'index'])->name('index');
-        Route::get('/procesos/{proceso}', [HaciendaAreaController::class, 'show'])->name('show');
-        Route::post('/procesos/{proceso}/cdp', [HaciendaAreaController::class, 'emitirCDP'])->name('cdp');
-        Route::post('/procesos/{proceso}/rp', [HaciendaAreaController::class, 'emitirRP'])->name('rp');
-        Route::post('/procesos/{proceso}/aprobar', [HaciendaAreaController::class, 'aprobar'])->name('aprobar');
-        Route::post('/procesos/{proceso}/rechazar', [HaciendaAreaController::class, 'rechazar'])->name('rechazar');
-        Route::get('/reportes', [HaciendaAreaController::class, 'reportes'])->name('reportes');
+        Route::get('/', [HaciendaController::class, 'index'])->name('index');
+        Route::get('/procesos/{proceso}', [HaciendaController::class, 'show'])->name('show');
+        Route::post('/procesos/{proceso}/cdp', [HaciendaController::class, 'emitirCDP'])->name('cdp');
+        Route::post('/procesos/{proceso}/rp', [HaciendaController::class, 'emitirRP'])->name('rp');
+        Route::post('/procesos/{proceso}/aprobar', [HaciendaController::class, 'aprobar'])->name('aprobar');
+        Route::post('/procesos/{proceso}/rechazar', [HaciendaController::class, 'rechazar'])->name('rechazar');
+        Route::get('/reportes', [HaciendaController::class, 'reportes'])->name('reportes');
     });
 
 Route::middleware(['auth', 'role:admin|juridica'])
     ->prefix('juridica')
     ->name('juridica.')
     ->group(function () {
-        Route::get('/', [JuridicaAreaController::class, 'index'])->name('index');
-        Route::get('/procesos/{proceso}', [JuridicaAreaController::class, 'show'])->name('show');
-        Route::post('/procesos/{proceso}/ajustado', [JuridicaAreaController::class, 'emitirAjustado'])->name('ajustado');
-        Route::post('/procesos/{proceso}/verificar-contratista', [JuridicaAreaController::class, 'verificarContratista'])->name('verificar.contratista');
-        Route::post('/procesos/{proceso}/polizas', [JuridicaAreaController::class, 'aprobarPolizas'])->name('polizas');
-        Route::post('/procesos/{proceso}/aprobar', [JuridicaAreaController::class, 'aprobar'])->name('aprobar');
-        Route::post('/procesos/{proceso}/rechazar', [JuridicaAreaController::class, 'rechazar'])->name('rechazar');
-        Route::get('/reportes', [JuridicaAreaController::class, 'reportes'])->name('reportes');
+        Route::get('/', [JuridicaController::class, 'index'])->name('index');
+        Route::get('/procesos/{proceso}', [JuridicaController::class, 'show'])->name('show');
+        Route::post('/procesos/{proceso}/ajustado', [JuridicaController::class, 'emitirAjustado'])->name('ajustado');
+        Route::post('/procesos/{proceso}/verificar-contratista', [JuridicaController::class, 'verificarContratista'])->name('verificar.contratista');
+        Route::post('/procesos/{proceso}/polizas', [JuridicaController::class, 'aprobarPolizas'])->name('polizas');
+        Route::post('/procesos/{proceso}/aprobar', [JuridicaController::class, 'aprobar'])->name('aprobar');
+        Route::post('/procesos/{proceso}/rechazar', [JuridicaController::class, 'rechazar'])->name('rechazar');
+        Route::get('/reportes', [JuridicaController::class, 'reportes'])->name('reportes');
     });
 
 Route::middleware(['auth', 'role:admin|secop'])
     ->prefix('secop')
     ->name('secop.')
     ->group(function () {
-        Route::get('/', [SecopAreaController::class, 'index'])->name('index');
-        Route::get('/procesos/{proceso}', [SecopAreaController::class, 'show'])->name('show');
-        Route::post('/procesos/{proceso}/publicar', [SecopAreaController::class, 'publicar'])->name('publicar');
-        Route::post('/procesos/{proceso}/contrato', [SecopAreaController::class, 'registrarContrato'])->name('contrato');
-        Route::post('/procesos/{proceso}/acta-inicio', [SecopAreaController::class, 'registrarActaInicio'])->name('acta.inicio');
-        Route::post('/procesos/{proceso}/cerrar', [SecopAreaController::class, 'cerrar'])->name('cerrar');
-        Route::post('/procesos/{proceso}/aprobar', [SecopAreaController::class, 'aprobar'])->name('aprobar');
-        Route::get('/reportes', [SecopAreaController::class, 'reportes'])->name('reportes');
+        Route::get('/', [SecopController::class, 'index'])->name('index');
+        Route::get('/procesos/{proceso}', [SecopController::class, 'show'])->name('show');
+        Route::post('/procesos/{proceso}/publicar', [SecopController::class, 'publicar'])->name('publicar');
+        Route::post('/procesos/{proceso}/contrato', [SecopController::class, 'registrarContrato'])->name('contrato');
+        Route::post('/procesos/{proceso}/acta-inicio', [SecopController::class, 'registrarActaInicio'])->name('acta.inicio');
+        Route::post('/procesos/{proceso}/cerrar', [SecopController::class, 'cerrar'])->name('cerrar');
+        Route::post('/procesos/{proceso}/aprobar', [SecopController::class, 'aprobar'])->name('aprobar');
+        Route::get('/reportes', [SecopController::class, 'reportes'])->name('reportes');
     });
 
 /*

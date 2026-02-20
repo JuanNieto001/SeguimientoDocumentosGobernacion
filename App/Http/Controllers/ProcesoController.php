@@ -259,12 +259,9 @@ class ProcesoController extends Controller
                 }
             }
 
-            // 7) Redirigir a la bandeja de Descentralización
-            $url = $segundaEtapa 
-                ? url('/planeacion?proceso_id=' . $procesoId)
-                : url('/unidad?proceso_id=' . $procesoId);
-
-            return redirect($url)->with('success', 'Solicitud creada y enviada a Descentralización correctamente.');
+            // 7) Redirigir a "Mis Solicitudes" (/procesos)
+            return redirect()->route('procesos.index')
+                ->with('success', 'Solicitud creada y enviada a Descentralización correctamente.');
         });
     }
 

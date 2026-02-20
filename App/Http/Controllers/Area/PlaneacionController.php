@@ -13,64 +13,28 @@ class PlaneacionController extends Controller
 {
     public function index()
     {
-        $areaRole = 'planeacion';
-
-        $procesos = DB::table('procesos')
-            ->where('area_actual_role', $areaRole)
+        // Obtener el primer proceso pendiente en Planeación
+        $primerProceso = DB::table('procesos')
+            ->where('area_actual_role', 'planeacion')
             ->where('estado', 'EN_CURSO')
             ->orderByDesc('id')
-            ->get();
+            ->first();
 
-        $selectedId = request('proceso_id') ?? ($procesos->first()->id ?? null);
-
-        $proceso = $selectedId
-            ? DB::table('procesos')->where('id', $selectedId)->first()
-            : null;
-
-        $procesoEtapa = null;
-        $checks = collect();
-        $enviarHabilitado = false;
-        $solicitudesPendientes = collect(); // ✅ NUEVO
-
-        if ($proceso) {
-            $procesoEtapa = DB::table('proceso_etapas')
-                ->where('proceso_id', $proceso->id)
-                ->where('etapa_id', $proceso->etapa_actual_id)
-                ->first();
-
-            // ✅ NUEVO: Cargar solicitudes de documentos si está en Etapa 1
-            $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
-            if ($etapaActual && $etapaActual->orden == 1) {
-                $solicitudesPendientes = DB::table('proceso_documentos_solicitados')
-                    ->where('proceso_id', $proceso->id)
-                    ->where('etapa_id', $proceso->etapa_actual_id)
-                    ->orderBy('id')
-                    ->get();
-            }
-
-            if ($procesoEtapa) {
-                $checks = DB::table('proceso_etapa_checks as pc')
-                    ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
-                    ->select('pc.id as check_id', 'pc.checked', 'ei.label', 'ei.requerido')
-                    ->where('pc.proceso_etapa_id', $procesoEtapa->id)
-                    ->orderBy('ei.orden')
-                    ->get();
-
-                // ✅ MODIFICADO: Habilitar envío si todas las solicitudes están subidas
-                if ($etapaActual && $etapaActual->orden == 1) {
-                    $totalSolicitudes = $solicitudesPendientes->count();
-                    $solicitudesSubidas = $solicitudesPendientes->where('estado', 'subido')->count();
-                    $enviarHabilitado = (bool)$procesoEtapa->recibido && $solicitudesSubidas === $totalSolicitudes;
-                } else {
-                    $faltantes = $checks->where('requerido', 1)->where('checked', 0)->count();
-                    $enviarHabilitado = (bool)$procesoEtapa->recibido && $faltantes === 0;
-                }
-            }
+        // Si hay procesos pendientes, redirigir al detalle del primero
+        if ($primerProceso) {
+            return redirect()->route('planeacion.show', $primerProceso->id);
         }
 
-        return view('areas.planeacion', compact(
-            'areaRole', 'procesos', 'proceso', 'procesoEtapa', 'checks', 'enviarHabilitado', 'solicitudesPendientes' // ✅ NUEVO
-        ));
+        // Si no hay procesos pendientes, mostrar mensaje
+        return view('areas.planeacion', [
+            'areaRole' => 'planeacion',
+            'procesos' => collect(),
+            'proceso' => null,
+            'procesoEtapa' => null,
+            'checks' => collect(),
+            'enviarHabilitado' => false,
+            'solicitudesPendientes' => collect(),
+        ]);
     }
 
     /**
@@ -87,10 +51,30 @@ class PlaneacionController extends Controller
             'auditorias.usuario'
         ])->findOrFail($id);
 
-        // Verificar que sea del área de planeación
-        abort_unless($proceso->area_actual_role === 'planeacion' || auth()->user()->hasRole('admin'), 403);
+        // Verificar que sea del área de planeación o admin
+        if ($proceso->area_actual_role !== 'planeacion' && !auth()->user()->hasRole('admin')) {
+            return redirect()->route('planeacion.index')
+                ->with('success', 'El proceso fue enviado exitosamente a la siguiente área.');
+        }
 
-        return view('areas.planeacion-detalle', compact('proceso'));
+        // Cargar la etapa actual del proceso con sus checks
+        $procesoEtapaActual = DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $proceso->etapa_actual_id)
+            ->first();
+
+        // Cargar checks si existe la etapa
+        $checks = collect();
+        if ($procesoEtapaActual) {
+            $checks = DB::table('proceso_etapa_checks as pc')
+                ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
+                ->select('pc.id', 'pc.checked', 'pc.checked_by', 'pc.checked_at', 'ei.label', 'ei.requerido')
+                ->where('pc.proceso_etapa_id', $procesoEtapaActual->id)
+                ->orderBy('ei.orden')
+                ->get();
+        }
+
+        return view('planeacion.show', compact('proceso', 'procesoEtapaActual', 'checks'));
     }
 
     /**
@@ -136,18 +120,83 @@ class PlaneacionController extends Controller
     {
         $proceso = Proceso::with('etapaActual')->findOrFail($id);
         
-        abort_unless($proceso->area_actual_role === 'planeacion', 403);
+        // Validar que el proceso esté en el área de planeación
+        if ($proceso->area_actual_role !== 'planeacion') {
+            return redirect()->route('planeacion.index')
+                ->with('error', 'Este proceso ya no está en tu bandeja.');
+        }
 
         $request->validate([
             'observaciones' => 'nullable|string|max:500',
         ]);
 
-        DB::transaction(function () use ($proceso, $request) {
-            // Actualizar estado
-            $proceso->update([
-                'aprobado_planeacion' => true,
-                'observaciones_planeacion' => $request->observaciones,
-            ]);
+        $result = DB::transaction(function () use ($proceso, $request) {
+            // Marcar etapa actual como enviada
+            $procesoEtapaActual = DB::table('proceso_etapas')
+                ->where('proceso_id', $proceso->id)
+                ->where('etapa_id', $proceso->etapa_actual_id)
+                ->first();
+            
+            if ($procesoEtapaActual) {
+                DB::table('proceso_etapas')
+                    ->where('id', $procesoEtapaActual->id)
+                    ->update([
+                        'enviado' => true,
+                        'enviado_por' => auth()->id(),
+                        'enviado_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            }
+            
+            // Buscar siguiente etapa
+            $siguienteEtapa = DB::table('etapas')
+                ->where('workflow_id', $proceso->workflow_id)
+                ->where('orden', '>', $proceso->etapaActual->orden)
+                ->where('activa', 1)
+                ->orderBy('orden')
+                ->first();
+            
+            if ($siguienteEtapa) {
+                // Actualizar proceso a siguiente etapa
+                $proceso->update([
+                    'etapa_actual_id' => $siguienteEtapa->id,
+                    'area_actual_role' => $siguienteEtapa->area_role,
+                    'aprobado_planeacion' => true,
+                    'observaciones_planeacion' => $request->observaciones,
+                ]);
+                
+                // Crear instancia de siguiente etapa
+                $procesoEtapaSiguiente = DB::table('proceso_etapas')->insertGetId([
+                    'proceso_id' => $proceso->id,
+                    'etapa_id' => $siguienteEtapa->id,
+                    'recibido' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                // Crear checks de siguiente etapa
+                $items = DB::table('etapa_items')
+                    ->where('etapa_id', $siguienteEtapa->id)
+                    ->orderBy('orden')
+                    ->get(['id']);
+                
+                foreach ($items as $item) {
+                    DB::table('proceso_etapa_checks')->insert([
+                        'proceso_etapa_id' => $procesoEtapaSiguiente,
+                        'etapa_item_id' => $item->id,
+                        'checked' => false,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            } else {
+                // No hay más etapas - proceso completado
+                $proceso->update([
+                    'estado' => 'completado',
+                    'aprobado_planeacion' => true,
+                    'observaciones_planeacion' => $request->observaciones,
+                ]);
+            }
 
             ProcesoAuditoria::registrar(
                 $proceso->id,
@@ -157,9 +206,15 @@ class PlaneacionController extends Controller
                 null,
                 "Proceso aprobado por Planeación. Observaciones: " . ($request->observaciones ?? 'Ninguna')
             );
+            
+            return true;
         });
 
-        return redirect()->back()->with('success', 'Proceso aprobado por Planeación');
+        if ($result) {
+            return redirect()->route('planeacion.index')->with('success', 'Proceso aprobado y enviado a la siguiente etapa');
+        }
+        
+        return redirect()->route('planeacion.index')->with('error', 'Error al aprobar el proceso');
     }
 
     /**
@@ -169,10 +224,14 @@ class PlaneacionController extends Controller
     {
         $proceso = Proceso::with('etapaActual')->findOrFail($id);
         
-        abort_unless($proceso->area_actual_role === 'planeacion', 403);
+        // Validar que el proceso esté en el área de planeación
+        if ($proceso->area_actual_role !== 'planeacion') {
+            return redirect()->route('planeacion.index')
+                ->with('error', 'Este proceso ya no está en tu bandeja.');
+        }
 
         $request->validate([
-            'observaciones' => 'required|string|min:10|max:500',
+            'motivo_rechazo' => 'required|string|min:10|max:500',
         ]);
 
         DB::transaction(function () use ($proceso, $request) {
@@ -180,7 +239,7 @@ class PlaneacionController extends Controller
             $proceso->update([
                 'estado' => 'rechazado',
                 'rechazado_por_area' => 'planeacion',
-                'observaciones_rechazo' => $request->observaciones,
+                'observaciones_rechazo' => $request->motivo_rechazo,
             ]);
 
             ProcesoAuditoria::registrar(
@@ -189,11 +248,11 @@ class PlaneacionController extends Controller
                 'planeacion',
                 $proceso->etapaActual->nombre ?? 'Rechazo Planeación',
                 null,
-                "Proceso rechazado por Planeación. Motivo: {$request->observaciones}"
+                "Proceso rechazado por Planeación. Motivo: {$request->motivo_rechazo}"
             );
         });
 
-        return redirect()->back()->with('warning', 'Proceso rechazado. Se ha notificado al área solicitante');
+        return redirect()->route('planeacion.index')->with('warning', 'Proceso rechazado. Se ha notificado al área solicitante');
     }
 
     /**

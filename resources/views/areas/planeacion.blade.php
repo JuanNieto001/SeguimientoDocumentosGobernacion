@@ -72,6 +72,11 @@
                                             </p>
                                         </div>
                                         <div class="flex gap-2">
+                                            <a href="{{ route('workflow.files.download', ['archivo' => $documentoEstudiosPrevios->id, 'inline' => 1]) }}" 
+                                               class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                                               target="_blank">
+                                                👁️ Ver
+                                            </a>
                                             <a href="{{ route('workflow.files.download', $documentoEstudiosPrevios->id) }}" 
                                                class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                                                target="_blank">

@@ -216,6 +216,14 @@ class WorkflowFilesController extends Controller
         $fullPath = 'public/' . $archivo->ruta;
         abort_unless(Storage::exists($fullPath), 404, 'El archivo no existe en el servidor.');
 
+        // Si viene el parámetro inline=1, mostrar en navegador en lugar de descargar
+        $inline = request()->query('inline') == '1';
+        
+        if ($inline) {
+            // Storage::path() devuelve la ruta absoluta correcta según el disco (incluyendo /private en Laravel 11)
+            return response()->file(Storage::path($fullPath));
+        }
+
         return Storage::download($fullPath, $archivo->nombre_original);
     }
 
