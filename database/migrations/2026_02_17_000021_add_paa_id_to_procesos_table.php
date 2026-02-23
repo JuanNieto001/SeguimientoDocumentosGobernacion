@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('procesos', function (Blueprint $table) {
             // Agregar relación con PAA
-            $table->foreignId('paa_id')->nullable()->after('workflow_id')->constrained('plan_anual_adquisiciones')->nullOnDelete();
+            $table->foreignId('paa_id')->nullable()->constrained('plan_anual_adquisiciones')->nullOnDelete();
         });
     }
 
@@ -28,3 +28,4 @@ return new class extends Migration
         });
     }
 };
+

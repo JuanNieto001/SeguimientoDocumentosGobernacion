@@ -14,93 +14,93 @@ return new class extends Migration
         Schema::table('procesos', function (Blueprint $table) {
             // Campos de Planeación
             if (!Schema::hasColumn('procesos', 'paa_verificado')) {
-                $table->boolean('paa_verificado')->default(false)->after('estado');
+                $table->boolean('paa_verificado')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'paa_id')) {
-                $table->foreignId('paa_id')->nullable()->constrained('plan_anual_adquisiciones')->after('paa_verificado');
+                $table->foreignId('paa_id')->nullable()->constrained('plan_anual_adquisiciones');
             }
             if (!Schema::hasColumn('procesos', 'aprobado_planeacion')) {
-                $table->boolean('aprobado_planeacion')->default(false)->after('paa_id');
+                $table->boolean('aprobado_planeacion')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'observaciones_planeacion')) {
-                $table->text('observaciones_planeacion')->nullable()->after('aprobado_planeacion');
+                $table->text('observaciones_planeacion')->nullable();
             }
 
             // Campos de Hacienda
             if (!Schema::hasColumn('procesos', 'numero_cdp')) {
-                $table->string('numero_cdp')->nullable()->after('observaciones_planeacion');
+                $table->string('numero_cdp')->nullable();
             }
             if (!Schema::hasColumn('procesos', 'valor_cdp')) {
-                $table->decimal('valor_cdp', 15, 2)->nullable()->after('numero_cdp');
+                $table->decimal('valor_cdp', 15, 2)->nullable();
             }
             if (!Schema::hasColumn('procesos', 'rubro_presupuestal')) {
-                $table->string('rubro_presupuestal')->nullable()->after('valor_cdp');
+                $table->string('rubro_presupuestal')->nullable();
             }
             if (!Schema::hasColumn('procesos', 'cdp_emitido')) {
-                $table->boolean('cdp_emitido')->default(false)->after('rubro_presupuestal');
+                $table->boolean('cdp_emitido')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'numero_rp')) {
-                $table->string('numero_rp')->nullable()->after('cdp_emitido');
+                $table->string('numero_rp')->nullable();
             }
             if (!Schema::hasColumn('procesos', 'valor_rp')) {
-                $table->decimal('valor_rp', 15, 2)->nullable()->after('numero_rp');
+                $table->decimal('valor_rp', 15, 2)->nullable();
             }
             if (!Schema::hasColumn('procesos', 'rp_emitido')) {
-                $table->boolean('rp_emitido')->default(false)->after('valor_rp');
+                $table->boolean('rp_emitido')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'aprobado_hacienda')) {
-                $table->boolean('aprobado_hacienda')->default(false)->after('rp_emitido');
+                $table->boolean('aprobado_hacienda')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'observaciones_hacienda')) {
-                $table->text('observaciones_hacienda')->nullable()->after('aprobado_hacienda');
+                $table->text('observaciones_hacienda')->nullable();
             }
 
             // Campos de Jurídica
             if (!Schema::hasColumn('procesos', 'ajustado_emitido')) {
-                $table->boolean('ajustado_emitido')->default(false)->after('observaciones_hacienda');
+                $table->boolean('ajustado_emitido')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'numero_ajustado')) {
-                $table->string('numero_ajustado')->nullable()->after('ajustado_emitido');
+                $table->string('numero_ajustado')->nullable();
             }
             if (!Schema::hasColumn('procesos', 'contratista_verificado')) {
-                $table->boolean('contratista_verificado')->default(false)->after('numero_ajustado');
+                $table->boolean('contratista_verificado')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'polizas_aprobadas')) {
-                $table->boolean('polizas_aprobadas')->default(false)->after('contratista_verificado');
+                $table->boolean('polizas_aprobadas')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'aprobado_juridica')) {
-                $table->boolean('aprobado_juridica')->default(false)->after('polizas_aprobadas');
+                $table->boolean('aprobado_juridica')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'observaciones_juridica')) {
-                $table->text('observaciones_juridica')->nullable()->after('aprobado_juridica');
+                $table->text('observaciones_juridica')->nullable();
             }
 
             // Campos de SECOP
             if (!Schema::hasColumn('procesos', 'secop_publicado')) {
-                $table->boolean('secop_publicado')->default(false)->after('observaciones_juridica');
+                $table->boolean('secop_publicado')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'secop_codigo')) {
-                $table->string('secop_codigo')->nullable()->after('secop_publicado');
+                $table->string('secop_codigo')->nullable();
             }
             if (!Schema::hasColumn('procesos', 'contrato_registrado')) {
-                $table->boolean('contrato_registrado')->default(false)->after('secop_codigo');
+                $table->boolean('contrato_registrado')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'numero_contrato')) {
-                $table->string('numero_contrato')->nullable()->after('contrato_registrado');
+                $table->string('numero_contrato')->nullable();
             }
             if (!Schema::hasColumn('procesos', 'acta_inicio_registrada')) {
-                $table->boolean('acta_inicio_registrada')->default(false)->after('numero_contrato');
+                $table->boolean('acta_inicio_registrada')->default(false);
             }
             if (!Schema::hasColumn('procesos', 'fecha_acta_inicio')) {
-                $table->date('fecha_acta_inicio')->nullable()->after('acta_inicio_registrada');
+                $table->date('fecha_acta_inicio')->nullable();
             }
 
             // Campos generales
             if (!Schema::hasColumn('procesos', 'rechazado_por_area')) {
-                $table->string('rechazado_por_area')->nullable()->after('fecha_acta_inicio');
+                $table->string('rechazado_por_area')->nullable();
             }
             if (!Schema::hasColumn('procesos', 'observaciones_rechazo')) {
-                $table->text('observaciones_rechazo')->nullable()->after('rechazado_por_area');
+                $table->text('observaciones_rechazo')->nullable();
             }
         });
     }
@@ -133,3 +133,4 @@ return new class extends Migration
         });
     }
 };
+

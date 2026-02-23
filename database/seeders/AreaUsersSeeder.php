@@ -10,7 +10,7 @@ class AreaUsersSeeder extends Seeder
 {
     public function run(): void
     {
-        $password = Hash::make('Admin123*');
+        $password = Hash::make('12345');
 
         $users = [
             [

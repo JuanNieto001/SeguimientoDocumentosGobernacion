@@ -10,23 +10,23 @@ return new class extends Migration
     {
         // Agregar supervisor a procesos
         Schema::table('procesos', function (Blueprint $table) {
-            $table->foreignId('supervisor_id')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
-            $table->timestamp('supervisor_asignado_at')->nullable()->after('supervisor_id');
-            $table->decimal('valor_inicial', 15, 2)->nullable()->after('descripcion');
-            $table->integer('plazo_dias')->nullable()->after('valor_inicial');
-            $table->date('fecha_inicio_contrato')->nullable()->after('plazo_dias');
-            $table->date('fecha_fin_contrato')->nullable()->after('fecha_inicio_contrato');
+            $table->foreignId('supervisor_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('supervisor_asignado_at')->nullable();
+            $table->decimal('valor_inicial', 15, 2)->nullable();
+            $table->integer('plazo_dias')->nullable();
+            $table->date('fecha_inicio_contrato')->nullable();
+            $table->date('fecha_fin_contrato')->nullable();
         });
 
         // Agregar días estimados a etapas
         Schema::table('etapas', function (Blueprint $table) {
-            $table->integer('dias_estimados')->nullable()->after('area_role')->comment('Tiempo estimado en días para completar esta etapa');
+            $table->integer('dias_estimados')->nullable()->comment('Tiempo estimado en días para completar esta etapa');
         });
 
         // Agregar campos de seguimiento a proceso_etapas
         Schema::table('proceso_etapas', function (Blueprint $table) {
-            $table->boolean('en_retraso')->default(false)->after('enviado_at');
-            $table->integer('dias_en_etapa')->nullable()->after('en_retraso')->comment('Días transcurridos en esta etapa');
+            $table->boolean('en_retraso')->default(false);
+            $table->integer('dias_en_etapa')->nullable()->comment('Días transcurridos en esta etapa');
         });
     }
 
@@ -53,3 +53,4 @@ return new class extends Migration
         });
     }
 };
+

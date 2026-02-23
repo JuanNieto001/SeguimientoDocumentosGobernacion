@@ -327,7 +327,7 @@ class DashboardController extends Controller
             ->join('workflows', 'procesos.workflow_id', '=', 'workflows.id')
             ->select(
                 'workflows.nombre',
-                DB::raw('AVG(JULIANDAY(procesos.updated_at) - JULIANDAY(procesos.created_at)) as promedio_dias')
+                DB::raw('AVG(TIMESTAMPDIFF(DAY, procesos.created_at, procesos.updated_at)) as promedio_dias')
             )
             ->whereIn('procesos.estado', ['completado', 'cerrado'])
             ->where('procesos.updated_at', '>', $tresMonthsAgo)
@@ -460,3 +460,4 @@ class DashboardController extends Controller
         return $tendencia;
     }
 }
+

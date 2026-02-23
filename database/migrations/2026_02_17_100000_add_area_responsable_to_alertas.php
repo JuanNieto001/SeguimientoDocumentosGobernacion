@@ -14,7 +14,7 @@ return new class extends Migration
         // Agregar campo area_responsable a alertas si no existe
         if (!Schema::hasColumn('alertas', 'area_responsable')) {
             Schema::table('alertas', function (Blueprint $table) {
-                $table->string('area_responsable')->nullable()->after('mensaje');
+                $table->string('area_responsable')->nullable();
             });
         }
     }
@@ -31,3 +31,4 @@ return new class extends Migration
         }
     }
 };
+

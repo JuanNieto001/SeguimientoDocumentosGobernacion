@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('workflows', function (Blueprint $table) {
             // Columnas requeridas por el WorkflowSeeder
-            $table->boolean('requiere_viabilidad_economica_inicial')->default(true)->after('activo');
-            $table->boolean('requiere_estudios_previos_completos')->default(true)->after('requiere_viabilidad_economica_inicial');
-            $table->text('observaciones')->nullable()->after('requiere_estudios_previos_completos');
+            $table->boolean('requiere_viabilidad_economica_inicial')->default(true);
+            $table->boolean('requiere_estudios_previos_completos')->default(true);
+            $table->text('observaciones')->nullable();
         });
     }
 
@@ -33,3 +33,4 @@ return new class extends Migration
         });
     }
 };
+

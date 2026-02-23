@@ -29,3 +29,4 @@ return new class extends Migration
         Schema::dropIfExists('tipos_archivo_por_etapa');
     }
 };
+

@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('proceso_etapa_archivos', function (Blueprint $table) {
-            $table->enum('estado', ['pendiente', 'aprobado', 'rechazado'])->default('pendiente')->after('uploaded_by');
-            $table->text('observaciones')->nullable()->after('estado');
-            $table->foreignId('revisado_por')->nullable()->after('observaciones')->constrained('users')->nullOnDelete();
-            $table->timestamp('revisado_at')->nullable()->after('revisado_por');
+            $table->enum('estado', ['pendiente', 'aprobado', 'rechazado'])->default('pendiente');
+            $table->text('observaciones')->nullable();
+            $table->foreignId('revisado_por')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('revisado_at')->nullable();
             
             $table->index('estado');
         });
@@ -26,3 +26,4 @@ return new class extends Migration
         });
     }
 };
+

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('proceso_auditoria', function (Blueprint $table) {
             // Nullable to avoid breaking existing registros; index for faster consultas
-            $table->unsignedBigInteger('etapa_id')->nullable()->after('descripcion');
+            $table->unsignedBigInteger('etapa_id')->nullable();
             $table->index('etapa_id');
         });
     }
@@ -23,3 +23,4 @@ return new class extends Migration
         });
     }
 };
+

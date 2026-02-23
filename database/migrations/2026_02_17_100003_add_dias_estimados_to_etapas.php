@@ -14,7 +14,7 @@ return new class extends Migration
         // Agregar días estimados a etapas
         Schema::table('etapas', function (Blueprint $table) {
             if (!Schema::hasColumn('etapas', 'dias_estimados')) {
-                $table->integer('dias_estimados')->nullable()->after('area_responsable')
+                $table->integer('dias_estimados')->nullable()
                     ->comment('Días estimados para completar esta etapa');
             }
         });
@@ -35,3 +35,4 @@ return new class extends Migration
         });
     }
 };
+
