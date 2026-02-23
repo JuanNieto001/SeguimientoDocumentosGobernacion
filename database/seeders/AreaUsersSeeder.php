@@ -84,7 +84,7 @@ class AreaUsersSeeder extends Seeder
             [
                 'name'          => 'Analista Regalías e Inversiones',
                 'email'         => 'regalias@demo.com',
-                'role'          => 'planeacion',
+                'roles'         => ['planeacion', 'inversiones_publicas'],
                 'secretaria_id' => $secPlaneacion?->id,
                 'unidad_id'     => $uRegalias?->id,
             ],
@@ -108,7 +108,7 @@ class AreaUsersSeeder extends Seeder
             [
                 'name'          => 'Analista Presupuesto',
                 'email'         => 'presupuesto@demo.com',
-                'role'          => 'hacienda',
+                'roles'         => ['hacienda', 'presupuesto'],
                 'secretaria_id' => $secHacienda?->id,
                 'unidad_id'     => $uPresupuesto?->id,
             ],
@@ -120,7 +120,7 @@ class AreaUsersSeeder extends Seeder
             [
                 'name'          => 'Analista Contabilidad',
                 'email'         => 'contabilidad@demo.com',
-                'role'          => 'hacienda',
+                'roles'         => ['hacienda', 'contabilidad'],
                 'secretaria_id' => $secHacienda?->id,
                 'unidad_id'     => $uContabilidad?->id,
             ],
@@ -132,7 +132,7 @@ class AreaUsersSeeder extends Seeder
             [
                 'name'          => 'Analista Rentas',
                 'email'         => 'rentas@demo.com',
-                'role'          => 'hacienda',
+                'roles'         => ['hacienda', 'rentas'],
                 'secretaria_id' => $secHacienda?->id,
                 'unidad_id'     => $uRentas?->id,
             ],
@@ -156,7 +156,7 @@ class AreaUsersSeeder extends Seeder
             [
                 'name'          => 'Coordinador Compras y SECOP',
                 'email'         => 'secop@demo.com',
-                'role'          => 'secop',
+                'roles'         => ['secop', 'compras'],
                 'secretaria_id' => $secGeneral?->id,
                 'unidad_id'     => $uCompras?->id,
             ],
@@ -213,7 +213,9 @@ class AreaUsersSeeder extends Seeder
                     'activo'        => true,
                 ]
             );
-            $user->syncRoles([$data['role']]);
+            // Soporta tanto 'role' (string) como 'roles' (array)
+            $roles = $data['roles'] ?? [$data['role']];
+            $user->syncRoles($roles);
         }
 
         $this->command->info('✅ Usuarios específicos por dependencia creados correctamente.');

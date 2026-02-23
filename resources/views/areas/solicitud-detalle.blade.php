@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            📄 Subir Documentos - Proceso #{{ $proceso->numero }}
+            📄 Subir Documentos - Proceso #{{ $proceso->codigo }}
         </h2>
     </x-slot>
 
@@ -12,8 +12,8 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 mb-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-2">Información del Proceso</h3>
                 <div class="text-sm text-gray-700 space-y-1">
-                    <p><strong>Número:</strong> {{ $proceso->numero }}</p>
-                    <p><strong>Descripción:</strong> {{ $proceso->descripcion }}</p>
+                    <p><strong>Código:</strong> {{ $proceso->codigo }}</p>
+                    <p><strong>Objeto:</strong> {{ $proceso->objeto }}</p>
                     <p><strong>Área actual:</strong> {{ $proceso->area_actual_role }}</p>
                 </div>
             </div>

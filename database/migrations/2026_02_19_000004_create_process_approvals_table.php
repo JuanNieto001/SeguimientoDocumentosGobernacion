@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('comments')->nullable();
             $table->json('checklist')->nullable(); // Items del checklist con estado
             
-            $table->foreignId('requested_from')->constrained('users')->nullOnDelete(); // A quién se solicita
+            $table->foreignId('requested_from')->nullable()->constrained('users')->nullOnDelete(); // A quién se solicita
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             
             $table->timestamp('requested_at');

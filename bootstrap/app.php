@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'secretaria.access'  => \App\Http\Middleware\CheckSecretariaAccess::class,
             'usuario.activo'     => \App\Http\Middleware\CheckUsuarioActivo::class,
             'permiso'            => \App\Http\Middleware\CheckPermiso::class,
+            'validar.rol.proceso.cd' => \App\Http\Middleware\ValidateRolProcesoCD::class,
         ]);
 
     })

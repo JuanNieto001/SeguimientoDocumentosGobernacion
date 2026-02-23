@@ -18,38 +18,45 @@ class SolicitudDocumentosController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $areaRole = $user->roles->first()->name ?? null;
+        
+        // Obtener TODOS los roles del usuario que son roles de área de documentos
+        $rolesDocumentos = ['compras', 'talento_humano', 'contabilidad', 'rentas', 'inversiones_publicas', 'presupuesto'];
+        $userRoles = $user->getRoleNames()->toArray();
+        $rolesActivos = array_intersect($userRoles, $rolesDocumentos);
 
-        if (!$areaRole) {
-            abort(403, 'No tienes un rol de área asignado.');
+        if (empty($rolesActivos)) {
+            abort(403, 'No tienes un rol de área de documentos asignado.');
         }
 
-        // Buscar solicitudes pendientes para este rol
+        // Buscar solicitudes pendientes para TODOS los roles de documentos del usuario
         $solicitudes = DB::table('proceso_documentos_solicitados as pds')
             ->join('procesos as p', 'p.id', '=', 'pds.proceso_id')
             ->join('etapas as e', 'e.id', '=', 'pds.etapa_id')
             ->leftJoin('proceso_etapa_archivos as pea', 'pea.id', '=', 'pds.archivo_id')
             ->select(
                 'pds.*',
-                'p.numero as proceso_numero',
-                'p.descripcion as proceso_descripcion',
+                'p.codigo as proceso_numero',
+                'p.objeto as proceso_descripcion',
                 'p.area_actual_role as proceso_area_actual',
                 'e.nombre as etapa_nombre',
                 'pea.nombre_original as archivo_nombre'
             )
-            ->where('pds.area_responsable_rol', $areaRole)
-            ->whereIn('pds.estado', ['pendiente', 'observado'])
+            ->whereIn('pds.area_responsable_rol', $rolesActivos)
             ->orderByDesc('pds.created_at')
             ->get();
 
         // Agrupar por proceso
         $solicitudesPorProceso = $solicitudes->groupBy('proceso_id');
 
+        // Determinar nombre del área principal
+        $areaRole = $rolesActivos[array_key_first($rolesActivos)];
+
         return view('areas.solicitudes', [
             'areaRole' => $areaRole,
             'areaName' => $this->getRoleName($areaRole),
             'solicitudesPorProceso' => $solicitudesPorProceso,
-            'totalSolicitudes' => $solicitudes->count(),
+            'totalSolicitudes' => $solicitudes->where('estado', '!=', 'subido')->count(),
+            'totalCompletadas' => $solicitudes->where('estado', 'subido')->count(),
         ]);
     }
 
@@ -59,22 +66,26 @@ class SolicitudDocumentosController extends Controller
     public function detalle(int $proceso)
     {
         $user = auth()->user();
-        $areaRole = $user->roles->first()->name ?? null;
+        
+        // Obtener todos los roles de documentos del usuario
+        $rolesDocumentos = ['compras', 'talento_humano', 'contabilidad', 'rentas', 'inversiones_publicas', 'presupuesto'];
+        $userRoles = $user->getRoleNames()->toArray();
+        $rolesActivos = array_intersect($userRoles, $rolesDocumentos);
 
-        if (!$areaRole) {
-            abort(403, 'No tienes un rol de área asignado.');
+        if (empty($rolesActivos)) {
+            abort(403, 'No tienes un rol de área de documentos asignado.');
         }
 
         // Cargar proceso
         $proceso = DB::table('procesos')->where('id', $proceso)->first();
         abort_unless($proceso, 404, 'Proceso no encontrado.');
 
-        // Cargar solicitudes pendientes de este área para este proceso
+        // Cargar solicitudes de TODOS los roles de documentos del usuario para este proceso
         $solicitudes = DB::table('proceso_documentos_solicitados as pds')
             ->leftJoin('proceso_etapa_archivos as pea', 'pea.id', '=', 'pds.archivo_id')
             ->select('pds.*', 'pea.nombre_original as archivo_nombre', 'pea.ruta as archivo_ruta')
             ->where('pds.proceso_id', $proceso->id)
-            ->where('pds.area_responsable_rol', $areaRole)
+            ->whereIn('pds.area_responsable_rol', $rolesActivos)
             ->get();
 
         // Cargar archivos que YA subió esta área para este proceso
@@ -82,6 +93,8 @@ class SolicitudDocumentosController extends Controller
             ->where('proceso_id', $proceso->id)
             ->where('uploaded_by', $user->id)
             ->get();
+
+        $areaRole = $rolesActivos[array_key_first($rolesActivos)];
 
         return view('areas.solicitud-detalle', [
             'proceso' => $proceso,

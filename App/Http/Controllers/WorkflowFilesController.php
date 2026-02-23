@@ -21,14 +21,27 @@ class WorkflowFilesController extends Controller
         $proceso = $this->loadProcesoOrFail($proceso);
         $this->authorizeAreaOrAdmin($proceso);
 
-        // ✅ NUEVO: Verificar que la etapa no haya sido enviada
-        $procesoEtapa = DB::table('proceso_etapas')
-            ->where('proceso_id', $proceso->id)
-            ->where('etapa_id', $proceso->etapa_actual_id)
-            ->first();
+        $user = auth()->user();
+        $userRoles = $user->getRoleNames()->toArray();
 
-        if ($procesoEtapa && $procesoEtapa->enviado) {
-            return back()->withErrors(['archivo' => 'No puedes subir archivos porque esta etapa ya fue enviada.']);
+        // ✅ Verificar si el usuario está subiendo un documento solicitado (desde otra área)
+        $esSubidaSolicitud = DB::table('proceso_documentos_solicitados')
+            ->where('proceso_id', $proceso->id)
+            ->whereIn('area_responsable_rol', $userRoles)
+            ->where('estado', 'pendiente')
+            ->where('puede_subir', true)
+            ->exists();
+
+        // Si NO es una subida de solicitud, verificar que la etapa no haya sido enviada
+        if (!$esSubidaSolicitud) {
+            $procesoEtapa = DB::table('proceso_etapas')
+                ->where('proceso_id', $proceso->id)
+                ->where('etapa_id', $proceso->etapa_actual_id)
+                ->first();
+
+            if ($procesoEtapa && $procesoEtapa->enviado) {
+                return back()->withErrors(['archivo' => 'No puedes subir archivos porque esta etapa ya fue enviada.']);
+            }
         }
 
         $request->validate([
@@ -154,6 +167,7 @@ class WorkflowFilesController extends Controller
                         'estado' => 'subido',
                         'archivo_id' => $archivoId,
                         'subido_por' => auth()->id(),
+                        'subido_at' => now(),
                         'updated_at' => now(),
                     ]);
 
@@ -341,10 +355,17 @@ class WorkflowFilesController extends Controller
             return;
         }
 
-        // ✅ CASO 2: Usuario tiene una solicitud pendiente para subir documento a este proceso
+        // ✅ CASO 2: Usuario es el creador del proceso
+        if ($proceso->created_by == $user->id) {
+            return;
+        }
+
+        // ✅ CASO 3: Usuario tiene una solicitud pendiente para subir documento a este proceso
+        // Verificar contra TODOS los roles del usuario
+        $userRoles = $user->getRoleNames()->toArray();
         $tienesSolicitud = DB::table('proceso_documentos_solicitados')
             ->where('proceso_id', $proceso->id)
-            ->where('area_responsable_rol', $user->roles->first()->name ?? '')
+            ->whereIn('area_responsable_rol', $userRoles)
             ->where('estado', 'pendiente')
             ->where('puede_subir', true)
             ->exists();

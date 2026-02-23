@@ -128,7 +128,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'hacienda',
             'juridica',
             'secop',
-            'talento_humano',  // Nuevo rol para Talento Humano (Certificado No Planta)
+            'talento_humano',      // Talento Humano (Certificado No Planta)
+            // ── Roles específicos por unidad para solicitudes paralelas Etapa 1 ──
+            'compras',             // Unidad de Compras → PAA
+            'contabilidad',        // Unidad de Contabilidad → Paz y Salvo Contabilidad
+            'rentas',              // Unidad de Rentas → Paz y Salvo Rentas
+            'inversiones_publicas',// Regalías e Inversiones → Compatibilidad del Gasto
+            'presupuesto',         // Unidad de Presupuesto → CDP
         ];
 
         foreach ($workflowRoles as $roleName) {

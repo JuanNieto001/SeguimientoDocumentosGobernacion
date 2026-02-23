@@ -8,11 +8,17 @@
                 <p class="text-xs text-gray-400 mt-1">
                     @php
                         $roleLabels = [
-                            'unidad_solicitante' => 'Unidad Solicitante',
-                            'planeacion'         => 'Secretaría de Planeación',
-                            'hacienda'           => 'Secretaría de Hacienda',
-                            'juridica'           => 'Secretaría Jurídica',
-                            'secop'              => 'Grupo SECOP',
+                            'unidad_solicitante'  => 'Unidad Solicitante',
+                            'planeacion'          => 'Secretaría de Planeación',
+                            'compras'             => 'Unidad de Compras — Secretaría General',
+                            'talento_humano'      => 'Talento Humano — Secretaría General',
+                            'rentas'              => 'Unidad de Rentas — Secretaría de Hacienda',
+                            'contabilidad'        => 'Unidad de Contabilidad — Secretaría de Hacienda',
+                            'inversiones_publicas'=> 'Regalías e Inversiones — Secretaría de Planeación',
+                            'presupuesto'         => 'Unidad de Presupuesto — Secretaría de Hacienda',
+                            'hacienda'            => 'Secretaría de Hacienda',
+                            'juridica'            => 'Secretaría Jurídica',
+                            'secop'               => 'Grupo SECOP',
                         ];
                         $userRoleLabel = collect($roleLabels)->first(fn($label, $role) => auth()->user()->hasRole($role)) ?? 'Usuario';
                     @endphp
@@ -34,6 +40,14 @@
     $myBandejaLabel = collect(['unidad_solicitante'=>'Unidad','planeacion'=>'Planeación','hacienda'=>'Hacienda','juridica'=>'Jurídica','secop'=>'SECOP'])
         ->first(fn($lbl, $role) => auth()->user()->hasRole($role)) ?? '';
 
+    $rolesDocumentosCheck = ['compras','talento_humano','rentas','contabilidad','inversiones_publicas','presupuesto'];
+    $esAreaDocumentos = collect($rolesDocumentosCheck)->contains(fn($r) => auth()->user()->hasRole($r));
+
+    $solicitudesPendientes = $solicitudesPendientes ?? collect();
+    $totalSolPendientes = $solicitudesPendientes->sum('docs_pendientes');
+    $totalSolSubidos    = $solicitudesPendientes->sum('docs_subidos');
+    $totalSolDocs       = $solicitudesPendientes->sum('total_docs');
+
     $enCursoCount = ($enCurso ?? collect())->count();
     $finalizadoCount = ($finalizados ?? collect())->count();
     $total = $enCursoCount + $finalizadoCount;
@@ -50,6 +64,37 @@
 
         {{-- KPIs --}}
         <div class="grid grid-cols-3 gap-4">
+            @if($esAreaDocumentos)
+            {{-- KPIs específicos para áreas de documentos --}}
+            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
+                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#dbeafe">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ $solicitudesPendientes->count() }}</p>
+                    <p class="text-xs text-gray-400">Procesos asignados</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
+                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#fef3c7">
+                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalSolPendientes }}</p>
+                    <p class="text-xs text-gray-400">Docs pendientes</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
+                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#dcfce7">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalSolSubidos }}</p>
+                    <p class="text-xs text-gray-400">Docs entregados</p>
+                </div>
+            </div>
+            @else
+            {{-- KPIs generales --}}
             <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
                 <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#dbeafe">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -77,6 +122,7 @@
                     <p class="text-xs text-gray-400">Finalizados</p>
                 </div>
             </div>
+            @endif
         </div>
 
         {{-- Acciones rápidas --}}
@@ -135,6 +181,63 @@
             </a>
             @endif
         </div>
+
+        {{-- ── Panel de solicitudes de documentos para áreas específicas ── --}}
+        @if($esAreaDocumentos)
+        <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">
+            <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color:#f1f5f9">
+                <h2 class="text-sm font-bold text-gray-700">📋 Procesos con documentos solicitados</h2>
+                <a href="{{ route('solicitudes.index') }}" class="text-xs text-blue-700 hover:text-blue-900 font-medium">Ver todos →</a>
+            </div>
+            @if($solicitudesPendientes->isEmpty())
+            <div class="flex flex-col items-center gap-2 py-10">
+                <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="text-sm text-gray-400">No tienes solicitudes de documentos pendientes</p>
+            </div>
+            @else
+            <div class="divide-y" style="divide-color:#f8fafc">
+                @foreach($solicitudesPendientes as $sol)
+                @php
+                    $allDone = $sol->docs_pendientes == 0;
+                @endphp
+                <div class="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg"
+                             style="background:{{ $allDone ? '#dcfce7' : '#fff7ed' }}">
+                            {{ $allDone ? '✅' : '📄' }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-gray-900 font-mono">{{ $sol->proceso_codigo }}</p>
+                            <p class="text-xs text-gray-500 truncate">{{ $sol->proceso_objeto }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">Etapa: {{ $sol->etapa_nombre }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0 ml-4">
+                        {{-- Barra de progreso --}}
+                        <div class="hidden sm:flex flex-col items-end gap-1">
+                            <span class="text-xs font-semibold" style="color:{{ $allDone ? '#15803d' : '#92400e' }}">
+                                {{ $sol->docs_subidos }}/{{ $sol->total_docs }} entregados
+                            </span>
+                            <div class="w-24 bg-gray-200 rounded-full h-1.5">
+                                <div class="h-1.5 rounded-full"
+                                     style="width:{{ $sol->total_docs > 0 ? ($sol->docs_subidos/$sol->total_docs)*100 : 0 }}%;
+                                            background:{{ $allDone ? '#16a34a' : '#f59e0b' }}"></div>
+                            </div>
+                        </div>
+                        <a href="{{ route('solicitudes.detalle', $sol->proceso_id) }}"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                           style="background:{{ $allDone ? '#f0fdf4' : '#fff7ed' }};color:{{ $allDone ? '#15803d' : '#c2410c' }}">
+                            {{ $allDone ? 'Ver' : 'Subir' }}
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+        @endif
+        {{-- ── FIN Panel solicitudes ── --}}
 
         {{-- Procesos en curso --}}
         <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">

@@ -130,6 +130,30 @@ class PlaneacionController extends Controller
             'observaciones' => 'nullable|string|max:500',
         ]);
 
+        // ── Validar que todos los documentos paralelos hayan sido recibidos ──
+        $solicitudes = DB::table('proceso_documentos_solicitados')
+            ->where('proceso_id', $proceso->id)
+            ->get();
+
+        if ($solicitudes->count() > 0) {
+            $pendientes = $solicitudes->where('estado', '!=', 'subido');
+            if ($pendientes->count() > 0) {
+                $faltantes = $pendientes->pluck('nombre_documento')->implode(', ');
+                return redirect()->back()->with('error', 
+                    "No se puede aprobar: faltan documentos por recibir de las áreas → {$faltantes}");
+            }
+        } else {
+            // Si no existen solicitudes aún, crearlas primero (primera vez que aprueba)
+            // Esto llama a la lógica del WorkflowController para crear solicitudes
+            $wfController = app(\App\Http\Controllers\WorkflowController::class);
+            $wfController->solicitarDocumentosEtapa1($proceso);
+            
+            return redirect()->back()->with('info', 
+                'Se han enviado las solicitudes de documentos a las áreas correspondientes. ' .
+                'Espera a que todas las áreas suban sus documentos antes de aprobar.');
+        }
+        // ── FIN Validación documentos paralelos ──
+
         $result = DB::transaction(function () use ($proceso, $request) {
             // Marcar etapa actual como enviada
             $procesoEtapaActual = DB::table('proceso_etapas')

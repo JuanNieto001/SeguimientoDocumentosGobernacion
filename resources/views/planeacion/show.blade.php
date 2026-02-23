@@ -32,6 +32,12 @@
             {{ session('error') }}
         </div>
         @endif
+        @if(session('info'))
+        <div class="flex items-center gap-3 p-3.5 rounded-xl text-sm font-medium" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ session('info') }}
+        </div>
+        @endif
         @if($errors->any())
         <div class="p-3.5 rounded-xl text-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">
             @foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach
@@ -188,6 +194,113 @@
                 </div>
             </div>
         </div>
+
+        {{-- ========== SOLICITUDES DE DOCUMENTOS PARALELOS (Etapa 1 - Descentralización) ========== --}}
+        @php
+            $solicitudesDocumentos = DB::table('proceso_documentos_solicitados')
+                ->where('proceso_id', $proceso->id)
+                ->orderBy('id')
+                ->get();
+            $totalSolicitudes = $solicitudesDocumentos->count();
+            $completadas = $solicitudesDocumentos->where('estado', 'subido')->count();
+            $pendientes = $totalSolicitudes - $completadas;
+            $todasCompletas = $pendientes === 0 && $totalSolicitudes > 0;
+        @endphp
+
+        @if($totalSolicitudes > 0)
+        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+            <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color:#f1f5f9">
+                <h3 class="text-sm font-semibold text-gray-700">📋 Documentos Solicitados a Áreas (Envío Simultáneo)</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs px-2 py-1 rounded-full font-semibold"
+                          style="background:{{ $todasCompletas ? '#dcfce7' : '#fef3c7' }}; color:{{ $todasCompletas ? '#15803d' : '#92400e' }}">
+                        {{ $completadas }}/{{ $totalSolicitudes }} completados
+                    </span>
+                </div>
+            </div>
+            <div class="p-5">
+                {{-- Barra de progreso --}}
+                <div class="mb-4">
+                    <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <span>Progreso de documentos</span>
+                        <span>{{ $totalSolicitudes > 0 ? round(($completadas / $totalSolicitudes) * 100) : 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full transition-all duration-500"
+                             style="width: {{ $totalSolicitudes > 0 ? ($completadas / $totalSolicitudes) * 100 : 0 }}%; background: {{ $todasCompletas ? '#16a34a' : '#f59e0b' }}">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Lista de documentos --}}
+                <div class="space-y-3">
+                    @foreach($solicitudesDocumentos as $sol)
+                    @php
+                        $archivo = $sol->archivo_id ? DB::table('proceso_etapa_archivos')->where('id', $sol->archivo_id)->first() : null;
+                        $subidoPor = $sol->subido_por ? DB::table('users')->where('id', $sol->subido_por)->first() : null;
+                    @endphp
+                    <div class="flex items-start gap-3 p-3 rounded-xl"
+                         style="background:{{ $sol->estado === 'subido' ? '#f0fdf4' : ($sol->puede_subir ? '#fffbeb' : '#f8fafc') }};
+                                border:1px solid {{ $sol->estado === 'subido' ? '#bbf7d0' : ($sol->puede_subir ? '#fde68a' : '#e2e8f0') }}">
+                        
+                        {{-- Icono de estado --}}
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-lg"
+                             style="background:{{ $sol->estado === 'subido' ? '#dcfce7' : ($sol->puede_subir ? '#fef3c7' : '#f1f5f9') }}">
+                            @if($sol->estado === 'subido') ✅
+                            @elseif($sol->puede_subir) ⏳
+                            @else 🔒
+                            @endif
+                        </div>
+                        
+                        {{-- Info del documento --}}
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-gray-800">{{ $sol->nombre_documento }}</p>
+                                <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ml-2"
+                                      style="background:{{ $sol->estado === 'subido' ? '#dcfce7' : '#fef3c7' }}; color:{{ $sol->estado === 'subido' ? '#15803d' : '#92400e' }}">
+                                    {{ $sol->estado === 'subido' ? 'Recibido' : ($sol->puede_subir ? 'Pendiente' : 'Bloqueado') }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">
+                                Área: <strong>{{ $sol->area_responsable_nombre }}</strong>
+                            </p>
+                            
+                            @if($sol->estado === 'subido' && $archivo)
+                                <div class="mt-2 flex items-center gap-2">
+                                    <span class="text-xs text-green-700">
+                                        📎 {{ $archivo->nombre_original }}
+                                        @if($subidoPor) · Por: {{ $subidoPor->name }} @endif
+                                        @if($sol->subido_at) · {{ \Carbon\Carbon::parse($sol->subido_at)->format('d/m/Y H:i') }} @endif
+                                    </span>
+                                    <a href="{{ route('workflow.files.download', $archivo->id) }}"
+                                       class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                                        Descargar
+                                    </a>
+                                </div>
+                            @elseif(!$sol->puede_subir)
+                                <p class="text-xs text-gray-400 mt-1 italic">
+                                    🔒 Requiere que se suba primero: Compatibilidad del Gasto
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                {{-- Mensaje de estado global --}}
+                @if($todasCompletas)
+                <div class="mt-4 p-3 rounded-xl text-sm font-medium" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0">
+                    ✅ Todos los documentos han sido recibidos. Puedes aprobar y enviar el proceso a la siguiente etapa.
+                </div>
+                @else
+                <div class="mt-4 p-3 rounded-xl text-sm font-medium" style="background:#fffbeb; color:#92400e; border:1px solid #fde68a">
+                    ⏳ Faltan {{ $pendientes }} documento(s) por recibir. No podrás avanzar hasta que todas las áreas envíen sus documentos.
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+        {{-- ========== FIN SOLICITUDES DE DOCUMENTOS PARALELOS ========== --}}
 
         {{-- Archivos --}}
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">

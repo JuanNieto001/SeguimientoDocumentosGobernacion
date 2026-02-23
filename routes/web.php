@@ -316,14 +316,73 @@ Route::middleware(['auth'])->prefix('procesos')->name('modificaciones.')->group(
     Route::get('/{proceso}/modificaciones/{modificacion}/descargar', [ModificacionContractualController::class, 'descargar'])->name('descargar');
 });
 
-/*
-|--------------------------------------------------------------------------
-| MÓDULO WORKFLOW - Contratación Directa Persona Natural
-|--------------------------------------------------------------------------
-*/
 use App\Http\Controllers\ContractProcessController;
 use App\Http\Controllers\ProcessDocumentController;
+use App\Http\Controllers\ProcesoContratacionDirectaController;
 
+/*
+|--------------------------------------------------------------------------
+| MÓDULO CD-PN: Contratación Directa – Persona Natural (State Machine)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->prefix('proceso-cd')->name('proceso-cd.')->group(function () {
+
+    // Listado y creación
+    Route::get('/', [ProcesoContratacionDirectaController::class, 'index'])->name('index');
+    Route::get('/crear', [ProcesoContratacionDirectaController::class, 'create'])
+        ->middleware('role:admin|unidad_solicitante')
+        ->name('create');
+    Route::post('/', [ProcesoContratacionDirectaController::class, 'store'])
+        ->middleware('role:admin|unidad_solicitante')
+        ->name('store');
+
+    // Detalle
+    Route::get('/{procesoCD}', [ProcesoContratacionDirectaController::class, 'show'])->name('show');
+
+    // Transición de estado (middleware valida rol por estado)
+    Route::post('/{procesoCD}/transicionar', [ProcesoContratacionDirectaController::class, 'transicionar'])
+        ->middleware('validar.rol.proceso.cd')
+        ->name('transicionar');
+
+    // Validaciones paralelas (Etapa 2)
+    Route::post('/{procesoCD}/validacion', [ProcesoContratacionDirectaController::class, 'registrarValidacion'])
+        ->middleware('validar.rol.proceso.cd')
+        ->name('validacion');
+
+    // Firmas (Etapa 5)
+    Route::post('/{procesoCD}/firma', [ProcesoContratacionDirectaController::class, 'registrarFirma'])
+        ->middleware('validar.rol.proceso.cd')
+        ->name('firma');
+
+    // Devolución (Etapa 4 y 5)
+    Route::post('/{procesoCD}/devolver', [ProcesoContratacionDirectaController::class, 'devolver'])
+        ->middleware('validar.rol.proceso.cd')
+        ->name('devolver');
+
+    // Documentos
+    Route::post('/{procesoCD}/documentos', [ProcesoContratacionDirectaController::class, 'subirDocumento'])
+        ->name('documentos.subir');
+    Route::get('/{procesoCD}/documentos/{documento}/descargar', [ProcesoContratacionDirectaController::class, 'descargarDocumento'])
+        ->name('documentos.descargar');
+    Route::post('/{procesoCD}/documentos/{documento}/aprobar', [ProcesoContratacionDirectaController::class, 'aprobarDocumento'])
+        ->middleware('validar.rol.proceso.cd')
+        ->name('documentos.aprobar');
+
+    // Cancelar
+    Route::post('/{procesoCD}/cancelar', [ProcesoContratacionDirectaController::class, 'cancelar'])
+        ->middleware('role:admin')
+        ->name('cancelar');
+
+    // Auditoría
+    Route::get('/{procesoCD}/auditoria', [ProcesoContratacionDirectaController::class, 'auditoria'])
+        ->name('auditoria');
+});
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO WORKFLOW - Contratación Directa Persona Natural (legacy)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth'])->prefix('contract-processes')->name('contract-processes.')->group(function () {
     // CRUD básico de procesos
     Route::get('/', [ContractProcessController::class, 'index'])->name('index');

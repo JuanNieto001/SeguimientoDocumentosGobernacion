@@ -23,9 +23,34 @@ class DashboardController extends Controller
             return $this->dashboardAdmin();
         }
         
-        // ✅ NUEVO: Redirigir Descentralización directamente a Mi Bandeja
+        // ✅ Redirigir Descentralización directamente a Mi Bandeja
         if ($user->hasRole('planeacion')) {
             return redirect()->route('planeacion.index');
+        }
+
+        // ── Roles de área específica (solicitudes paralelas Etapa 1) ──────────
+        $rolesDocumentos = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto'];
+        $userRolesDoc = collect($rolesDocumentos)->filter(fn($r) => $user->hasRole($r));
+
+        // Cargar solicitudes de documentos pendientes/subidos para estos roles
+        $solicitudesPendientes = collect();
+        if ($userRolesDoc->isNotEmpty()) {
+            $solicitudesPendientes = DB::table('proceso_documentos_solicitados as pds')
+                ->join('procesos', 'procesos.id', '=', 'pds.proceso_id')
+                ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id')
+                ->whereIn('pds.area_responsable_rol', $userRolesDoc->values()->toArray())
+                ->select(
+                    'procesos.id as proceso_id',
+                    'procesos.codigo as proceso_codigo',
+                    'procesos.objeto as proceso_objeto',
+                    'etapas.nombre as etapa_nombre',
+                    DB::raw('COUNT(*) as total_docs'),
+                    DB::raw('SUM(CASE WHEN pds.estado = "subido" THEN 1 ELSE 0 END) as docs_subidos'),
+                    DB::raw('SUM(CASE WHEN pds.estado = "pendiente" AND pds.puede_subir = 1 THEN 1 ELSE 0 END) as docs_pendientes')
+                )
+                ->groupBy('procesos.id', 'procesos.codigo', 'procesos.objeto', 'etapas.nombre')
+                ->orderByDesc('procesos.id')
+                ->get();
         }
 
         $base = DB::table('procesos')
@@ -40,7 +65,7 @@ class DashboardController extends Controller
         if ($user->hasRole('unidad_solicitante')) {
             $base->where('procesos.created_by', $user->id);
         } else {
-            $rolesArea = ['planeacion', 'hacienda', 'juridica', 'secop'];
+            $rolesArea = ['hacienda', 'juridica', 'secop'];
             $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));
             if ($miRolArea) {
                 $base->where('procesos.area_actual_role', $miRolArea);
@@ -54,7 +79,7 @@ class DashboardController extends Controller
         $enCurso = $all->where('estado', 'EN_CURSO')->values();
         $finalizados = $all->where('estado', 'FINALIZADO')->values();
 
-        return view('dashboard', compact('enCurso', 'finalizados'));
+        return view('dashboard', compact('enCurso', 'finalizados', 'solicitudesPendientes'));
     }
 
     /**

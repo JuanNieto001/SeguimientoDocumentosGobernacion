@@ -8,4 +8,12 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: false,
+        hmr: {
+            host: '192.168.231.9',
+        },
+    },
 });

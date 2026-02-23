@@ -282,6 +282,45 @@ class WorkflowController extends Controller
 
             // ========== FIN VALIDACIONES ESPECÍFICAS ==========
 
+            // ========== VALIDACIÓN ETAPA 1: DESCENTRALIZACIÓN - DOCUMENTOS PARALELOS ==========
+            // Cuando Descentralización envía, NO avanza hasta que TODAS las áreas
+            // hayan devuelto sus documentos (PAA, No Planta, Paz y Salvos, Compatibilidad, CDP)
+            if ($etapaActual->orden == 1 && $etapaActual->area_role === 'planeacion') {
+                
+                // Verificar si existen solicitudes de documentos para este proceso
+                $totalSolicitudes = DB::table('proceso_documentos_solicitados')
+                    ->where('proceso_id', $proceso->id)
+                    ->where('etapa_id', $proceso->etapa_actual_id)
+                    ->count();
+
+                if ($totalSolicitudes === 0) {
+                    // Si no se han creado solicitudes, crearlas ahora
+                    $this->solicitarDocumentosEtapa1($proceso);
+                    return redirect()->back()->with('info', 
+                        'Se han enviado las solicitudes de documentos a las áreas correspondientes: ' .
+                        'Compras (PAA), Talento Humano (No Planta), Rentas (Paz y Salvo), ' .
+                        'Contabilidad (Paz y Salvo), Planeación (Compatibilidad del Gasto) y Presupuesto (CDP). ' .
+                        'Debes esperar a que todas las áreas devuelvan sus documentos para poder avanzar.'
+                    );
+                }
+
+                // Verificar cuántos documentos faltan
+                $docsPendientes = DB::table('proceso_documentos_solicitados')
+                    ->where('proceso_id', $proceso->id)
+                    ->where('etapa_id', $proceso->etapa_actual_id)
+                    ->where('estado', '!=', 'subido')
+                    ->get();
+
+                if ($docsPendientes->count() > 0) {
+                    $faltantes = $docsPendientes->pluck('nombre_documento')->implode(', ');
+                    return redirect()->back()->with('error', 
+                        "No puedes avanzar: faltan {$docsPendientes->count()} documento(s) por recibir de las áreas. " .
+                        "Documentos pendientes: {$faltantes}"
+                    );
+                }
+            }
+            // ========== FIN VALIDACIÓN ETAPA 1 ==========
+
             // Marcar enviado si no lo está
             if (!$procesoEtapa->enviado) {
                 DB::table('proceso_etapas')->where('id', $procesoEtapa->id)->update([
@@ -378,7 +417,7 @@ class WorkflowController extends Controller
      * Solicitar documentos a múltiples áreas (Etapa 1)
      * Descentralización coordina la solicitud de 7 documentos
      */
-    private function solicitarDocumentosEtapa1($proceso): void
+    public function solicitarDocumentosEtapa1($proceso): void
     {
         $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
         $user = auth()->user();

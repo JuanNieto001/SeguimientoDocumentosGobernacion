@@ -40,7 +40,7 @@ return new class extends Migration
             $table->text('observations')->nullable();
             
             // Auditoría
-            $table->foreignId('uploaded_by')->constrained('users')->nullOnDelete();
+            $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
             $table->text('approval_notes')->nullable();

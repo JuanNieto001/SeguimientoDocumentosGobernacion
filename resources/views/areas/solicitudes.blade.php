@@ -35,7 +35,7 @@
                             <div class="flex justify-between items-start mb-3">
                                 <div>
                                     <h4 class="font-bold text-gray-800">
-                                        Proceso #{{ $primeraSolicitud->proceso_numero }}
+                                        Proceso #{{ $primeraSolicitud->proceso_numero ?? 'N/A' }}
                                     </h4>
                                     <p class="text-sm text-gray-600">
                                         {{ $primeraSolicitud->proceso_descripcion }}
