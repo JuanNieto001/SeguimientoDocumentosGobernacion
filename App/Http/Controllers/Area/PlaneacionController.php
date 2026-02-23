@@ -11,30 +11,43 @@ use App\Models\PlanAnualAdquisicion;
 
 class PlaneacionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Obtener el primer proceso pendiente en Planeación
-        $primerProceso = DB::table('procesos')
-            ->where('area_actual_role', 'planeacion')
-            ->where('estado', 'EN_CURSO')
-            ->orderByDesc('id')
-            ->first();
+        // Planeación supervisa TODOS los procesos (En curso y finalizados)
+        $query = DB::table('procesos')
+            ->leftJoin('users as creador', 'creador.id', '=', 'procesos.created_by')
+            ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id')
+            ->select(
+                'procesos.*',
+                'creador.name as creado_por_nombre',
+                'etapas.nombre as etapa_nombre',
+                'etapas.orden as etapa_orden'
+            )
+            ->orderByDesc('procesos.id');
 
-        // Si hay procesos pendientes, redirigir al detalle del primero
-        if ($primerProceso) {
-            return redirect()->route('planeacion.show', $primerProceso->id);
+        if ($request->filled('buscar')) {
+            $q = '%'.$request->buscar.'%';
+            $query->where(function ($w) use ($q) {
+                $w->where('procesos.codigo', 'like', $q)
+                  ->orWhere('procesos.objeto', 'like', $q)
+                  ->orWhere('procesos.contratista', 'like', $q);
+            });
+        }
+        if ($request->filled('estado')) {
+            $query->where('procesos.estado', $request->estado);
+        }
+        if ($request->filled('etapa')) {
+            $query->where('etapas.orden', $request->etapa);
         }
 
-        // Si no hay procesos pendientes, mostrar mensaje
-        return view('areas.planeacion', [
-            'areaRole' => 'planeacion',
-            'procesos' => collect(),
-            'proceso' => null,
-            'procesoEtapa' => null,
-            'checks' => collect(),
-            'enviarHabilitado' => false,
-            'solicitudesPendientes' => collect(),
-        ]);
+        $procesos = $query->get();
+
+        $etapas = DB::table('etapas')
+            ->where('workflow_id', 1)
+            ->orderBy('orden')
+            ->get();
+
+        return view('planeacion.index', compact('procesos', 'etapas'));
     }
 
     /**

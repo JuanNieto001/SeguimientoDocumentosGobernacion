@@ -7,42 +7,38 @@ use Illuminate\Support\Facades\DB;
 
 class ProcesoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
         $query = DB::table('procesos')
             ->leftJoin('workflows', 'workflows.id', '=', 'procesos.workflow_id')
+            ->leftJoin('users as creador', 'creador.id', '=', 'procesos.created_by')
+            ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id')
             ->select([
                 'procesos.*',
                 'workflows.nombre as workflow_nombre',
                 'workflows.codigo as workflow_codigo',
+                'creador.name as creado_por_nombre',
+                'etapas.nombre as etapa_nombre',
+                'etapas.orden as etapa_orden',
             ])
             ->orderByDesc('procesos.id');
 
-        // Admin ve todo
+        // Visibilidad por rol
         if (!$user->hasRole('admin')) {
-
             if ($user->hasRole('planeacion')) {
-                // Planeación gestiona TODOS los procesos del sistema
-                // (los crea y supervisa de inicio a fin)
-                // No se aplica filtro adicional
+                // Planeación ve todos
             } elseif ($user->hasRole('unidad_solicitante')) {
-                // Unidad solicitante: ve los procesos que creó
                 $query->where('procesos.created_by', $user->id);
             } else {
-                // Áreas (hacienda, juridica, secop):
-                // ven lo que esté en su bandeja O ya hayan procesado
                 $rolesArea = ['hacienda', 'juridica', 'secop'];
                 $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));
-
                 if (!$miRolArea) {
                     $query->whereRaw('1=0');
                 } else {
                     $query->where(function ($q) use ($miRolArea) {
-                        // En bandeja ahora
                         $q->where('procesos.area_actual_role', $miRolArea)
-                          // O ya pasó por esta área (enviado)
                           ->orWhereIn('procesos.id', function ($sub) use ($miRolArea) {
                               $sub->select('pe.proceso_id')
                                   ->from('proceso_etapas as pe')
@@ -55,9 +51,31 @@ class ProcesoController extends Controller
             }
         }
 
+        // ── Filtros desde GET ────────────────────────────────────────
+        if ($buscar = $request->input('buscar')) {
+            $query->where(function ($q) use ($buscar) {
+                $q->where('procesos.codigo', 'like', "%{$buscar}%")
+                  ->orWhere('procesos.objeto', 'like', "%{$buscar}%")
+                  ->orWhere('procesos.contratista_nombre', 'like', "%{$buscar}%");
+            });
+        }
+        if ($estado = $request->input('estado')) {
+            $query->where('procesos.estado', $estado);
+        }
+        if ($etapa = $request->input('etapa')) {
+            $query->where('etapas.orden', $etapa);
+        }
+
         $procesos = $query->get();
 
-        return view('procesos.index', compact('procesos'));
+        // Datos para filtros
+        $etapas = DB::table('etapas')
+            ->where('workflow_id', 1)
+            ->where('activa', 1)
+            ->orderBy('orden')
+            ->get(['id', 'orden', 'nombre']);
+
+        return view('procesos.index', compact('procesos', 'etapas'));
     }
 
     public function create()

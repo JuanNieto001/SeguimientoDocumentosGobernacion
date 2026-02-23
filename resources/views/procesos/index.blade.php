@@ -42,12 +42,55 @@
         </div>
         @endif
 
-        @if(session('error'))
-        <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c">
-            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-            {{ session('error') }}
-        </div>
-        @endif
+        {{-- Filtros --}}
+        <form method="GET" action="{{ route('procesos.index') }}"
+              class="bg-white rounded-2xl p-5" style="border:1px solid #e2e8f0">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Buscar</label>
+                    <input type="text" name="buscar" value="{{ request('buscar') }}"
+                           placeholder="Código, objeto, contratista..."
+                           class="w-full border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                           style="border-color:#e2e8f0">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Estado</label>
+                    <select name="estado"
+                            class="w-full border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                            style="border-color:#e2e8f0">
+                        <option value="">Todos</option>
+                        <option value="EN_CURSO"   @selected(request('estado')=='EN_CURSO')>En curso</option>
+                        <option value="FINALIZADO" @selected(request('estado')=='FINALIZADO')>Finalizado</option>
+                        <option value="RECHAZADO"  @selected(request('estado')=='RECHAZADO')>Rechazado</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Etapa</label>
+                    <select name="etapa"
+                            class="w-full border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                            style="border-color:#e2e8f0">
+                        <option value="">Todas</option>
+                        @foreach($etapas ?? [] as $et)
+                        <option value="{{ $et->orden }}" @selected(request('etapa')==$et->orden)>
+                            Etapa {{ $et->orden }}: {{ Str::limit($et->nombre, 35) }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit"
+                            class="flex-1 px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
+                            style="background:linear-gradient(135deg,#15803d,#14532d)">
+                        Filtrar
+                    </button>
+                    @if(request()->hasAny(['buscar','estado','etapa']))
+                    <a href="{{ route('procesos.index') }}"
+                       class="px-3 py-2 rounded-xl text-sm font-medium border hover:bg-gray-50 transition"
+                       style="border-color:#e2e8f0;color:#6b7280">✕</a>
+                    @endif
+                </div>
+            </div>
+        </form>
 
         <div class="flex items-center gap-2">
             <span class="text-sm text-gray-500">Total de procesos:</span>
@@ -62,6 +105,7 @@
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Objeto</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Área actual</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Creado por</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
@@ -89,6 +133,9 @@
                         </td>
                         <td class="px-5 py-3.5 text-gray-700 max-w-xs">
                             <span class="block truncate text-sm">{{ $p->objeto }}</span>
+                            @if(isset($p->etapa_nombre))
+                            <span class="text-xs text-gray-400">Etapa {{ $p->etapa_orden }}: {{ Str::limit($p->etapa_nombre, 30) }}</span>
+                            @endif
                         </td>
                         <td class="px-5 py-3.5">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" style="background:{{ $ec['bg'] }};color:{{ $ec['text'] }}">
@@ -101,19 +148,20 @@
                                 {{ $ac['label'] }}
                             </span>
                         </td>
+                        <td class="px-5 py-3.5 text-xs text-gray-500 hidden md:table-cell">
+                            {{ $p->creado_por_nombre ?? '—' }}
+                        </td>
                         <td class="px-5 py-3.5 text-xs text-gray-400 whitespace-nowrap">
                             {{ \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') }}
                         </td>
                         <td class="px-5 py-3.5">
                             <div class="flex items-center gap-2">
-                                {{-- Expediente --}}
                                 <a href="{{ route('procesos.show', $p->id) }}"
                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-blue-100"
                                    style="background:#eff6ff;color:#2563eb" title="Ver expediente">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     Exp.
                                 </a>
-                                {{-- Ir a bandeja --}}
                                 @if($bandejaUrl && $canOpen)
                                     <a href="{{ $bandejaUrl }}"
                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-xs font-semibold transition-all hover:opacity-90"
@@ -129,10 +177,13 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-5 py-16 text-center">
+                        <td colspan="7" class="px-5 py-16 text-center">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <p class="text-sm text-gray-400 font-medium">No hay procesos registrados</p>
+                                <p class="text-sm text-gray-400 font-medium">No se encontraron procesos.</p>
+                                @if(request()->hasAny(['buscar','estado','etapa']))
+                                <a href="{{ route('procesos.index') }}" class="text-xs text-green-700 hover:underline">Limpiar filtros</a>
+                                @endif
                             </div>
                         </td>
                     </tr>
