@@ -22,7 +22,7 @@ class JuridicaController extends Controller
             abort(403, 'No tienes acceso a esta área');
         }
 
-        $estado = $request->get('estado', 'pendiente');
+        $estado = $request->get('estado', 'EN_CURSO');
         
         $procesos = Proceso::with(['workflow', 'etapaActual', 'procesoEtapas', 'creador', 'paa'])
             ->whereHas('etapaActual', function($query) {
@@ -35,11 +35,11 @@ class JuridicaController extends Controller
             ->paginate(20);
 
         $stats = [
-            'total' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'juridica'))->count(),
+            'total'    => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'juridica'))->count(),
             'pendiente' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'juridica'))
-                ->where('estado', 'pendiente')->count(),
+                ->where('estado', 'EN_CURSO')->count(),
             'en_curso' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'juridica'))
-                ->where('estado', 'en_curso')->count(),
+                ->where('estado', 'EN_REVISION')->count(),
             'rechazado' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'juridica'))
                 ->where('estado', 'rechazado')->count(),
         ];
@@ -63,6 +63,8 @@ class JuridicaController extends Controller
             'etapaActual.items',
             'procesoEtapas.etapa',
             'procesoEtapas.checks.item',
+            'procesoEtapas.recibidoPor',
+            'procesoEtapas.enviadoPor',
             'archivos',
             'auditorias.usuario',
             'creador',
@@ -128,13 +130,9 @@ class JuridicaController extends Controller
     public function verificarContratista(Request $request, $id)
     {
         $validated = $request->validate([
-            'tipo_documento' => 'required|string|max:10',
-            'numero_documento' => 'required|string|max:20',
-            'antecedentes_procuraduria' => 'required|in:si,no',
-            'antecedentes_policia' => 'required|in:si,no',
-            'antecedentes_contraloria' => 'required|in:si,no',
-            'inhabilidades' => 'required|in:si,no',
-            'observaciones' => 'nullable|string|max:1000',
+            'antecedentes_resultado' => 'required|in:sin_antecedentes,con_antecedentes',
+            'numero_documento'       => 'required|string|max:30',
+            'observaciones'          => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -142,48 +140,39 @@ class JuridicaController extends Controller
 
             $proceso = Proceso::findOrFail($id);
 
-            // Verificar si hay algún antecedente positivo
-            $tieneAntecedentes = in_array('si', [
-                $validated['antecedentes_procuraduria'],
-                $validated['antecedentes_policia'],
-                $validated['antecedentes_contraloria'],
-                $validated['inhabilidades']
-            ]);
-
-            $resultado = $tieneAntecedentes ? 'con_antecedentes' : 'sin_antecedentes';
+            $tieneAntecedentes = $validated['antecedentes_resultado'] === 'con_antecedentes';
 
             $proceso->update([
-                'verificacion_contratista' => json_encode($validated),
-                'resultado_verificacion' => $resultado,
+                'verificacion_contratista' => $validated['numero_documento'],
+                'resultado_verificacion'   => $validated['antecedentes_resultado'],
             ]);
 
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'contratista_verificado',
-                'Jurídica',
-                $proceso->etapaActual->nombre,
+                'Verificación de contratista: doc ' . $validated['numero_documento'] . ' — ' . $validated['antecedentes_resultado'],
+                $proceso->etapa_actual_id,
                 null,
-                "Verificación de contratista: {$validated['tipo_documento']} {$validated['numero_documento']} - Resultado: $resultado" .
-                ($validated['observaciones'] ? " - {$validated['observaciones']}" : "")
+                ['resultado' => $validated['antecedentes_resultado']]
             );
 
             if ($tieneAntecedentes) {
                 Alerta::create([
                     'proceso_id' => $proceso->id,
-                    'tipo' => 'advertencia',
-                    'mensaje' => 'El contratista tiene antecedentes o inhabilidades',
-                    'prioridad' => 'alta',
-                    'user_id' => $proceso->created_by,
+                    'tipo'       => 'advertencia',
+                    'mensaje'    => 'El contratista tiene antecedentes o inhabilidades',
+                    'prioridad'  => 'alta',
+                    'user_id'    => $proceso->created_by,
                 ]);
             }
 
             DB::commit();
 
             return back()->with(
-                $tieneAntecedentes ? 'warning' : 'success',
-                $tieneAntecedentes 
-                    ? 'Verificación completada - Se encontraron antecedentes o inhabilidades'
-                    : 'Verificación completada - Sin antecedentes'
+                $tieneAntecedentes ? 'error' : 'success',
+                $tieneAntecedentes
+                    ? 'Verificación registrada — Se encontraron antecedentes. Se creó una alerta.'
+                    : 'Verificación registrada — Sin antecedentes.'
             );
 
         } catch (\Exception $e) {
@@ -292,32 +281,35 @@ class JuridicaController extends Controller
                 return back()->with('error', 'No se puede rechazar, es la primera etapa');
             }
 
-            $proceso->etapa_actual_id = $etapaAnterior->id;
-            $proceso->estado = 'rechazado';
-            $proceso->save();
+            DB::table('procesos')->where('id', $proceso->id)->update([
+                'etapa_actual_id'  => $etapaAnterior->id,
+                'area_actual_role' => $etapaAnterior->area_role,
+                'estado'           => 'EN_CURSO',
+                'updated_at'       => now(),
+            ]);
 
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'etapa_rechazada',
-                'Jurídica',
-                $etapaActual->nombre,
-                $etapaAnterior->nombre,
-                "RECHAZADO POR JURÍDICA: {$validated['motivo']}"
+                "RECHAZADO POR JURÍDICA: {$validated['motivo']}",
+                $etapaActual->id,
+                null,
+                ['motivo' => $validated['motivo'], 'devuelto_a' => $etapaAnterior->nombre]
             );
 
             Alerta::create([
                 'proceso_id' => $proceso->id,
-                'tipo' => 'rechazo',
-                'mensaje' => "Proceso rechazado por Jurídica: {$validated['motivo']}",
-                'prioridad' => 'alta',
-                'user_id' => $proceso->created_by,
+                'tipo'       => 'rechazo',
+                'mensaje'    => "Proceso rechazado por Jurídica: {$validated['motivo']}",
+                'prioridad'  => 'alta',
+                'user_id'    => $proceso->created_by,
             ]);
 
             DB::commit();
 
             return redirect()
                 ->route('juridica.index')
-                ->with('success', 'Proceso rechazado y devuelto a etapa anterior');
+                ->with('success', 'Proceso rechazado y devuelto a ' . $etapaAnterior->nombre);
 
         } catch (\Exception $e) {
             DB::rollBack();

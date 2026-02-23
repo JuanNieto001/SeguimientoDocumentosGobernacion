@@ -17,146 +17,228 @@ class TiposArchivoSeeder extends Seeder
         // ======================================
         // TIPOS DE ARCHIVO PARA CD_PN
         // ======================================
-        $this->seedTiposCD_PN($workflows['CD_PN']->id);
+        if (isset($workflows['CD_PN'])) {
+            $this->seedTiposCD_PN($workflows['CD_PN']->id);
+        }
 
         // ======================================
-        // TIPOS DE ARCHIVO PARA MC, SA, LP, CM
+        // WORKFLOWS FUTUROS (comentados)
+        // Los tipos de archivo para MC, SA, LP, CM
+        // se habilitarán cuando se activen esos workflows.
         // ======================================
-        $this->seedTiposMC($workflows['MC']->id);
-        $this->seedTiposSA($workflows['SA']->id);
-        $this->seedTiposLP($workflows['LP']->id);
-        $this->seedTiposCM($workflows['CM']->id);
+        // if (isset($workflows['MC'])) $this->seedTiposMC($workflows['MC']->id);
+        // if (isset($workflows['SA'])) $this->seedTiposSA($workflows['SA']->id);
+        // if (isset($workflows['LP'])) $this->seedTiposLP($workflows['LP']->id);
+        // if (isset($workflows['CM'])) $this->seedTiposCM($workflows['CM']->id);
 
         $this->command->info('✅ Tipos de archivo por etapa creados correctamente.');
     }
 
     private function seedTiposCD_PN($workflowId)
     {
-        // Etapa 0A: Unidad Solicitante
-        $etapa0A = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 0)->first();
-        if ($etapa0A) {
-            $this->insertTipos($etapa0A->id, [
-                ['tipo' => 'borrador_estudios_previos', 'label' => 'Borrador de Estudios Previos', 'requerido' => true, 'orden' => 1],
-                ['tipo' => 'formato_necesidades', 'label' => 'Formato de Necesidades', 'requerido' => true, 'orden' => 2],
-                ['tipo' => 'cotizaciones', 'label' => 'Cotizaciones (mínimo 3)', 'requerido' => true, 'orden' => 3],
+        // Helper: busca etapa por orden dentro del workflow
+        $e = fn(int $orden) => DB::table('etapas')
+            ->where('workflow_id', $workflowId)
+            ->where('orden', $orden)
+            ->first();
+
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 0 – Estudio Previo y Remisión  [Unidad Solicitante]
+        //   Documentos que la unidad solicitante elabora y envía a Planeación.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(0)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'borrador_estudios_previos', 'label' => 'Borrador de Estudios Previos',      'requerido' => true,  'orden' => 1],
+                ['tipo' => 'formato_necesidades',       'label' => 'Formato de Necesidades',            'requerido' => true,  'orden' => 2],
+                ['tipo' => 'cotizaciones',               'label' => 'Cotizaciones (mínimo 3)',           'requerido' => true,  'orden' => 3],
             ]);
         }
 
-        // Etapa 1 (Planeación): Estudios Previos
-        $etapa1 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 2)->first();
-        if ($etapa1) {
-            $this->insertTipos($etapa1->id, [
-                ['tipo' => 'estudios_previos_finales', 'label' => 'Estudios Previos Finales', 'requerido' => true, 'orden' => 1],
-                ['tipo' => 'analisis_sector', 'label' => 'Análisis del Sector', 'requerido' => true, 'orden' => 2],
-                ['tipo' => 'matriz_riesgos', 'label' => 'Matriz de Riesgos', 'requerido' => true, 'orden' => 3],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 1 – Solicitud de Documentos Iniciales  [Planeación]
+        //   Planeación reúne/solicita y recibe: EP Finales, Análisis del Sector,
+        //   Matriz de Riesgos, CDP y Certificado de Compatibilidad con el PAA.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(1)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'estudios_previos_finales',     'label' => 'Estudios Previos Finales',                         'requerido' => true,  'orden' => 1],
+                ['tipo' => 'analisis_sector',              'label' => 'Análisis del Sector',                              'requerido' => true,  'orden' => 2],
+                ['tipo' => 'matriz_riesgos',               'label' => 'Matriz de Riesgos',                                'requerido' => true,  'orden' => 3],
+                ['tipo' => 'cdp',                          'label' => 'Certificado de Disponibilidad Presupuestal (CDP)', 'requerido' => true,  'orden' => 4],
+                ['tipo' => 'certificado_compatibilidad',   'label' => 'Certificado de Compatibilidad con el PAA',         'requerido' => true,  'orden' => 5],
             ]);
         }
 
-        // Etapa 2 (Planeación): Documentos presupuestales
-        $etapa2 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 3)->first();
-        if ($etapa2) {
-            $this->insertTipos($etapa2->id, [
-                ['tipo' => 'cdp', 'label' => 'Certificado de Disponibilidad Presupuestal (CDP)', 'requerido' => true, 'orden' => 1],
-                ['tipo' => 'certificado_compatibilidad', 'label' => 'Certificado de Compatibilidad', 'requerido' => true, 'orden' => 2],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 2 – Recepción y Validación de Documentos del Contratista  [Unidad Solicitante]
+        //   El contratista entrega TODOS los documentos personales/legales.
+        //   La Sec. Jurídica valida la HV. El abogado de la unidad revisa checklist.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(2)) {
+            $this->insertTipos($etapa->id, [
+                // Documentos de identidad y tributarios
+                ['tipo' => 'cedula_contratista',              'label' => 'Cédula de Ciudadanía (copia legible)',                                   'requerido' => true,  'orden' => 1],
+                ['tipo' => 'rut',                             'label' => 'RUT actualizado (datos y actividad económica)',                            'requerido' => true,  'orden' => 2],
+                ['tipo' => 'certificado_cuenta_bancaria',     'label' => 'Certificado de Cuenta Bancaria (vigencia inferior a 30 días)',             'requerido' => true,  'orden' => 3],
+                // Documentos académicos y de experiencia
+                ['tipo' => 'soportes_academicos',             'label' => 'Certificados de Estudio (diplomas/actas de grado pregrado y posgrado)',   'requerido' => true,  'orden' => 4],
+                ['tipo' => 'certificados_experiencia',        'label' => 'Certificados de Experiencia Laboral',                                      'requerido' => true,  'orden' => 5],
+                ['tipo' => 'tarjeta_profesional',             'label' => 'Matrícula o Tarjeta Profesional (cuando aplique)',                        'requerido' => false, 'orden' => 6],
+                ['tipo' => 'ausencia_sanciones_profesionales','label' => 'Constancia de Ausencia de Sanciones Disciplinarias Profesionales',        'requerido' => false, 'orden' => 7],
+                // Documentos de seguridad social
+                ['tipo' => 'seguridad_social_salud',          'label' => 'Constancia de Afiliación Salud (mes anterior)',                           'requerido' => true,  'orden' => 8],
+                ['tipo' => 'seguridad_social_pension',        'label' => 'Constancia de Afiliación Pensión (mes anterior)',                          'requerido' => true,  'orden' => 9],
+                ['tipo' => 'certificado_medico',              'label' => 'Certificado de Examen Médico de Aptitud Laboral vigente',                 'requerido' => true,  'orden' => 10],
+                ['tipo' => 'situacion_militar',               'label' => 'Acreditación de la Situación Militar (cuando aplique)',                    'requerido' => false, 'orden' => 11],
+                // Antecedentes (todos con vigencia ≤ 30 días)
+                ['tipo' => 'antecedentes_disciplinarios',     'label' => 'Certificado Antecedentes Disciplinarios (Procuraduría)',                   'requerido' => true,  'orden' => 12],
+                ['tipo' => 'antecedentes_fiscales',           'label' => 'Certificado Antecedentes Fiscales (Contraloría General)',                  'requerido' => true,  'orden' => 13],
+                ['tipo' => 'antecedentes_judiciales',         'label' => 'Certificado Antecedentes Judiciales (Policía Nacional)',                   'requerido' => true,  'orden' => 14],
+                ['tipo' => 'antecedentes_medidas_correctivas','label' => 'Certificado de Ausencia de Medidas Correctivas',                           'requerido' => true,  'orden' => 15],
+                ['tipo' => 'delitos_sexuales',                'label' => 'Antecedentes de Delitos Sexuales',                                         'requerido' => true,  'orden' => 16],
+                ['tipo' => 'redam',                           'label' => 'Registro de Deudores Alimentarios Morosos (REDAM)',                        'requerido' => true,  'orden' => 17],
+                ['tipo' => 'inhabilidades_incompatibilidades','label' => 'Certificado de Inhabilidades e Incompatibilidades',                        'requerido' => true,  'orden' => 18],
+                // Declaraciones SIGEP / Ley 2013
+                ['tipo' => 'declaracion_bienes_rentas_sigep', 'label' => 'Declaración de Bienes y Rentas SIGEP II (descargado de plataforma)',      'requerido' => true,  'orden' => 19],
+                ['tipo' => 'declaracion_conflicto_intereses', 'label' => 'Declaración Bienes/Renta y Conflicto de Intereses (Ley 2013)',            'requerido' => true,  'orden' => 20],
+                // HV y validación jurídica
+                ['tipo' => 'hoja_vida_sigep',                 'label' => 'Hoja de Vida SIGEP (cargada en plataforma SIGEP II)',                    'requerido' => true,  'orden' => 21],
+                ['tipo' => 'hv_validada_juridica',            'label' => 'Hoja de Vida SIGEP validada por Secretaría Jurídica',                     'requerido' => true,  'orden' => 22],
             ]);
         }
 
-        // Etapa 3 (Hacienda): Viabilidad Económica
-        $etapa3 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 4)->first();
-        if ($etapa3) {
-            $this->insertTipos($etapa3->id, [
-                ['tipo' => 'viabilidad_economica', 'label' => 'Viabilidad Económica', 'requerido' => true, 'orden' => 1],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 3 – Elaboración de Documentos Contractuales  [Unidad Solicitante / Abogado]
+        //   El abogado de la unidad proyecta todos los documentos oficiales del
+        //   proceso. Las firmas requeridas: Ordenador del Gasto, Supervisor,
+        //   Contratista (acepta oferta). Honorarios según tabla de la Gobernación.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(3)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'invitacion_oferta',       'label' => 'Invitación a Presentar Oferta (Formato Almera)',                'requerido' => true,  'orden' => 1],
+                ['tipo' => 'aceptacion_oferta',       'label' => 'Aceptación de la Oferta firmada por el Contratista',          'requerido' => true,  'orden' => 2],
+                ['tipo' => 'solicitud_contratacion',  'label' => 'Solicitud de Contratación y Designación de Supervisor',       'requerido' => true,  'orden' => 3],
+                ['tipo' => 'certificado_idoneidad',   'label' => 'Certificado de Idoneidad y Experiencia del Contratista',       'requerido' => true,  'orden' => 4],
+                ['tipo' => 'estudios_previos_finales','label' => 'Estudios Previos con Anexos (versión definitiva, firmada)',   'requerido' => true,  'orden' => 5],
+                ['tipo' => 'analisis_sector',         'label' => 'Análisis del Sector (incluido estudio del mercado)',          'requerido' => true,  'orden' => 6],
+                ['tipo' => 'minuta_contrato',         'label' => 'Minuta del Contrato (proyección para revisión jurídica)',     'requerido' => true,  'orden' => 7],
+                ['tipo' => 'ficha_bpin',              'label' => 'Ficha BPIN (si aplica para proyectos de inversión)',          'requerido' => false, 'orden' => 8],
             ]);
         }
 
-        // Etapa 4: Verificación del contratista
-        $etapa4 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 5)->first();
-        if ($etapa4) {
-            $this->insertTipos($etapa4->id, [
-                ['tipo' => 'hoja_vida', 'label' => 'Hoja de Vida (SIGEP)', 'requerido' => true, 'orden' => 1],
-                ['tipo' => 'soportes_academicos', 'label' => 'Soportes Académicos', 'requerido' => true, 'orden' => 2],
-                ['tipo' => 'certificados_experiencia', 'label' => 'Certificados de Experiencia', 'requerido' => true, 'orden' => 3],
-                ['tipo' => 'antecedentes_disciplinarios', 'label' => 'Antecedentes Disciplinarios (Procuraduría)', 'requerido' => true, 'orden' => 4],
-                ['tipo' => 'antecedentes_judiciales', 'label' => 'Antecedentes Judiciales (Policía)', 'requerido' => true, 'orden' => 5],
-                ['tipo' => 'antecedentes_fiscales', 'label' => 'Antecedentes Fiscales (Contraloría)', 'requerido' => true, 'orden' => 6],
-                ['tipo' => 'seguridad_social', 'label' => 'Aportes a Seguridad Social', 'requerido' => true, 'orden' => 7],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 4 – Compilación de Carpeta Precontractual  [Unidad Solicitante]
+        //   Paso de organización interna; no requiere carga de archivos nuevos
+        //   (todos los documentos ya fueron cargados en etapas anteriores).
+        // ─────────────────────────────────────────────────────────────────────
+        // Sin tipos de archivo: es una etapa de verificación/checklist.
+
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 5 – Radicación en Secretaría Jurídica  [Jurídica]
+        //   Jurídica recibe la carpeta y genera el radicado de recepción.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(5)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'radicado_recepcion_juridica', 'label' => 'Radicado de Recepción (Secretaría Jurídica)', 'requerido' => false, 'orden' => 1],
             ]);
         }
 
-        // Etapa 5: Proyección del contrato
-        $etapa5 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 6)->first();
-        if ($etapa5) {
-            $this->insertTipos($etapa5->id, [
-                ['tipo' => 'minuta_contrato', 'label' => 'Minuta del Contrato (borrador)', 'requerido' => true, 'orden' => 1],
-                ['tipo' => 'solicitud_contratacion', 'label' => 'Solicitud de Contratación', 'requerido' => true, 'orden' => 2],
-                ['tipo' => 'designacion_supervisor', 'label' => 'Designación de Supervisor', 'requerido' => true, 'orden' => 3],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 6 – Revisión Jurídica y Ajustado a Derecho  [Jurídica]
+        //   Jurídica emite el concepto "Ajustado a Derecho".
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(6)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'ajustado_derecho', 'label' => 'Ajustado a Derecho (Concepto Jurídico)', 'requerido' => true, 'orden' => 1],
             ]);
         }
 
-        // Etapa 7: Ajustado a Derecho
-        $etapa7 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 8)->first();
-        if ($etapa7) {
-            $this->insertTipos($etapa7->id, [
-                ['tipo' => 'ajustado_derecho', 'label' => 'Ajustado a Derecho', 'requerido' => true, 'orden' => 1],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 7 – Estructuración en SECOP II  [SECOP / Unidad de Compras]
+        //   La Unidad de Compras estructura y publica el proceso en SECOP II.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(7)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'proceso_secop', 'label' => 'Proceso Estructurado/Publicado en SECOP II', 'requerido' => true, 'orden' => 1],
             ]);
         }
 
-        // Etapa 8: SECOP - Estructuración
-        $etapa8 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 9)->first();
-        if ($etapa8) {
-            $this->insertTipos($etapa8->id, [
-                ['tipo' => 'proceso_secop', 'label' => 'Proceso Estructurado en SECOP', 'requerido' => true, 'orden' => 1],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 8 – Aprobaciones y Firmas en SECOP II  [SECOP]
+        //   El contrato es aprobado y firmado digitalmente por ambas partes.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(8)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'contrato_firmado',    'label' => 'Contrato Firmado Digitalmente',              'requerido' => true, 'orden' => 1],
+                ['tipo' => 'contrato_electronico','label' => 'Contrato Electrónico registrado en SECOP II','requerido' => true, 'orden' => 2],
             ]);
         }
 
-        // Etapa 9: Firma del contrato
-        $etapa9 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 10)->first();
-        if ($etapa9) {
-            $this->insertTipos($etapa9->id, [
-                ['tipo' => 'contrato_firmado', 'label' => 'Contrato Firmado', 'requerido' => true, 'orden' => 1],
-                ['tipo' => 'contrato_electronico', 'label' => 'Contrato Electrónico SECOP', 'requerido' => true, 'orden' => 2],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 9 – Solicitud de RPC  [Planeación / Unidad de Descentralización]
+        //   Planeación solicita formalmente el Registro Presupuestal a Hacienda.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(9)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'solicitud_rpc', 'label' => 'Solicitud de Registro Presupuestal de Compromiso (RPC)', 'requerido' => true, 'orden' => 1],
             ]);
         }
 
-        // Etapa 10: Registro Presupuestal
-        $etapa10 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 11)->first();
-        if ($etapa10) {
-            $this->insertTipos($etapa10->id, [
-                ['tipo' => 'registro_presupuestal', 'label' => 'Registro Presupuestal (RP)', 'requerido' => true, 'orden' => 1],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 10 – Expedición del RPC  [Hacienda]
+        //   Hacienda expide el Registro Presupuestal de Compromiso.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(10)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'registro_presupuestal', 'label' => 'Registro Presupuestal de Compromiso (RPC)', 'requerido' => true, 'orden' => 1],
             ]);
         }
 
-        // Etapa 11: Radicación
-        $etapa11 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 12)->first();
-        if ($etapa11) {
-            $this->insertTipos($etapa11->id, [
-                ['tipo' => 'comprobante_radicacion', 'label' => 'Comprobante de Radicación', 'requerido' => true, 'orden' => 1],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 11 – Organización del Expediente Físico  [Unidad Solicitante]
+        //   Paso de organización; los documentos ya existen en etapas anteriores.
+        // ─────────────────────────────────────────────────────────────────────
+        // Sin tipos de archivo: es una etapa de organización/checklist.
+
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 12 – Radicación del Expediente y Asignación Nº Contrato  [Jurídica]
+        //   Jurídica recibe el expediente físico, radica y asigna número de contrato.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(12)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'comprobante_radicacion', 'label' => 'Comprobante de Radicación del Expediente', 'requerido' => true, 'orden' => 1],
             ]);
         }
 
-        // Etapa 12: Pólizas
-        $etapa12 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 13)->first();
-        if ($etapa12) {
-            $this->insertTipos($etapa12->id, [
-                ['tipo' => 'polizas', 'label' => 'Pólizas de Garantía', 'requerido' => true, 'orden' => 1],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 13 – Solicitud de ARL  [Unidad Solicitante]
+        //   La unidad gestiona la afiliación a la ARL del contratista.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(13)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'poliza_arl',        'label' => 'Póliza / Certificado de ARL (Accidente Laboral)', 'requerido' => true,  'orden' => 1],
+                ['tipo' => 'afiliacion_arl',    'label' => 'Constancia de Afiliación a ARL',                  'requerido' => false, 'orden' => 2],
             ]);
         }
 
-        // Etapa 13: Acta de Inicio
-        $etapa13 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 14)->first();
-        if ($etapa13) {
-            $this->insertTipos($etapa13->id, [
-                ['tipo' => 'acta_inicio', 'label' => 'Acta de Inicio', 'requerido' => true, 'orden' => 1],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 14 – Elaboración y Firma del Acta de Inicio  [Unidad Solicitante]
+        //   La unidad elabora y hace firmar el Acta de Inicio por ambas partes.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(14)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'acta_inicio', 'label' => 'Acta de Inicio (firmada por ambas partes)', 'requerido' => true, 'orden' => 1],
             ]);
         }
 
-        // Etapa 14: Ejecución y Cierre
-        $etapa14 = DB::table('etapas')->where('workflow_id', $workflowId)->where('orden', 15)->first();
-        if ($etapa14) {
-            $this->insertTipos($etapa14->id, [
-                ['tipo' => 'informes_supervision', 'label' => 'Informes de Supervisión', 'requerido' => false, 'orden' => 1],
-                ['tipo' => 'acta_terminacion', 'label' => 'Acta de Terminación', 'requerido' => true, 'orden' => 2],
-                ['tipo' => 'acta_liquidacion', 'label' => 'Acta de Liquidación (si aplica)', 'requerido' => false, 'orden' => 3],
+        // ─────────────────────────────────────────────────────────────────────
+        // ORDEN 15 – Inicio de Ejecución en SECOP II  [SECOP / Unidad de Compras]
+        //   La Unidad de Compras carga el Acta de Inicio en SECOP II y registra
+        //   el inicio formal de la ejecución del contrato.
+        // ─────────────────────────────────────────────────────────────────────
+        if ($etapa = $e(15)) {
+            $this->insertTipos($etapa->id, [
+                ['tipo' => 'acta_inicio_secop', 'label' => 'Acta de Inicio registrada en SECOP II', 'requerido' => true, 'orden' => 1],
             ]);
         }
     }

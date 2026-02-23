@@ -22,7 +22,7 @@ class SecopController extends Controller
             abort(403, 'No tienes acceso a esta área');
         }
 
-        $estado = $request->get('estado', 'pendiente');
+        $estado = $request->get('estado', 'EN_CURSO');
         
         $procesos = Proceso::with(['workflow', 'etapaActual', 'procesoEtapas', 'creador', 'paa'])
             ->whereHas('etapaActual', function($query) {
@@ -35,11 +35,11 @@ class SecopController extends Controller
             ->paginate(20);
 
         $stats = [
-            'total' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'secop'))->count(),
+            'total'    => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'secop'))->count(),
             'pendiente' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'secop'))
-                ->where('estado', 'pendiente')->count(),
+                ->where('estado', 'EN_CURSO')->count(),
             'en_curso' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'secop'))
-                ->where('estado', 'en_curso')->count(),
+                ->where('estado', 'EN_REVISION')->count(),
             'publicado_secop' => Proceso::whereHas('etapaActual', fn($q) => $q->where('area_role', 'secop'))
                 ->whereNotNull('numero_proceso_secop')->count(),
         ];

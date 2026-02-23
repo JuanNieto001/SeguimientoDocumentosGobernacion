@@ -44,6 +44,14 @@ class ProcesoAuditoria extends Model
     }
 
     /**
+     * Alias en español para la relación user
+     */
+    public function usuario(): BelongsTo
+    {
+        return $this->user();
+    }
+
+    /**
      * Relación: Una auditoría puede estar asociada a una etapa
      */
     public function etapa(): BelongsTo
@@ -93,9 +101,9 @@ class ProcesoAuditoria extends Model
     }
 
     /**
-     * Scope: Por usuario
+     * Scope: Por usuario (por ID)
      */
-    public function scopeUsuario($query, int $userId)
+    public function scopePorUsuario($query, int $userId)
     {
         return $query->where('user_id', $userId);
     }

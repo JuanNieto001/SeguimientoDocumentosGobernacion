@@ -17,6 +17,7 @@ class JuridicaController extends Controller
 
         $procesos = \DB::table('procesos')
             ->where('area_actual_role', $areaRole)
+            ->where('estado', 'EN_CURSO')
             ->orderByDesc('id')
             ->get();
 

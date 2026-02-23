@@ -58,7 +58,7 @@
         {{-- Filtros --}}
         <div class="bg-white rounded-2xl border p-4 flex items-center gap-3" style="border-color:#e2e8f0">
             <span class="text-xs text-gray-400 font-medium">Filtrar:</span>
-            @foreach(['pendiente'=>'Pendientes','en_curso'=>'En curso','rechazado'=>'Rechazados','todos'=>'Todos'] as $val => $label)
+            @foreach(['EN_CURSO'=>'Pendientes','EN_REVISION'=>'En revisión','rechazado'=>'Rechazados','todos'=>'Todos'] as $val => $label)
             <a href="{{ url('/juridica?estado='.$val) }}"
                class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
                style="background:{{ $estado==$val?'#14532d':'#f1f5f9' }};color:{{ $estado==$val?'#fff':'#374151' }}">

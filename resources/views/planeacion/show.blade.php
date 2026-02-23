@@ -53,7 +53,7 @@
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm border-t pt-4" style="border-color:#f1f5f9">
                 <div>
-                    <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Workflow</p>
+                    <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Tipo de contratación</p>
                     <p class="font-medium text-gray-700">{{ $proceso->workflow->nombre ?? 'N/D' }}</p>
                 </div>
                 <div>
@@ -69,6 +69,79 @@
                     <p class="font-medium text-gray-700">{{ optional($proceso->creador)->name ?? 'N/A' }}</p>
                 </div>
             </div>
+        </div>
+
+        {{-- Documento de Estudios Previos --}}
+        @php
+            $documentoEstudiosPrevios = DB::table('proceso_etapa_archivos')
+                ->where('proceso_id', $proceso->id)
+                ->where('tipo_archivo', 'estudios_previos')
+                ->first();
+        @endphp
+        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+            <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
+                <h3 class="text-sm font-semibold text-gray-700">📄 Documento de Estudios Previos</h3>
+            </div>
+            <div class="p-5">
+                @if($documentoEstudiosPrevios)
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">{{ $documentoEstudiosPrevios->nombre_original }}</p>
+                                <p class="text-xs text-gray-600 mt-1">
+                                    Subido el {{ \Carbon\Carbon::parse($documentoEstudiosPrevios->uploaded_at)->format('d/m/Y H:i') }}
+                                </p>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="{{ route('workflow.files.download', ['archivo' => $documentoEstudiosPrevios->id, 'inline' => 1]) }}" 
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all"
+                                   target="_blank">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    Ver
+                                </a>
+                                <a href="{{ route('workflow.files.download', $documentoEstudiosPrevios->id) }}" 
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
+                                   target="_blank">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Descargar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-900">
+                        <p class="font-semibold">⚠️ No se encontró el documento de Estudios Previos</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Recepción --}}
+        <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Recepción del documento</h3>
+            <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
+                @csrf
+                <input type="hidden" name="area_role" value="planeacion">
+                @php $recibido = $procesoEtapaActual && $procesoEtapaActual->recibido; @endphp
+                <div class="flex items-center gap-4">
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                        style="background:{{ $recibido?'#f0fdf4':'#14532d' }};color:{{ $recibido?'#15803d':'#fff' }};border:{{ $recibido?'1px solid #bbf7d0':'none' }}"
+                        {{ $recibido?'disabled':'' }}>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            @if($recibido)
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            @else
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                            @endif
+                        </svg>
+                        {{ $recibido?'Documento recibido ✓':'Marcar como recibido' }}
+                    </button>
+                    @if($recibido && $procesoEtapaActual->recibido_at)
+                    <span class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($procesoEtapaActual->recibido_at)->format('d/m/Y H:i') }}</span>
+                    @endif
+                </div>
+            </form>
         </div>
 
         {{-- Decisión de Planeación --}}
@@ -114,34 +187,6 @@
                     </form>
                 </div>
             </div>
-        </div>
-
-        {{-- Recepción --}}
-        <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Recepción del documento</h3>
-            <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
-                @csrf
-                <input type="hidden" name="area_role" value="planeacion">
-                @php $recibido = $procesoEtapaActual && $procesoEtapaActual->recibido; @endphp
-                <div class="flex items-center gap-4">
-                    <button type="submit"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-                        style="background:{{ $recibido?'#f0fdf4':'#14532d' }};color:{{ $recibido?'#15803d':'#fff' }};border:{{ $recibido?'1px solid #bbf7d0':'none' }}"
-                        {{ $recibido?'disabled':'' }}>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            @if($recibido)
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            @else
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                            @endif
-                        </svg>
-                        {{ $recibido?'Documento recibido ✓':'Marcar como recibido' }}
-                    </button>
-                    @if($recibido && $procesoEtapaActual->recibido_at)
-                    <span class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($procesoEtapaActual->recibido_at)->format('d/m/Y H:i') }}</span>
-                    @endif
-                </div>
-            </form>
         </div>
 
         {{-- Archivos --}}
@@ -227,13 +272,13 @@
         </div>
 
         {{-- Checklist --}}
-        @if($procesoEtapaActual && $procesoEtapaActual->checks->isNotEmpty())
+        @if($procesoEtapaActual && $checks->isNotEmpty())
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">Lista de verificación</h3>
             </div>
             <div class="p-4 space-y-2">
-                @foreach($procesoEtapaActual->checks as $check)
+                @foreach($checks as $check)
                 <form method="POST" action="{{ route('workflow.checks.toggle', [$proceso->id, $check->id]) }}">
                     @csrf
                     <input type="hidden" name="area_role" value="planeacion">
@@ -242,8 +287,8 @@
                             style="background:{{ $check->checked?'#f0fdf4':'#f8fafc' }};border:1px solid {{ $check->checked?'#bbf7d0':'#e2e8f0' }}"
                             {{ !$procesoEtapaActual->recibido?'disabled':'' }}>
                         <span class="text-base">{{ $check->checked?'✅':'☐' }}</span>
-                        <span class="font-medium text-gray-700">{{ optional($check->item)->label ?? 'Ítem #'.$check->id }}</span>
-                        @if(optional($check->item)->requerido)<span class="ml-auto text-xs text-gray-400">(requerido)</span>@endif
+                        <span class="font-medium text-gray-700">{{ $check->label ?? 'Ítem #'.$check->id }}</span>
+                        @if($check->requerido)<span class="ml-auto text-xs text-gray-400">(requerido)</span>@endif
                     </button>
                 </form>
                 @endforeach

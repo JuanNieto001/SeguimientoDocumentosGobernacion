@@ -21,6 +21,15 @@ class Proceso extends Model
         'created_by',
         'paa_id',
         'valor_estimado',
+        // Datos del contratista (CD-PN)
+        'contratista_nombre',
+        'contratista_documento',
+        'contratista_tipo_documento',
+        'plazo_ejecucion',
+        'numero_proceso_juridica',
+        // Origen de la solicitud
+        'secretaria_origen_id',
+        'unidad_origen_id',
         // Planeación
         'paa_verificado',
         'aprobado_planeacion',
@@ -162,6 +171,22 @@ class Proceso extends Model
     public function paa(): BelongsTo
     {
         return $this->belongsTo(PlanAnualAdquisicion::class, 'paa_id');
+    }
+
+    /**
+     * Relación: Secretaría de donde nace la solicitud
+     */
+    public function secretariaOrigen(): BelongsTo
+    {
+        return $this->belongsTo(Secretaria::class, 'secretaria_origen_id');
+    }
+
+    /**
+     * Relación: Unidad solicitante que inicia el proceso
+     */
+    public function unidadOrigen(): BelongsTo
+    {
+        return $this->belongsTo(Unidad::class, 'unidad_origen_id');
     }
 
     /**

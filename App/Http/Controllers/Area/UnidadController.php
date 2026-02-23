@@ -52,6 +52,7 @@ class UnidadController extends Controller
         $checks = collect();
         $enviarHabilitado = false;
         $archivos = collect();
+        $puedeEditar = false; // Nueva variable para controlar si puede editar
 
         if ($proceso) {
 
@@ -72,6 +73,9 @@ class UnidadController extends Controller
 
                 $procesoEtapa = DB::table('proceso_etapas')->where('id', $procesoEtapaId)->first();
             }
+
+            // ✅ NUEVO: Determinar si puede editar (solo si NO ha enviado)
+            $puedeEditar = !$procesoEtapa->enviado;
 
             // 5) Seed checks si faltan (para que la vista siempre tenga checklist)
             $checksCount = DB::table('proceso_etapa_checks')
@@ -103,24 +107,25 @@ class UnidadController extends Controller
                 ->orderBy('ei.orden')
                 ->get();
 
-            // 7) Habilitar envío si existen archivos requeridos (NO checks para Unidad)
-            $tiposRequeridos = ['borrador_estudios_previos', 'formato_necesidades'];
-            $archivosRequeridos = 0;
+            // 7) Habilitar envío según etapa
+            $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+            $ordenEtapa = $etapaActual ? $etapaActual->orden : 0;
             
-            foreach ($tiposRequeridos as $tipo) {
-                $existe = DB::table('proceso_etapa_archivos')
+            // Verificar archivos según la etapa
+            if ($ordenEtapa == 0) {
+                // Etapa 0: requiere solo Estudios Previos
+                $enviarHabilitado = DB::table('proceso_etapa_archivos')
                     ->where('proceso_id', $proceso->id)
                     ->where('etapa_id', $proceso->etapa_actual_id)
-                    ->where('tipo_archivo', $tipo)
+                    ->where('tipo_archivo', 'estudios_previos')
                     ->exists();
-                    
-                if ($existe) {
-                    $archivosRequeridos++;
-                }
+            } else {
+                // Otras etapas: habilitar si hay al menos 1 archivo
+                $enviarHabilitado = DB::table('proceso_etapa_archivos')
+                    ->where('proceso_id', $proceso->id)
+                    ->where('etapa_id', $proceso->etapa_actual_id)
+                    ->exists();
             }
-            
-            // Envío habilitado si existen los 2 archivos requeridos
-            $enviarHabilitado = ($archivosRequeridos === count($tiposRequeridos));
             
             // 8) Cargar archivos de la etapa actual
             $archivos = DB::table('proceso_etapa_archivos as pea')
@@ -142,7 +147,8 @@ class UnidadController extends Controller
             'procesoEtapa',
             'checks',
             'enviarHabilitado',
-            'archivos'
+            'archivos',
+            'puedeEditar' // ✅ NUEVO: Pasar variable a la vista
         ));
     }
 

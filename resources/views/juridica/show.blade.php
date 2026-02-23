@@ -18,6 +18,7 @@
         </div>
     </x-slot>
 
+    @php $recibido = $procesoEtapaActual && $procesoEtapaActual->recibido; @endphp
     <div class="p-6 space-y-4">
 
         @if(session('success'))
@@ -84,37 +85,40 @@
                 <h3 class="text-sm font-semibold text-gray-700">Decisión Jurídica</h3>
             </div>
             <div class="p-5 grid sm:grid-cols-2 gap-4">
-                <div class="p-4 rounded-xl space-y-3" style="background:#f0fdf4;border:1px solid #bbf7d0">
-                    <p class="text-sm font-semibold" style="color:#15803d">✅ Aprobar y enviar a SECOP</p>
-                    <form method="POST" action="{{ route('juridica.aprobar', $proceso->id) }}">
+                <div class="p-4 rounded-xl space-y-3" style="background:{{ $recibido ? '#f0fdf4' : '#f8fafc' }};border:1px solid {{ $recibido ? '#bbf7d0' : '#e2e8f0' }};{{ !$recibido ? 'opacity:0.6' : '' }}">
+                    <p class="text-sm font-semibold" style="color:{{ $recibido ? '#15803d' : '#9ca3af' }}">✅ Enviar a la siguiente secretaría</p>
+                    <form method="POST" action="{{ route('workflow.enviar', $proceso->id) }}">
                         @csrf
                         <div class="space-y-3">
-                            <textarea name="observaciones" rows="2"
-                                class="w-full border rounded-xl px-3 py-2 text-sm bg-white resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
-                                style="border-color:#d1fae5"
-                                placeholder="Observaciones (opcional)..."></textarea>
+                            @if(!$recibido)
+                            <p class="text-xs text-amber-600">⚠️ Debe marcar el documento como recibido primero.</p>
+                            @else
+                            <p class="text-xs text-gray-500">Requiere: checklist completo.</p>
+                            @endif
                             <button type="submit"
-                                onclick="return confirm('¿Confirmar aprobación jurídica y enviar a SECOP?')"
-                                class="w-full px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
-                                style="background:#15803d">
-                                Aprobar y enviar a SECOP
+                                onclick="return confirm('¿Confirmar y enviar a la siguiente secretaría?')"
+                                class="w-full px-4 py-2 rounded-xl text-white text-sm font-semibold transition"
+                                style="background:{{ $recibido ? '#15803d' : '#9ca3af' }};cursor:{{ $recibido ? 'pointer' : 'not-allowed' }}"
+                                {{ !$recibido ? 'disabled' : '' }}>
+                                Enviar a siguiente secretaría
                             </button>
                         </div>
                     </form>
                 </div>
-                <div class="p-4 rounded-xl space-y-3" style="background:#fef2f2;border:1px solid #fecaca">
-                    <p class="text-sm font-semibold" style="color:#dc2626">❌ Rechazar proceso</p>
+                <div class="p-4 rounded-xl space-y-3" style="background:{{ $recibido ? '#fef2f2' : '#f8fafc' }};border:1px solid {{ $recibido ? '#fecaca' : '#e2e8f0' }};{{ !$recibido ? 'opacity:0.6' : '' }}">
+                    <p class="text-sm font-semibold" style="color:{{ $recibido ? '#dc2626' : '#9ca3af' }}">❌ Rechazar proceso</p>
                     <form method="POST" action="{{ route('juridica.rechazar', $proceso->id) }}">
                         @csrf
                         <div class="space-y-3">
                             <textarea name="motivo" rows="2"
-                                class="w-full border rounded-xl px-3 py-2 text-sm bg-white resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
-                                style="border-color:#fecaca"
-                                placeholder="Motivo del rechazo (obligatorio)..." required minlength="10"></textarea>
+                                class="w-full border rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+                                style="border-color:{{ $recibido ? '#fecaca' : '#e2e8f0' }};background:{{ $recibido ? '#fff' : '#f8fafc' }}"
+                                placeholder="Motivo del rechazo (obligatorio)..." {{ $recibido ? 'required' : 'disabled' }} minlength="10"></textarea>
                             <button type="submit"
                                 onclick="return confirm('¿Rechazar y devolver el proceso?')"
-                                class="w-full px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
-                                style="background:#dc2626">
+                                class="w-full px-4 py-2 rounded-xl text-white text-sm font-semibold transition"
+                                style="background:{{ $recibido ? '#dc2626' : '#9ca3af' }};cursor:{{ $recibido ? 'pointer' : 'not-allowed' }}"
+                                {{ !$recibido ? 'disabled' : '' }}>
                                 Rechazar y devolver
                             </button>
                         </div>
@@ -129,7 +133,6 @@
             <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
                 @csrf
                 <input type="hidden" name="area_role" value="juridica">
-                @php $recibido = $procesoEtapaActual && $procesoEtapaActual->recibido; @endphp
                 <div class="flex items-center gap-4">
                     <button type="submit"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
@@ -195,21 +198,32 @@
                 <div class="grid sm:grid-cols-2 gap-3">
                     <div class="p-4 rounded-xl" style="background:#f8fafc;border:1px solid #e2e8f0">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Verificar Contratista</p>
-                        <form method="POST" action="{{ route('juridica.verificar.contratista', $proceso->id) }}">
+                        <form method="POST" action="{{ route('juridica.verificar.contratista', $proceso->id) }}" class="space-y-2">
                             @csrf
+                            <select name="antecedentes_resultado" required
+                                class="w-full px-3 py-2 rounded-xl border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color:#e2e8f0">
+                                <option value="">Resultado verificación...</option>
+                                <option value="sin_antecedentes">Sin antecedentes ✅</option>
+                                <option value="con_antecedentes">⚠ Con antecedentes</option>
+                            </select>
+                            <input type="text" name="numero_documento" placeholder="Número de identificación"
+                                   required class="w-full px-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color:#e2e8f0">
                             <button type="submit"
-                                    onclick="return confirm('¿Confirmar verificación de antecedentes del contratista?')"
                                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition"
                                     style="background:#1d4ed8">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                Verificar antecedentes
+                                Registrar verificación
                             </button>
                         </form>
                     </div>
                     <div class="p-4 rounded-xl" style="background:#f8fafc;border:1px solid #e2e8f0">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Aprobar Pólizas</p>
-                        <form method="POST" action="{{ route('juridica.polizas', $proceso->id) }}">
+                        <form method="POST" action="{{ route('juridica.polizas', $proceso->id) }}" class="space-y-2">
                             @csrf
+                            <input type="hidden" name="polizas_aprobadas" value="1">
+                            <textarea name="observaciones" rows="2"
+                                class="w-full border rounded-xl px-3 py-2 text-sm bg-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                style="border-color:#e2e8f0" placeholder="Observaciones (opcional)..."></textarea>
                             <button type="submit"
                                     onclick="return confirm('¿Aprobar las pólizas del proceso?')"
                                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition"
@@ -313,14 +327,14 @@
         @endif
         @endif
 
-        {{-- Historial --}}
+        {{-- Historial breve (visible para todos) --}}
         @if($proceso->auditorias->isNotEmpty())
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">Historial de actividad</h3>
             </div>
             <div class="p-5 space-y-3">
-                @foreach($proceso->auditorias as $audit)
+                @foreach($proceso->auditorias->take(10) as $audit)
                 <div class="flex gap-3 text-sm">
                     <div class="w-1.5 h-1.5 rounded-full mt-2 shrink-0" style="background:#14532d"></div>
                     <div>
@@ -336,6 +350,18 @@
                 </div>
                 @endforeach
             </div>
+        </div>
+        @endif
+
+        {{-- Link a logs completos (solo admin) --}}
+        @if(auth()->user()->hasRole('admin'))
+        <div class="text-center">
+            <a href="{{ route('admin.logs.proceso', $proceso->id) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+               style="background:#1f2937;color:#d1d5db">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Ver auditoría completa
+            </a>
         </div>
         @endif
 

@@ -78,10 +78,15 @@
                         <form method="POST" action="{{ route('workflow.enviar', $proceso->id) }}" class="pt-2">
                             @csrf
                             <input type="hidden" name="area_role" value="{{ $areaRole }}">
-                            <button class="px-4 py-2 rounded text-white {{ $enviarHabilitado ? 'bg-gray-800' : 'bg-gray-400' }}"
+                            <button class="px-4 py-2 rounded text-white {{ $enviarHabilitado ? 'bg-gray-800' : 'bg-gray-400 cursor-not-allowed' }}"
                                     {{ $enviarHabilitado ? '' : 'disabled' }}>
                                 Finalizar Proceso
                             </button>
+                            @if(!$procesoEtapa || !$procesoEtapa->recibido)
+                                <p class="text-xs text-red-600 mt-1">⚠ Debes marcar "Recibí" antes de finalizar.</p>
+                            @elseif(!$enviarHabilitado)
+                                <p class="text-xs text-amber-600 mt-1">⚠ Completa todos los ítems requeridos del checklist.</p>
+                            @endif
                         </form>
 
                     </div>
