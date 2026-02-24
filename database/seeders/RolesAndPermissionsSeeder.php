@@ -135,6 +135,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'rentas',              // Unidad de Rentas → Paz y Salvo Rentas
             'inversiones_publicas',// Regalías e Inversiones → Compatibilidad del Gasto
             'presupuesto',         // Unidad de Presupuesto → CDP
+            'radicacion',          // Radicación y Correspondencia
         ];
 
         foreach ($workflowRoles as $roleName) {

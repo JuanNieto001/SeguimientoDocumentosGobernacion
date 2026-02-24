@@ -463,9 +463,9 @@ class WorkflowController extends Controller
             [
                 'tipo_documento' => 'sigep',
                 'nombre_documento' => 'SIGEP Validado',
-                'area_responsable_rol' => 'juridica',
-                'area_responsable_nombre' => 'Oficina de Radicación',
-                'secretaria_nombre' => 'Secretaría Jurídica',
+                'area_responsable_rol' => 'radicacion',
+                'area_responsable_nombre' => 'Radicación y Correspondencia',
+                'secretaria_nombre' => 'Secretaría General',
                 'puede_subir' => true,
             ],
         ];

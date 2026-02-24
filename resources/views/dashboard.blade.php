@@ -16,6 +16,7 @@
                             'contabilidad'        => 'Unidad de Contabilidad — Secretaría de Hacienda',
                             'inversiones_publicas'=> 'Regalías e Inversiones — Secretaría de Planeación',
                             'presupuesto'         => 'Unidad de Presupuesto — Secretaría de Hacienda',
+                            'radicacion'          => 'Radicación y Correspondencia — Secretaría General',
                             'hacienda'            => 'Secretaría de Hacienda',
                             'juridica'            => 'Secretaría Jurídica',
                             'secop'               => 'Grupo SECOP',
@@ -36,11 +37,14 @@
         'juridica'           => 'juridica.index',
         'secop'              => 'secop.index',
     ];
-    $myBandeja = collect($bandejaRoutes)->first(fn($route, $role) => auth()->user()->hasRole($role));
-    $myBandejaLabel = collect(['unidad_solicitante'=>'Unidad','planeacion'=>'Planeación','hacienda'=>'Hacienda','juridica'=>'Jurídica','secop'=>'SECOP'])
-        ->first(fn($lbl, $role) => auth()->user()->hasRole($role)) ?? '';
+    // Usuarios con rol de área-doc NO deben ver la bandeja de planeacion/hacienda aunque tengan ese rol
+    $rolesDocCheck2 = ['compras','talento_humano','rentas','contabilidad','inversiones_publicas','presupuesto','radicacion'];
+    $esAreaDoc2 = collect($rolesDocCheck2)->contains(fn($r) => auth()->user()->hasRole($r));
+    $myBandeja = $esAreaDoc2 ? null : collect($bandejaRoutes)->first(fn($route, $role) => auth()->user()->hasRole($role));
+    $myBandejaLabel = $esAreaDoc2 ? '' : (collect(['unidad_solicitante'=>'Unidad','planeacion'=>'Planeación','hacienda'=>'Hacienda','juridica'=>'Jurídica','secop'=>'SECOP'])
+        ->first(fn($lbl, $role) => auth()->user()->hasRole($role)) ?? '');
 
-    $rolesDocumentosCheck = ['compras','talento_humano','rentas','contabilidad','inversiones_publicas','presupuesto'];
+    $rolesDocumentosCheck = ['compras','talento_humano','rentas','contabilidad','inversiones_publicas','presupuesto','radicacion'];
     $esAreaDocumentos = collect($rolesDocumentosCheck)->contains(fn($r) => auth()->user()->hasRole($r));
 
     $solicitudesPendientes = $solicitudesPendientes ?? collect();
@@ -141,7 +145,7 @@
             </a>
             @endif
 
-            @if(auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante') || auth()->user()->hasRole('admin'))
+            @if(!$esAreaDocumentos && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante') || auth()->user()->hasRole('admin')))
             <a href="{{ route('procesos.create') }}"
                class="flex items-center gap-3 p-4 bg-white rounded-2xl transition-all hover:shadow-md hover:-translate-y-0.5"
                style="border:1px solid #e2e8f0">
@@ -167,7 +171,7 @@
                 </div>
             </a>
 
-            @if(auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('admin'))
+            @if(!$esAreaDocumentos && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('admin')))
             <a href="{{ route('paa.index') }}"
                class="flex items-center gap-3 p-4 bg-white rounded-2xl transition-all hover:shadow-md hover:-translate-y-0.5"
                style="border:1px solid #e2e8f0">

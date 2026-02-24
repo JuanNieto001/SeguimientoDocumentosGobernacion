@@ -20,7 +20,7 @@ class SolicitudDocumentosController extends Controller
         $user = auth()->user();
         
         // Obtener TODOS los roles del usuario que son roles de área de documentos
-        $rolesDocumentos = ['compras', 'talento_humano', 'contabilidad', 'rentas', 'inversiones_publicas', 'presupuesto'];
+        $rolesDocumentos = ['compras', 'talento_humano', 'contabilidad', 'rentas', 'inversiones_publicas', 'presupuesto', 'radicacion'];
         $userRoles = $user->getRoleNames()->toArray();
         $rolesActivos = array_intersect($userRoles, $rolesDocumentos);
 
@@ -45,8 +45,10 @@ class SolicitudDocumentosController extends Controller
             ->orderByDesc('pds.created_at')
             ->get();
 
-        // Agrupar por proceso
-        $solicitudesPorProceso = $solicitudes->groupBy('proceso_id');
+        // Agrupar por proceso — solo procesos con documentos AÚN pendientes
+        $solicitudesPorProceso = $solicitudes
+            ->groupBy('proceso_id')
+            ->filter(fn ($docs) => $docs->contains(fn ($d) => $d->estado !== 'subido'));
 
         // Determinar nombre del área principal
         $areaRole = $rolesActivos[array_key_first($rolesActivos)];
@@ -68,7 +70,7 @@ class SolicitudDocumentosController extends Controller
         $user = auth()->user();
         
         // Obtener todos los roles de documentos del usuario
-        $rolesDocumentos = ['compras', 'talento_humano', 'contabilidad', 'rentas', 'inversiones_publicas', 'presupuesto'];
+        $rolesDocumentos = ['compras', 'talento_humano', 'contabilidad', 'rentas', 'inversiones_publicas', 'presupuesto', 'radicacion'];
         $userRoles = $user->getRoleNames()->toArray();
         $rolesActivos = array_intersect($userRoles, $rolesDocumentos);
 
@@ -94,14 +96,38 @@ class SolicitudDocumentosController extends Controller
             ->where('uploaded_by', $user->id)
             ->get();
 
+        // Cargar documento de estudios previos adjunto al proceso
+        $estudiosPrevios = DB::table('proceso_etapa_archivos')
+            ->where('proceso_id', $proceso->id)
+            ->where('tipo_archivo', 'estudios_previos')
+            ->orderByDesc('created_at')
+            ->first();
+
+        // Cargar creador del proceso
+        $creador = DB::table('users')->where('id', $proceso->created_by)->first();
+
         $areaRole = $rolesActivos[array_key_first($rolesActivos)];
 
+        // Para presupuesto: cargar el doc de Compatibilidad del Gasto (inversiones_publicas) como referencia
+        $compatibilidadDoc = null;
+        if (in_array('presupuesto', $rolesActivos)) {
+            $compatibilidadDoc = DB::table('proceso_documentos_solicitados as pds')
+                ->leftJoin('proceso_etapa_archivos as pea', 'pea.id', '=', 'pds.archivo_id')
+                ->select('pds.*', 'pea.nombre_original as archivo_nombre', 'pea.ruta as archivo_ruta')
+                ->where('pds.proceso_id', $proceso->id)
+                ->where('pds.area_responsable_rol', 'inversiones_publicas')
+                ->first();
+        }
+
         return view('areas.solicitud-detalle', [
-            'proceso' => $proceso,
-            'solicitudes' => $solicitudes,
-            'archivosSubidos' => $archivosSubidos,
-            'areaRole' => $areaRole,
-            'areaName' => $this->getRoleName($areaRole),
+            'proceso'          => $proceso,
+            'solicitudes'      => $solicitudes,
+            'archivosSubidos'  => $archivosSubidos,
+            'estudiosPrevios'  => $estudiosPrevios,
+            'creador'          => $creador,
+            'areaRole'         => $areaRole,
+            'areaName'         => $this->getRoleName($areaRole),
+            'compatibilidadDoc' => $compatibilidadDoc,
         ]);
     }
 
@@ -117,6 +143,7 @@ class SolicitudDocumentosController extends Controller
             'rentas' => 'Rentas',
             'inversiones_publicas' => 'Inversiones Públicas',
             'presupuesto' => 'Presupuesto',
+            'radicacion' => 'Radicación y Correspondencia',
         ];
 
         return $nombres[$role] ?? ucfirst(str_replace('_', ' ', $role));

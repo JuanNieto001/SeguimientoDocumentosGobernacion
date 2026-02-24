@@ -24,7 +24,7 @@ class DashboardController extends Controller
         }
         
         // ── Roles de área específica (solicitudes paralelas Etapa 1) ──────────
-        $rolesDocumentos = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto'];
+        $rolesDocumentos = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
         $userRolesDoc = collect($rolesDocumentos)->filter(fn($r) => $user->hasRole($r));
 
         // Cargar solicitudes de documentos pendientes/subidos para estos roles
@@ -59,8 +59,8 @@ class DashboardController extends Controller
         // Unidad ve lo suyo. Planeación ve todo. Áreas ven lo que esté en su bandeja.
         if ($user->hasRole('unidad_solicitante')) {
             $base->where('procesos.created_by', $user->id);
-        } elseif ($user->hasRole('planeacion')) {
-            // Planeación supervisa todos los procesos — sin filtro adicional
+        } elseif ($user->hasRole('planeacion') && $userRolesDoc->isEmpty()) {
+            // Planeación pura supervisa todos los procesos — sin filtro adicional
         } else {
             $rolesArea = ['hacienda', 'juridica', 'secop'];
             $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));

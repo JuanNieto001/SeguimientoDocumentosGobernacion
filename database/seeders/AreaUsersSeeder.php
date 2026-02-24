@@ -151,12 +151,24 @@ class AreaUsersSeeder extends Seeder
 
             // ─────────────────────────────────────────────────────────
             // SECRETARÍA GENERAL – UNIDAD DE COMPRAS Y SUMINISTROS
-            // Responsable: PAA (Etapa 1) y publicación SECOP II (Etapa 6)
+            // Responsable: PAA (Etapa 1)
             // ─────────────────────────────────────────────────────────
             [
-                'name'          => 'Coordinador Compras y SECOP',
+                'name'          => 'Coordinador Compras y Suministros',
+                'email'         => 'compras@demo.com',
+                'role'          => 'compras',
+                'secretaria_id' => $secGeneral?->id,
+                'unidad_id'     => $uCompras?->id,
+            ],
+
+            // ─────────────────────────────────────────────────────────
+            // SECRETARÍA GENERAL – SECOP II
+            // Responsable: Publicación SECOP II (Etapa 6)
+            // ─────────────────────────────────────────────────────────
+            [
+                'name'          => 'Operador SECOP II',
                 'email'         => 'secop@demo.com',
-                'roles'         => ['secop', 'compras'],
+                'role'          => 'secop',
                 'secretaria_id' => $secGeneral?->id,
                 'unidad_id'     => $uCompras?->id,
             ],
@@ -171,6 +183,18 @@ class AreaUsersSeeder extends Seeder
                 'role'          => 'talento_humano',
                 'secretaria_id' => $secGeneral?->id,
                 'unidad_id'     => $uTalentoHumano?->id,
+            ],
+
+            // ─────────────────────────────────────────────────────────
+            // SECRETARÍA GENERAL – RADICACIÓN Y CORRESPONDENCIA
+            // Responsable: Documentos de Radicación (Etapa 1)
+            // ─────────────────────────────────────────────────────────
+            [
+                'name'          => 'Analista Radicación',
+                'email'         => 'radicacion@demo.com',
+                'role'          => 'radicacion',
+                'secretaria_id' => $secGeneral?->id,
+                'unidad_id'     => null,
             ],
 
             // ─────────────────────────────────────────────────────────

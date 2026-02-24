@@ -28,9 +28,15 @@ use App\Http\Controllers\Admin\LogsController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
+    if (!auth()->check()) {
+        return redirect()->route('login');
+    }
+    $rolesDoc = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
+    $tieneRolDoc = collect($rolesDoc)->contains(fn($r) => auth()->user()->hasRole($r));
+    if (auth()->user()->hasRole('planeacion') && !$tieneRolDoc) {
+        return redirect()->route('planeacion.index');
+    }
+    return redirect()->route('dashboard');
 });
 
 /*
@@ -245,6 +251,10 @@ Route::middleware(['auth', 'role:admin|unidad_solicitante'])
         Route::get('/procesos/{proceso}', [UnidadController::class, 'show'])->name('show');
         Route::match(['get', 'post'], '/crear', [UnidadController::class, 'crear'])->name('crear');
         Route::post('/procesos/{proceso}/enviar', [UnidadController::class, 'enviar'])->name('enviar');
+        Route::post('/procesos/{proceso}/recibir', [UnidadController::class, 'recibir'])->name('recibir');
+        Route::post('/procesos/{proceso}/doc/{check}/recibido-fisico', [UnidadController::class, 'marcarRecibidoFisico'])->name('recibido.fisico');
+        Route::post('/procesos/{proceso}/doc/{check}/subir-archivo', [UnidadController::class, 'subirArchivoDigital'])->name('subir.archivo');
+        Route::post('/procesos/{proceso}/aprobar-etapa2', [UnidadController::class, 'aprobarEtapa2'])->name('aprobar.etapa2');
     });
 
 Route::middleware(['auth', 'role:admin|planeacion'])

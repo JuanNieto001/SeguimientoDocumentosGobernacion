@@ -166,14 +166,324 @@ class UnidadController extends Controller
         ])->findOrFail($id);
 
         $user = auth()->user();
-        
-        // Verificar acceso: admin o creador del proceso
+
+        // Verificar acceso: admin o unidad_solicitante
         abort_unless(
-            $user->hasRole('admin') || $proceso->created_by === $user->id,
+            $user->hasRole('admin') || $user->hasRole('unidad_solicitante'),
             403
         );
 
+        // Obtener etapa actual
+        $etapaActual = $proceso->etapaActual;
+        $ordenEtapa = $etapaActual ? $etapaActual->orden : 0;
+
+        // Cargar proceso_etapa actual
+        $procesoEtapaActual = DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $proceso->etapa_actual_id)
+            ->first();
+
+        // Si estamos en etapa 2, 3 o 4 (del abogado: Validación Contratista, Docs Contractuales, Consolidación)
+        if ($ordenEtapa >= 2 && $ordenEtapa <= 4 && $proceso->area_actual_role === 'unidad_solicitante') {
+
+            // Verificar si $procesoEtapaActual tiene recibido
+            $recibido = $procesoEtapaActual && $procesoEtapaActual->recibido;
+
+            // Cargar checks con campos de recibido_fisico y archivos
+            $documentos = collect();
+            if ($procesoEtapaActual) {
+                // Asegurar que existan los checks (seedear si faltan)
+                $checksCount = DB::table('proceso_etapa_checks')
+                    ->where('proceso_etapa_id', $procesoEtapaActual->id)
+                    ->count();
+
+                if ($checksCount === 0) {
+                    $items = DB::table('etapa_items')
+                        ->where('etapa_id', $proceso->etapa_actual_id)
+                        ->orderBy('orden')
+                        ->get();
+
+                    foreach ($items as $item) {
+                        DB::table('proceso_etapa_checks')->insert([
+                            'proceso_etapa_id' => $procesoEtapaActual->id,
+                            'etapa_item_id'    => $item->id,
+                            'checked'          => false,
+                            'recibido_fisico'  => false,
+                            'created_at'       => now(),
+                            'updated_at'       => now(),
+                        ]);
+                    }
+                }
+
+                $documentos = DB::table('proceso_etapa_checks as pc')
+                    ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
+                    ->select(
+                        'pc.id as check_id',
+                        'pc.checked',
+                        'pc.recibido_fisico',
+                        'pc.recibido_fisico_at',
+                        'pc.archivo_path',
+                        'pc.archivo_nombre',
+                        'pc.archivo_subido_at',
+                        'ei.label',
+                        'ei.requerido',
+                        'ei.tipo_documento',
+                        'ei.responsable_unidad',
+                        'ei.notas'
+                    )
+                    ->where('pc.proceso_etapa_id', $procesoEtapaActual->id)
+                    ->orderBy('ei.orden')
+                    ->get();
+            }
+
+            // Calcular progreso
+            $totalDocs = $documentos->count();
+            $recibidosFisico = $documentos->where('recibido_fisico', true)->count();
+            $archivosSubidos = $documentos->whereNotNull('archivo_path')->count();
+            $todosCompletos = $totalDocs > 0 && $recibidosFisico === $totalDocs && $archivosSubidos === $totalDocs;
+
+            return view('areas.unidad-abogado', compact(
+                'proceso',
+                'procesoEtapaActual',
+                'recibido',
+                'documentos',
+                'totalDocs',
+                'recibidosFisico',
+                'archivosSubidos',
+                'todosCompletos',
+                'ordenEtapa'
+            ));
+        }
+
+        // Para etapa 0 u otras, usar la vista por defecto
         return view('areas.unidad-detalle', compact('proceso'));
+    }
+
+    /**
+     * Marcar como recibido (para etapa 2+)
+     */
+    public function recibir(Request $request, $id)
+    {
+        $proceso = Proceso::findOrFail($id);
+        $user = auth()->user();
+
+        abort_unless($user->hasRole('admin') || $user->hasRole('unidad_solicitante'), 403);
+
+        $procesoEtapa = DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $proceso->etapa_actual_id)
+            ->first();
+
+        if ($procesoEtapa && !$procesoEtapa->recibido) {
+            DB::table('proceso_etapas')
+                ->where('id', $procesoEtapa->id)
+                ->update([
+                    'recibido'     => true,
+                    'recibido_por' => $user->id,
+                    'recibido_at'  => now(),
+                    'updated_at'   => now(),
+                ]);
+
+            ProcesoAuditoria::registrar(
+                $proceso->id,
+                'documento_recibido',
+                'unidad_solicitante',
+                $proceso->etapaActual->nombre ?? 'Etapa actual',
+                null,
+                'Documento recibido por el abogado'
+            );
+        }
+
+        return redirect()->back()->with('success', 'Documento marcado como recibido.');
+    }
+
+    /**
+     * Marcar un documento del contratista como recibido físicamente
+     */
+    public function marcarRecibidoFisico(Request $request, $procesoId, $checkId)
+    {
+        $proceso = Proceso::findOrFail($procesoId);
+        $user = auth()->user();
+
+        abort_unless($user->hasRole('admin') || $user->hasRole('unidad_solicitante'), 403);
+
+        $check = DB::table('proceso_etapa_checks')->where('id', $checkId)->first();
+        abort_unless($check, 404);
+
+        // Toggle recibido_fisico
+        $nuevoEstado = !$check->recibido_fisico;
+
+        DB::table('proceso_etapa_checks')
+            ->where('id', $checkId)
+            ->update([
+                'recibido_fisico'     => $nuevoEstado,
+                'recibido_fisico_at'  => $nuevoEstado ? now() : null,
+                'recibido_fisico_por' => $nuevoEstado ? $user->id : null,
+                'checked'             => $nuevoEstado, // También marcar el check general
+                'checked_by'          => $nuevoEstado ? $user->id : null,
+                'checked_at'          => $nuevoEstado ? now() : null,
+                'updated_at'          => now(),
+            ]);
+
+        // Obtener etapa_item label
+        $item = DB::table('etapa_items')->where('id', $check->etapa_item_id)->first();
+        $labelDoc = $item ? $item->label : 'Documento #'.$checkId;
+
+        ProcesoAuditoria::registrar(
+            $proceso->id,
+            $nuevoEstado ? 'recibido_fisico' : 'recibido_fisico_revertido',
+            'unidad_solicitante',
+            $proceso->etapaActual->nombre ?? 'Validación Contratista',
+            null,
+            ($nuevoEstado ? 'Recibido físicamente: ' : 'Recepción revertida: ') . $labelDoc
+        );
+
+        return redirect()->back()->with('success',
+            $nuevoEstado
+                ? "Documento marcado como recibido físicamente: {$labelDoc}"
+                : "Recepción revertida: {$labelDoc}"
+        );
+    }
+
+    /**
+     * Subir archivo digital para un documento del contratista
+     */
+    public function subirArchivoDigital(Request $request, $procesoId, $checkId)
+    {
+        $proceso = Proceso::findOrFail($procesoId);
+        $user = auth()->user();
+
+        abort_unless($user->hasRole('admin') || $user->hasRole('unidad_solicitante'), 403);
+
+        $request->validate([
+            'archivo' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png',
+        ], [
+            'archivo.required' => 'Debes seleccionar un archivo.',
+            'archivo.max' => 'El archivo no debe superar 10MB.',
+            'archivo.mimes' => 'Formato no permitido. Usa: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG.',
+        ]);
+
+        $check = DB::table('proceso_etapa_checks')->where('id', $checkId)->first();
+        abort_unless($check, 404);
+
+        // Guardar archivo
+        $file = $request->file('archivo');
+        $nombreOriginal = $file->getClientOriginalName();
+        $path = $file->store("procesos/{$procesoId}/contratista", 'public');
+
+        DB::table('proceso_etapa_checks')
+            ->where('id', $checkId)
+            ->update([
+                'archivo_path'      => $path,
+                'archivo_nombre'    => $nombreOriginal,
+                'archivo_subido_at' => now(),
+                'updated_at'        => now(),
+            ]);
+
+        $item = DB::table('etapa_items')->where('id', $check->etapa_item_id)->first();
+        $labelDoc = $item ? $item->label : 'Documento #'.$checkId;
+
+        ProcesoAuditoria::registrar(
+            $proceso->id,
+            'archivo_digital_subido',
+            'unidad_solicitante',
+            $proceso->etapaActual->nombre ?? 'Validación Contratista',
+            null,
+            "Archivo digital subido: {$labelDoc} ({$nombreOriginal})"
+        );
+
+        return redirect()->back()->with('success', "Archivo subido exitosamente: {$nombreOriginal}");
+    }
+
+    /**
+     * Aprobar etapa 2 (Validación Contratista) y enviar a siguiente etapa
+     */
+    public function aprobarEtapa2(Request $request, $id)
+    {
+        $proceso = Proceso::with(['workflow', 'etapaActual'])->findOrFail($id);
+        $user = auth()->user();
+
+        abort_unless($user->hasRole('admin') || $user->hasRole('unidad_solicitante'), 403);
+
+        // Verificar que esté en etapa 2 con role unidad_solicitante
+        if ($proceso->area_actual_role !== 'unidad_solicitante') {
+            return redirect()->back()->with('error', 'Este proceso no está en tu área.');
+        }
+
+        // Verificar recibido
+        $procesoEtapa = DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $proceso->etapa_actual_id)
+            ->first();
+
+        if (!$procesoEtapa || !$procesoEtapa->recibido) {
+            return redirect()->back()->with('error', 'Debes marcar el proceso como recibido primero.');
+        }
+
+        // Verificar que todos los documentos requeridos tengan recibido_fisico y archivo
+        $docsRequeridos = DB::table('proceso_etapa_checks as pc')
+            ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
+            ->where('pc.proceso_etapa_id', $procesoEtapa->id)
+            ->where('ei.requerido', true)
+            ->get();
+
+        foreach ($docsRequeridos as $doc) {
+            if (!$doc->recibido_fisico) {
+                return redirect()->back()->with('error', 'Todos los documentos requeridos deben estar marcados como recibidos físicamente.');
+            }
+            if (!$doc->archivo_path) {
+                return redirect()->back()->with('error', 'Todos los documentos requeridos deben tener su archivo digital subido.');
+            }
+        }
+
+        return DB::transaction(function () use ($proceso, $procesoEtapa, $request, $user) {
+            // Marcar etapa actual como enviada
+            DB::table('proceso_etapas')
+                ->where('id', $procesoEtapa->id)
+                ->update([
+                    'enviado'     => true,
+                    'enviado_por' => $user->id,
+                    'enviado_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+
+            // Buscar siguiente etapa
+            $siguienteEtapa = DB::table('etapas')
+                ->where('workflow_id', $proceso->workflow_id)
+                ->where('orden', '>', $proceso->etapaActual->orden)
+                ->where('activa', 1)
+                ->orderBy('orden')
+                ->first();
+
+            if ($siguienteEtapa) {
+                $proceso->update([
+                    'etapa_actual_id'  => $siguienteEtapa->id,
+                    'area_actual_role' => $siguienteEtapa->area_role,
+                    'estado'           => 'en_proceso',
+                ]);
+
+                // Crear proceso_etapa para la siguiente
+                DB::table('proceso_etapas')->insert([
+                    'proceso_id' => $proceso->id,
+                    'etapa_id'   => $siguienteEtapa->id,
+                    'recibido'   => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                ProcesoAuditoria::registrar(
+                    $proceso->id,
+                    'etapa_aprobada',
+                    'unidad_solicitante',
+                    $siguienteEtapa->nombre,
+                    $proceso->etapaActual->nombre ?? null,
+                    'Documentos del contratista verificados. Proceso enviado a: ' . $siguienteEtapa->nombre
+                );
+            }
+
+            return redirect()->route('unidad.show', $proceso->id)
+                ->with('success', 'Documentos verificados y proceso enviado a la siguiente etapa.');
+        });
     }
 
     /**

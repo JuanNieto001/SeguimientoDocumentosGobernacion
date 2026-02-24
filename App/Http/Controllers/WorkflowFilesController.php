@@ -28,8 +28,7 @@ class WorkflowFilesController extends Controller
         $esSubidaSolicitud = DB::table('proceso_documentos_solicitados')
             ->where('proceso_id', $proceso->id)
             ->whereIn('area_responsable_rol', $userRoles)
-            ->where('estado', 'pendiente')
-            ->where('puede_subir', true)
+            ->whereIn('estado', ['pendiente', 'bloqueado'])
             ->exists();
 
         // Si NO es una subida de solicitud, verificar que la etapa no haya sido enviada
@@ -217,12 +216,24 @@ class WorkflowFilesController extends Controller
         if (!$user->hasRole('admin')) {
             // El creador del proceso puede descargar cualquier archivo de su proceso
             if ($proceso->created_by !== $user->id) {
-                // Si no es el creador, debe ser del área actual
-                abort_unless(
-                    $proceso->area_actual_role && $user->hasRole($proceso->area_actual_role),
-                    403,
-                    'No tienes permiso para descargar este archivo.'
-                );
+                // Roles de área de documentos pueden descargar archivos de procesos donde tienen solicitudes
+                $rolesDoc = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
+                $miRolDoc = collect($rolesDoc)->first(fn($r) => $user->hasRole($r));
+                $tieneAccesoDoc = false;
+                if ($miRolDoc) {
+                    $tieneAccesoDoc = DB::table('proceso_documentos_solicitados')
+                        ->where('proceso_id', $proceso->id)
+                        ->where('area_responsable_rol', $miRolDoc)
+                        ->exists();
+                }
+                // Si no es el creador ni tiene solicitudes asignadas, debe ser del área actual
+                if (!$tieneAccesoDoc) {
+                    abort_unless(
+                        $proceso->area_actual_role && $user->hasRole($proceso->area_actual_role),
+                        403,
+                        'No tienes permiso para descargar este archivo.'
+                    );
+                }
             }
         }
 
@@ -360,14 +371,12 @@ class WorkflowFilesController extends Controller
             return;
         }
 
-        // ✅ CASO 3: Usuario tiene una solicitud pendiente para subir documento a este proceso
+        // ✅ CASO 3: Usuario tiene una solicitud asignada para este proceso (cualquier estado)
         // Verificar contra TODOS los roles del usuario
         $userRoles = $user->getRoleNames()->toArray();
         $tienesSolicitud = DB::table('proceso_documentos_solicitados')
             ->where('proceso_id', $proceso->id)
             ->whereIn('area_responsable_rol', $userRoles)
-            ->where('estado', 'pendiente')
-            ->where('puede_subir', true)
             ->exists();
 
         if ($tienesSolicitud) {

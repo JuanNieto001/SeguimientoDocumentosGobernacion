@@ -11,32 +11,63 @@ class ProcesoController extends Controller
     {
         $user = auth()->user();
 
+        // Roles de solicitud de documentos (etapa 1 paralela)
+        $rolesDoc = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
+        $miRolDoc = collect($rolesDoc)->first(fn ($r) => $user->hasRole($r));
+
         $query = DB::table('procesos')
             ->leftJoin('workflows', 'workflows.id', '=', 'procesos.workflow_id')
             ->leftJoin('users as creador', 'creador.id', '=', 'procesos.created_by')
-            ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id')
-            ->select([
+            ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id');
+
+        // Para roles de doc: join para obtener fechas de recibido y enviado
+        if ($miRolDoc) {
+            $query->leftJoin(DB::raw('(SELECT proceso_id, area_responsable_rol, MIN(solicitado_at) as fecha_recibido, MAX(subido_at) as fecha_enviado FROM proceso_documentos_solicitados GROUP BY proceso_id, area_responsable_rol) as pds_fechas'), function ($join) use ($miRolDoc) {
+                $join->on('pds_fechas.proceso_id', '=', 'procesos.id')
+                     ->where('pds_fechas.area_responsable_rol', '=', $miRolDoc);
+            });
+            $query->addSelect([
                 'procesos.*',
                 'workflows.nombre as workflow_nombre',
                 'workflows.codigo as workflow_codigo',
                 'creador.name as creado_por_nombre',
                 'etapas.nombre as etapa_nombre',
                 'etapas.orden as etapa_orden',
-            ])
-            ->orderByDesc('procesos.id');
+                'pds_fechas.fecha_recibido as doc_fecha_recibido',
+                'pds_fechas.fecha_enviado as doc_fecha_enviado',
+            ]);
+        } else {
+            $query->select([
+                'procesos.*',
+                'workflows.nombre as workflow_nombre',
+                'workflows.codigo as workflow_codigo',
+                'creador.name as creado_por_nombre',
+                'etapas.nombre as etapa_nombre',
+                'etapas.orden as etapa_orden',
+            ]);
+        }
+
+        $query->orderByDesc('procesos.id');
 
         // Visibilidad por rol
         if (!$user->hasRole('admin')) {
-            if ($user->hasRole('planeacion')) {
-                // Planeación ve todos
+            if ($user->hasRole('planeacion') && !$miRolDoc) {
+                // Planeación supervisa todos los procesos — sin filtro adicional
             } elseif ($user->hasRole('unidad_solicitante')) {
                 $query->where('procesos.created_by', $user->id);
             } else {
+                // Roles con bandeja propia (etapa de área en el workflow)
                 $rolesArea = ['hacienda', 'juridica', 'secop'];
                 $miRolArea = collect($rolesArea)->first(fn ($r) => $user->hasRole($r));
-                if (!$miRolArea) {
-                    $query->whereRaw('1=0');
-                } else {
+
+                if ($miRolDoc) {
+                    // Roles de solicitud de documentos tienen prioridad (etapa 1 paralela)
+                    $query->whereIn('procesos.id', function ($sub) use ($miRolDoc) {
+                        $sub->select('proceso_id')
+                            ->from('proceso_documentos_solicitados')
+                            ->where('area_responsable_rol', $miRolDoc);
+                    });
+                } elseif ($miRolArea) {
                     $query->where(function ($q) use ($miRolArea) {
                         $q->where('procesos.area_actual_role', $miRolArea)
                           ->orWhereIn('procesos.id', function ($sub) use ($miRolArea) {
@@ -47,6 +78,8 @@ class ProcesoController extends Controller
                                   ->where('pe.enviado', true);
                           });
                     });
+                } else {
+                    $query->whereRaw('1=0');
                 }
             }
         }
@@ -75,7 +108,7 @@ class ProcesoController extends Controller
             ->orderBy('orden')
             ->get(['id', 'orden', 'nombre']);
 
-        return view('procesos.index', compact('procesos', 'etapas'));
+        return view('procesos.index', compact('procesos', 'etapas', 'miRolDoc'));
     }
 
     public function create()

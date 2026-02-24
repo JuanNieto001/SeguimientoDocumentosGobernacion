@@ -44,7 +44,7 @@
         {{-- Filtros --}}
         <form method="GET" action="{{ route('planeacion.index') }}"
               class="bg-white rounded-2xl p-5" style="border:1px solid #e2e8f0">
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1.5">Buscar</label>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
@@ -63,26 +63,13 @@
                         <option value="RECHAZADO"  @selected(request('estado')=='RECHAZADO')>Rechazado</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Etapa</label>
-                    <select name="etapa"
-                            class="w-full border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                            style="border-color:#e2e8f0">
-                        <option value="">Todas</option>
-                        @foreach($etapas ?? [] as $et)
-                        <option value="{{ $et->orden }}" @selected(request('etapa')==$et->orden)>
-                            Etapa {{ $et->orden }}: {{ Str::limit($et->nombre, 35) }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
                 <div class="flex gap-2">
                     <button type="submit"
                             class="flex-1 px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
                             style="background:linear-gradient(135deg,#15803d,#14532d)">
                         Filtrar
                     </button>
-                    @if(request()->hasAny(['buscar','estado','etapa']))
+                    @if(request()->hasAny(['buscar','estado']))
                     <a href="{{ route('planeacion.index') }}"
                        class="px-3 py-2 rounded-xl text-sm font-medium border hover:bg-gray-50 transition"
                        style="border-color:#e2e8f0;color:#6b7280">✕</a>
@@ -191,7 +178,7 @@
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 <p class="text-sm text-gray-400 font-medium">No se encontraron procesos.</p>
-                                @if(request()->hasAny(['buscar','estado','etapa']))
+                                @if(request()->hasAny(['buscar','estado']))
                                 <a href="{{ route('planeacion.index') }}" class="text-xs text-green-700 hover:underline">Limpiar filtros</a>
                                 @endif
                             </div>

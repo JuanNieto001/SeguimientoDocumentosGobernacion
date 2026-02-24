@@ -5,7 +5,7 @@
                 <h1 class="text-lg font-bold text-gray-900 leading-none">Procesos</h1>
                 <p class="text-xs text-gray-400 mt-1">Gobernación de Caldas &mdash; Sistema de Contratación Pública</p>
             </div>
-            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante'))
+            @if((auth()->user()->hasRole('admin') || auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante')) && !$miRolDoc)
             <div class="ml-8">
                 <a href="{{ route('procesos.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:opacity-95"
@@ -45,6 +45,8 @@
         {{-- Filtros --}}
         <form method="GET" action="{{ route('procesos.index') }}"
               class="bg-white rounded-2xl p-5" style="border:1px solid #e2e8f0">
+            @php $esAdminOPlaneacion = !$miRolDoc && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('planeacion')); @endphp
+            @if($esAdminOPlaneacion)
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1.5">Buscar</label>
@@ -90,6 +92,29 @@
                     @endif
                 </div>
             </div>
+            @else
+            <div class="flex gap-4 items-end">
+                <div class="flex-1">
+                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Buscar por código</label>
+                    <input type="text" name="buscar" value="{{ request('buscar') }}"
+                           placeholder="Código del proceso..."
+                           class="w-full border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                           style="border-color:#e2e8f0">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit"
+                            class="px-5 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
+                            style="background:linear-gradient(135deg,#15803d,#14532d)">
+                        Buscar
+                    </button>
+                    @if(request('buscar'))
+                    <a href="{{ route('procesos.index') }}"
+                       class="px-3 py-2 rounded-xl text-sm font-medium border hover:bg-gray-50 transition"
+                       style="border-color:#e2e8f0;color:#6b7280">✕</a>
+                    @endif
+                </div>
+            </div>
+            @endif
         </form>
 
         <div class="flex items-center gap-2">
@@ -103,11 +128,13 @@
                     <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc">
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Código</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Objeto</th>
-                        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $esAdminOPlaneacion ? 'Estado' : 'Documentos' }}</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Área actual</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Creado por</th>
-                        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $miRolDoc ? 'Recibido / Enviado' : 'Fecha' }}</th>
+                        @if($esAdminOPlaneacion)
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -138,10 +165,22 @@
                             @endif
                         </td>
                         <td class="px-5 py-3.5">
+                            @if($esAdminOPlaneacion)
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" style="background:{{ $ec['bg'] }};color:{{ $ec['text'] }}">
                                 <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:{{ $ec['dot'] }}"></span>
                                 {{ $ec['label'] }}
                             </span>
+                            @elseif($p->doc_fecha_enviado ?? null)
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" style="background:#dcfce7;color:#15803d">
+                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#22c55e"></span>
+                                Enviado
+                            </span>
+                            @else
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" style="background:#fef9c3;color:#a16207">
+                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#eab308"></span>
+                                Pendiente
+                            </span>
+                            @endif
                         </td>
                         <td class="px-5 py-3.5">
                             <span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium" style="background:{{ $ac['bg'] }};color:{{ $ac['text'] }}">
@@ -152,8 +191,26 @@
                             {{ $p->creado_por_nombre ?? '—' }}
                         </td>
                         <td class="px-5 py-3.5 text-xs text-gray-400 whitespace-nowrap">
+                            @if($miRolDoc)
+                            <div class="space-y-1">
+                                <div>
+                                    <span class="block text-gray-400" style="font-size:10px">Recibido</span>
+                                    <span class="text-gray-600 font-medium">
+                                        {{ $p->doc_fecha_recibido ? \Carbon\Carbon::parse($p->doc_fecha_recibido)->format('d/m/Y H:i') : '—' }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="block text-gray-400" style="font-size:10px">Enviado</span>
+                                    <span class="{{ $p->doc_fecha_enviado ? 'text-green-600 font-medium' : 'text-gray-400' }}">
+                                        {{ $p->doc_fecha_enviado ? \Carbon\Carbon::parse($p->doc_fecha_enviado)->format('d/m/Y H:i') : 'Pendiente' }}
+                                    </span>
+                                </div>
+                            </div>
+                            @else
                             {{ \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') }}
+                            @endif
                         </td>
+                        @if($esAdminOPlaneacion)
                         <td class="px-5 py-3.5">
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('procesos.show', $p->id) }}"
@@ -174,10 +231,11 @@
                                 @endif
                             </div>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-16 text-center">
+                        <td colspan="{{ $esAdminOPlaneacion ? 7 : 6 }}" class="px-5 py-16 text-center">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 <p class="text-sm text-gray-400 font-medium">No se encontraron procesos.</p>

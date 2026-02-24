@@ -151,6 +151,21 @@
         </div>
 
         {{-- Decisión de Planeación --}}
+        @php
+            // Verificar si ya se aprobó y se enviaron solicitudes de documentos
+            $solicitudesDocumentos = DB::table('proceso_documentos_solicitados')
+                ->where('proceso_id', $proceso->id)
+                ->orderBy('id')
+                ->get();
+            $yaSeAprobaron = $solicitudesDocumentos->count() > 0;
+            $totalSolicitudes = $solicitudesDocumentos->count();
+            $completadas = $solicitudesDocumentos->where('estado', 'subido')->count();
+            $pendientes = $totalSolicitudes - $completadas;
+            $todasCompletas = $pendientes === 0 && $totalSolicitudes > 0;
+        @endphp
+
+        @if(!$yaSeAprobaron)
+        {{-- Solo mostrar si NO se ha aprobado aún --}}
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">Decisión de Planeación</h3>
@@ -171,11 +186,11 @@
                             @endphp
                             <button type="submit"
                                 @if(!$recibido) disabled title="Debes marcar el documento como recibido antes de aprobar" @endif
-                                @if($recibido) onclick="return confirm('¿Confirmar aprobación y enviar a la siguiente área?')" @else onclick="return false" @endif
+                                @if($recibido) onclick="return confirm('¿Confirmar aprobación y solicitar documentos a las áreas?')" @else onclick="return false" @endif
                                 class="w-full px-4 py-2 rounded-xl text-sm font-semibold transition"
                                 style="background:{{ $aprobBg }};color:#fff;cursor:{{ $aprobCursor }};opacity:{{ $recibido ? '1' : '0.6' }}">
                                 @if($recibido)
-                                    Aprobar y enviar a siguiente área
+                                    Aprobar y solicitar documentos a áreas
                                 @else
                                     🔒 Primero marca el documento como recibido
                                 @endif
@@ -191,11 +206,15 @@
                             <textarea name="motivo_rechazo" rows="2"
                                 class="w-full border rounded-xl px-3 py-2 text-sm bg-white resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
                                 style="border-color:#fecaca"
-                                placeholder="Motivo del rechazo (obligatorio)..." required></textarea>
+                                placeholder="Motivo del rechazo (obligatorio)..." required
+                                @if(!$recibido) disabled @endif></textarea>
                             <button type="submit"
-                                onclick="return confirm('¿Rechazar y devolver el proceso a la etapa anterior?')"
-                                class="w-full px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
-                                style="background:#dc2626">
+                                @if(!$recibido) disabled title="Debes marcar el documento como recibido antes de rechazar" @endif
+                                onclick="@if($recibido) return confirm('¿Rechazar y devolver el proceso a la etapa anterior?') @else return false @endif"
+                                class="w-full px-4 py-2 rounded-xl text-white text-sm font-semibold transition"
+                                style="background:{{ $recibido ? '#dc2626' : '#9ca3af' }};
+                                       cursor:{{ $recibido ? 'pointer' : 'not-allowed' }};
+                                       opacity:{{ $recibido ? '1' : '0.6' }}">
                                 Rechazar y devolver
                             </button>
                         </div>
@@ -203,20 +222,18 @@
                 </div>
             </div>
         </div>
+        @else
+        {{-- Ya aprobado: mostrar estado --}}
+        <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
+            <div class="flex items-center gap-3 p-3.5 rounded-xl text-sm font-medium" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">
+                <span>✅</span>
+                <span>Proceso aprobado — Documentos solicitados a las áreas. Esperando recepción completa para enviar al abogado.</span>
+            </div>
+        </div>
+        @endif
 
         {{-- ========== SOLICITUDES DE DOCUMENTOS PARALELOS (Etapa 1 - Descentralización) ========== --}}
-        @php
-            $solicitudesDocumentos = DB::table('proceso_documentos_solicitados')
-                ->where('proceso_id', $proceso->id)
-                ->orderBy('id')
-                ->get();
-            $totalSolicitudes = $solicitudesDocumentos->count();
-            $completadas = $solicitudesDocumentos->where('estado', 'subido')->count();
-            $pendientes = $totalSolicitudes - $completadas;
-            $todasCompletas = $pendientes === 0 && $totalSolicitudes > 0;
-        @endphp
-
-        @if($totalSolicitudes > 0)
+        @if($yaSeAprobaron && $totalSolicitudes > 0)
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">📋 Documentos Solicitados a Áreas (Envío Simultáneo)</h3>
@@ -296,151 +313,65 @@
                     @endforeach
                 </div>
 
-                {{-- Mensaje de estado global --}}
+                {{-- Mensaje de estado --}}
                 @if($todasCompletas)
                 <div class="mt-4 p-3 rounded-xl text-sm font-medium" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0">
-                    ✅ Todos los documentos han sido recibidos. Puedes aprobar y enviar el proceso a la siguiente etapa.
+                    ✅ Todos los documentos han sido recibidos. Puedes enviar el expediente al abogado de la unidad solicitante.
                 </div>
                 @else
                 <div class="mt-4 p-3 rounded-xl text-sm font-medium" style="background:#fffbeb; color:#92400e; border:1px solid #fde68a">
                     ⏳ Faltan {{ $pendientes }} documento(s) por recibir. No podrás avanzar hasta que todas las áreas envíen sus documentos.
                 </div>
                 @endif
+
+                {{-- Botón Enviar — siempre visible, deshabilitado hasta que todos los documentos estén completos --}}
+                <form method="POST" action="{{ route('workflow.enviar', $proceso->id) }}" class="mt-4">
+                    @csrf
+                    <input type="hidden" name="area_role" value="planeacion">
+                    <button type="submit"
+                        @if($todasCompletas)
+                            onclick="return confirm('¿Confirmar envío del expediente completo al abogado de la unidad solicitante?')"
+                        @else
+                            disabled
+                            title="Debes esperar a que todas las áreas envíen sus documentos"
+                        @endif
+                        class="w-full px-4 py-3 rounded-xl text-white text-sm font-bold transition"
+                        style="background:{{ $todasCompletas ? '#14532d' : '#9ca3af' }};
+                               cursor:{{ $todasCompletas ? 'pointer' : 'not-allowed' }};
+                               opacity:{{ $todasCompletas ? '1' : '0.6' }}">
+                        @if($todasCompletas)
+                            📤 Enviar a la siguiente etapa (Abogado Unidad Solicitante)
+                        @else
+                            🔒 Enviar a la siguiente etapa — Esperando documentos ({{ $completadas }}/{{ $totalSolicitudes }})
+                        @endif
+                    </button>
+                </form>
             </div>
         </div>
         @endif
         {{-- ========== FIN SOLICITUDES DE DOCUMENTOS PARALELOS ========== --}}
 
-        {{-- Archivos --}}
+        {{-- Archivos de etapas anteriores --}}
+        @php $archivosAnteriores = $proceso->archivos->where('etapa_id', '!=', $proceso->etapa_actual_id); @endphp
+        @if($archivosAnteriores->isNotEmpty())
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-            <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
-                <h3 class="text-sm font-semibold text-gray-700">Documentos de la etapa</h3>
-            </div>
-            <div class="p-5 space-y-4">
-                <form method="POST" action="{{ route('workflow.files.store', $proceso->id) }}" enctype="multipart/form-data"
-                      class="grid sm:grid-cols-3 gap-3 p-4 rounded-xl" style="background:#f8fafc;border:1px dashed #cbd5e1">
-                    @csrf
-                    <input type="hidden" name="area_role" value="planeacion">
-                    <select name="tipo_archivo" required
-                            class="px-3 py-2.5 rounded-xl border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500" style="border-color:#e2e8f0">
-                        <option value="">Tipo de documento</option>
-                        <option value="concepto_favorable">Concepto favorable</option>
-                        <option value="verificacion_paa">Verificación PAA</option>
-                        <option value="solicitud_cdp">Solicitud CDP</option>
-                        <option value="estudios_previos_revisados">Estudios previos revisados</option>
-                        <option value="aval_planeacion">Aval de Planeación</option>
-                        <option value="anexo">Anexo</option>
-                        <option value="otro">Otro</option>
-                    </select>
-                    <input type="file" name="archivo" required
-                           class="px-3 py-2 rounded-xl border text-sm bg-white" style="border-color:#e2e8f0">
-                    <button type="submit"
-                            class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition"
-                            style="background:#14532d">Subir documento</button>
-                </form>
-
-                @php $archivosEtapa = $proceso->archivos->where('etapa_id', $proceso->etapa_actual_id); @endphp
-                <div class="space-y-2">
-                    @forelse($archivosEtapa as $archivo)
+            <details class="rounded-xl overflow-hidden">
+                <summary class="px-5 py-4 text-sm font-semibold text-gray-700 cursor-pointer" style="background:#f8fafc">
+                    📎 Archivos de etapas anteriores ({{ $archivosAnteriores->count() }})
+                </summary>
+                <div class="p-4 space-y-2">
+                    @foreach($archivosAnteriores as $archivo)
                     <div class="flex items-center justify-between p-3 rounded-xl" style="background:#f8fafc;border:1px solid #e2e8f0">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background:#dbeafe">
-                                <svg class="w-4 h-4" fill="none" stroke="#2563eb" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-sm font-medium text-gray-700 truncate">{{ $archivo->nombre_original }}</p>
-                                <p class="text-xs text-gray-400">{{ str_replace('_',' ',$archivo->tipo_archivo) }}</p>
-                            </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">{{ $archivo->nombre_original }}</p>
+                            <p class="text-xs text-gray-400">{{ str_replace('_',' ',$archivo->tipo_archivo) }}</p>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <a href="{{ route('workflow.files.download', $archivo->id) }}"
-                               class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            </a>
-                            <form method="POST" action="{{ route('workflow.files.destroy', $archivo->id) }}" onsubmit="return confirm('¿Eliminar archivo?')">
-                                @csrf @method('DELETE')
-                                <button class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </form>
-                        </div>
+                        <a href="{{ route('workflow.files.download', $archivo->id) }}"
+                           class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">Descargar</a>
                     </div>
-                    @empty
-                    <p class="text-sm text-gray-400 text-center py-4">Aún no hay documentos cargados en esta etapa.</p>
-                    @endforelse
+                    @endforeach
                 </div>
-
-                @php $archivosAnteriores = $proceso->archivos->where('etapa_id', '!=', $proceso->etapa_actual_id); @endphp
-                @if($archivosAnteriores->isNotEmpty())
-                <details class="rounded-xl overflow-hidden" style="border:1px solid #e2e8f0">
-                    <summary class="px-4 py-3 text-sm font-medium cursor-pointer" style="background:#f8fafc">
-                        📎 Archivos de etapas anteriores ({{ $archivosAnteriores->count() }})
-                    </summary>
-                    <div class="p-4 space-y-2">
-                        @foreach($archivosAnteriores as $archivo)
-                        <div class="flex items-center justify-between p-3 rounded-xl" style="background:#f8fafc;border:1px solid #e2e8f0">
-                            <div>
-                                <p class="text-sm font-medium text-gray-700">{{ $archivo->nombre_original }}</p>
-                                <p class="text-xs text-gray-400">{{ str_replace('_',' ',$archivo->tipo_archivo) }}</p>
-                            </div>
-                            <a href="{{ route('workflow.files.download', $archivo->id) }}"
-                               class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">Descargar</a>
-                        </div>
-                        @endforeach
-                    </div>
-                </details>
-                @endif
-            </div>
-        </div>
-
-        {{-- Checklist --}}
-        @if($procesoEtapaActual && $checks->isNotEmpty())
-        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-            <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
-                <h3 class="text-sm font-semibold text-gray-700">Lista de verificación</h3>
-            </div>
-            <div class="p-4 space-y-2">
-                @foreach($checks as $check)
-                <form method="POST" action="{{ route('workflow.checks.toggle', [$proceso->id, $check->id]) }}">
-                    @csrf
-                    <input type="hidden" name="area_role" value="planeacion">
-                    <button type="submit"
-                            class="w-full flex items-center gap-3 p-3 rounded-xl text-left text-sm transition-all"
-                            style="background:{{ $check->checked?'#f0fdf4':'#f8fafc' }};border:1px solid {{ $check->checked?'#bbf7d0':'#e2e8f0' }}"
-                            {{ !$procesoEtapaActual->recibido?'disabled':'' }}>
-                        <span class="text-base">{{ $check->checked?'✅':'☐' }}</span>
-                        <span class="font-medium text-gray-700">{{ $check->label ?? 'Ítem #'.$check->id }}</span>
-                        @if($check->requerido)<span class="ml-auto text-xs text-gray-400">(requerido)</span>@endif
-                    </button>
-                </form>
-                @endforeach
-            </div>
-        </div>
-        @endif
-
-        {{-- Historial --}}
-        @if($proceso->auditorias->isNotEmpty())
-        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-            <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
-                <h3 class="text-sm font-semibold text-gray-700">Historial de actividad</h3>
-            </div>
-            <div class="p-5 space-y-3">
-                @foreach($proceso->auditorias as $audit)
-                <div class="flex gap-3 text-sm">
-                    <div class="w-1.5 h-1.5 rounded-full mt-2 shrink-0" style="background:#14532d"></div>
-                    <div>
-                        <span class="font-semibold text-gray-800 capitalize">{{ str_replace('_',' ',$audit->accion) }}</span>
-                        @if($audit->descripcion)
-                        <span class="text-gray-500"> — {{ $audit->descripcion }}</span>
-                        @endif
-                        <p class="text-xs text-gray-400 mt-0.5">
-                            {{ optional($audit->user)->name ?? 'Sistema' }}
-                            · {{ \Carbon\Carbon::parse($audit->created_at)->format('d/m/Y H:i') }}
-                        </p>
-                    </div>
-                </div>
-                @endforeach
-            </div>
+            </details>
         </div>
         @endif
 
