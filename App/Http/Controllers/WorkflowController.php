@@ -89,13 +89,8 @@ class WorkflowController extends Controller
                     'updated_at'   => now(),
                 ]);
                 
-                // ✅ NUEVO: Si es Etapa 1 (Descentralización), solicitar documentos automáticamente
-                $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
-                if ($etapa && $etapa->orden == 1) {
-                    $this->solicitarDocumentosEtapa1($proceso);
-                }
-                
                 // Registrar auditoría
+                $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
                 $descripcionAuditoria = "Documento recibido en {$etapa->nombre} ({$proceso->area_actual_role})";
                 ProcesoAuditoria::registrar(
                     $proceso->id,
