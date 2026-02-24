@@ -71,6 +71,72 @@
             </div>
         </div>
 
+        {{-- ── Documentos recibidos de Descentralización ─────────────────── --}}
+        @if(isset($docsDescentralizacion) && $docsDescentralizacion->count() > 0)
+        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+            <details {{ $docsDescentralizacion->where('estado','subido')->count() < $docsDescentralizacion->count() ? 'open' : '' }}>
+                <summary class="px-5 py-4 border-b flex items-center justify-between cursor-pointer select-none"
+                         style="border-color:#f1f5f9;list-style:none">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-semibold text-gray-700">📦 Documentos de Descentralización</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold"
+                              style="background:{{ $docsDescentralizacion->where('estado','subido')->count() === $docsDescentralizacion->count() ? '#dcfce7' : '#fef9c3' }};
+                                     color:{{ $docsDescentralizacion->where('estado','subido')->count() === $docsDescentralizacion->count() ? '#15803d' : '#92400e' }}">
+                            {{ $docsDescentralizacion->where('estado','subido')->count() }}/{{ $docsDescentralizacion->count() }} recibidos
+                        </span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </summary>
+                <div class="divide-y" style="divide-color:#f8fafc">
+                    @foreach($docsDescentralizacion as $dDoc)
+                    <div class="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50/60 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm"
+                                 style="background:{{ $dDoc->estado === 'subido' ? '#dcfce7' : '#fef9c3' }}">
+                                {{ $dDoc->estado === 'subido' ? '✅' : '⏳' }}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-800">{{ $dDoc->nombre_documento }}</p>
+                                <p class="text-xs text-gray-400">
+                                    {{ $dDoc->area_responsable_nombre }}
+                                    @if($dDoc->subido_at)
+                                        · Recibido {{ \Carbon\Carbon::parse($dDoc->subido_at)->format('d/m/Y H:i') }}
+                                    @endif
+                                    @if($dDoc->subido_por_nombre)
+                                        · por {{ $dDoc->subido_por_nombre }}
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 ml-4">
+                            @if($dDoc->estado === 'subido' && $dDoc->archivo_id)
+                                <a href="{{ route('workflow.files.download', $dDoc->archivo_id) }}"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-90"
+                                   style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    Descargar
+                                </a>
+                                <a href="{{ route('workflow.files.download', ['archivo' => $dDoc->archivo_id, 'inline' => 1]) }}"
+                                   target="_blank"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-90"
+                                   style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    Ver
+                                </a>
+                            @else
+                                <span class="text-xs text-gray-400 italic">Pendiente de recibir</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </details>
+        </div>
+        @endif
+        {{-- ── Fin documentos Descentralización ───────────────────────────── --}}
+
         {{-- Acciones: Recibir + Progreso --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -129,136 +195,189 @@
 
         {{-- Lista de documentos del contratista --}}
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-            <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color:#f1f5f9">
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-700">📋 Documentos del Contratista</h3>
-                    <p class="text-xs text-gray-400 mt-0.5">Recibe los documentos físicos y sube la versión digital de cada uno</p>
+
+            {{-- Cabecera de la tabla --}}
+            <div class="px-5 py-4 border-b" style="border-color:#f1f5f9;background:#f8fafc">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-sm font-bold text-gray-800">📋 Documentos del Contratista</h3>
+                    <span class="text-xs px-2.5 py-1 rounded-full font-semibold"
+                          style="background:{{ $todosCompletos ? '#dcfce7' : '#fef9c3' }};color:{{ $todosCompletos ? '#15803d' : '#92400e' }}">
+                        {{ $recibidosFisico }}/{{ $totalDocs }} físicos &nbsp;·&nbsp; {{ $archivosSubidos }}/{{ $totalDocs }} digitales
+                    </span>
+                </div>
+                {{-- Cabeceras de columna --}}
+                <div class="hidden lg:grid mt-3 gap-3 text-xs font-semibold uppercase tracking-wide text-gray-400"
+                     style="grid-template-columns: 2rem 1fr 11rem 13rem">
+                    <span>#</span>
+                    <span>Documento</span>
+                    <span class="text-center">Físico recibido</span>
+                    <span class="text-center">Archivo digital</span>
                 </div>
             </div>
 
-            <div class="divide-y" style="border-color:#f1f5f9">
+            <div class="divide-y" style="divide-color:#f1f5f9">
                 @foreach($documentos as $i => $doc)
-                <div class="p-4 hover:bg-gray-50/50 transition-colors">
-                    <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+                @php
+                    $fisico = (bool)$doc->recibido_fisico;
+                    $digital = !empty($doc->archivo_path);
+                    $completo = $fisico && $digital;
+                    $rowBg = $completo ? '#f0fdf4' : ($fisico ? '#eff6ff' : 'transparent');
+                @endphp
+                <div class="px-5 py-3 transition-colors hover:brightness-95"
+                     style="background:{{ $rowBg }}">
 
-                        {{-- Info del documento --}}
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-start gap-2">
-                                <span class="text-xs font-mono text-gray-400 mt-0.5 shrink-0">{{ $i + 1 }}.</span>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-800">{{ $doc->label }}</p>
-                                    <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                        @if($doc->requerido)
-                                        <span class="text-xs px-1.5 py-0.5 rounded" style="background:#fef2f2;color:#dc2626">Requerido</span>
-                                        @else
-                                        <span class="text-xs px-1.5 py-0.5 rounded" style="background:#f0fdf4;color:#15803d">Opcional</span>
-                                        @endif
-                                        @if($doc->responsable_unidad)
-                                        <span class="text-xs text-gray-400">{{ $doc->responsable_unidad }}</span>
-                                        @endif
-                                        @if($doc->notas)
-                                        <span class="text-xs text-gray-400 italic">{{ Str::limit($doc->notas, 60) }}</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="grid items-center gap-3"
+                         style="grid-template-columns: 2rem 1fr">
+
+                        {{-- Número / estado --}}
+                        <div class="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0"
+                             style="background:{{ $completo ? '#15803d' : ($fisico ? '#2563eb' : '#e5e7eb') }};
+                                    color:{{ $completo || $fisico ? '#fff' : '#6b7280' }}">
+                            {{ $completo ? '✓' : ($i + 1) }}
                         </div>
 
-                        {{-- Acciones --}}
-                        <div class="flex items-center gap-2 shrink-0">
+                        {{-- Nombre + badges + columnas de acción --}}
+                        <div class="flex flex-col lg:grid lg:items-center lg:gap-3"
+                             style="grid-template-columns:1fr 11rem 13rem">
 
-                            {{-- Botón Recibido Físico --}}
-                            @if($recibido)
-                            <form method="POST" action="{{ route('unidad.recibido.fisico', [$proceso->id, $doc->check_id]) }}">
-                                @csrf
-                                <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                                    style="background:{{ $doc->recibido_fisico ? '#f0fdf4' : '#f8fafc' }};
-                                           color:{{ $doc->recibido_fisico ? '#15803d' : '#6b7280' }};
-                                           border:1px solid {{ $doc->recibido_fisico ? '#bbf7d0' : '#e5e7eb' }}"
-                                    title="{{ $doc->recibido_fisico ? 'Clic para desmarcar' : 'Marcar como recibido en físico' }}">
-                                    @if($doc->recibido_fisico)
-                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-                                        Recibido
+                            {{-- Nombre del documento --}}
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-800 leading-snug">
+                                    {{ preg_replace('/^(\\\\u[0-9a-fA-F]{4}|\x{2610}|☐|\s)+/u', '', $doc->label) }}
+                                </p>
+                                <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    @if($doc->requerido)
+                                    <span class="text-xs px-1.5 py-0.5 rounded font-medium" style="background:#fef2f2;color:#dc2626">Requerido</span>
                                     @else
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
-                                        Recibir físico
+                                    <span class="text-xs px-1.5 py-0.5 rounded font-medium" style="background:#f0fdf4;color:#15803d">Opcional</span>
                                     @endif
-                                </button>
-                            </form>
-                            @else
-                                <span class="text-xs text-gray-400 italic">Recibe el proceso primero</span>
-                            @endif
+                                    @if($doc->notas)
+                                    <span class="text-xs text-gray-400 italic">{{ Str::limit($doc->notas, 50) }}</span>
+                                    @endif
+                                </div>
+                            </div>
 
-                            {{-- Botón Subir Archivo --}}
-                            @if($doc->recibido_fisico)
-                                @if($doc->archivo_path)
-                                    {{-- Ya tiene archivo subido --}}
-                                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                                         style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                        {{ Str::limit($doc->archivo_nombre, 20) }}
-                                    </div>
-                                    {{-- Botón para reemplazar --}}
-                                    <form method="POST" action="{{ route('unidad.subir.archivo', [$proceso->id, $doc->check_id]) }}" enctype="multipart/form-data" class="inline-flex items-center">
-                                        @csrf
-                                        <label class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs cursor-pointer transition hover:bg-gray-100"
-                                               style="color:#6b7280;border:1px solid #e5e7eb">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                            Reemplazar
-                                            <input type="file" name="archivo" class="hidden" onchange="this.form.submit()" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                                        </label>
-                                    </form>
+                            {{-- Columna FÍSICO --}}
+                            <div class="flex justify-start lg:justify-center mt-2 lg:mt-0">
+                                @if($recibido)
+                                <form method="POST" action="{{ route('unidad.recibido.fisico', [$proceso->id, $doc->check_id]) }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all w-36 justify-center"
+                                        style="background:{{ $fisico ? '#dcfce7' : '#14532d' }};
+                                               color:{{ $fisico ? '#15803d' : '#fff' }};
+                                               border:1.5px solid {{ $fisico ? '#86efac' : '#14532d' }}"
+                                        title="{{ $fisico ? 'Clic para desmarcar' : 'Marcar como recibido físicamente' }}">
+                                        @if($fisico)
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                                            Recibido ✓
+                                        @else
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            Marcar recibido
+                                        @endif
+                                    </button>
+                                </form>
                                 @else
-                                    {{-- Subir archivo --}}
-                                    <form method="POST" action="{{ route('unidad.subir.archivo', [$proceso->id, $doc->check_id]) }}" enctype="multipart/form-data" class="inline-flex items-center">
+                                <span class="text-xs text-gray-400 italic">—</span>
+                                @endif
+                            </div>
+
+                            {{-- Columna DIGITAL --}}
+                            <div class="flex justify-start lg:justify-center mt-2 lg:mt-0">
+                                @if(!$fisico)
+                                    {{-- Sin recibir físico aún --}}
+                                    <span class="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs w-44 justify-center"
+                                          style="background:#f9fafb;color:#d1d5db;border:1.5px dashed #e5e7eb">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        Recibe físico antes
+                                    </span>
+                                @elseif($digital)
+                                    {{-- Archivo ya subido --}}
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold max-w-[8rem]"
+                                             style="background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe"
+                                             title="{{ $doc->archivo_nombre }}">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            <span class="truncate">{{ Str::limit($doc->archivo_nombre, 14) }}</span>
+                                        </div>
+                                        <form method="POST" action="{{ route('unidad.subir.archivo', [$proceso->id, $doc->check_id]) }}" enctype="multipart/form-data">
+                                            @csrf
+                                            <label class="inline-flex items-center justify-center w-8 h-8 rounded-xl cursor-pointer transition hover:opacity-80"
+                                                   style="background:#f1f5f9;color:#6b7280;border:1.5px solid #e2e8f0" title="Reemplazar archivo">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                                <input type="file" name="archivo" class="hidden" onchange="this.form.submit()" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                                            </label>
+                                        </form>
+                                    </div>
+                                @else
+                                    {{-- Pendiente de subir --}}
+                                    <form method="POST" action="{{ route('unidad.subir.archivo', [$proceso->id, $doc->check_id]) }}" enctype="multipart/form-data">
                                         @csrf
-                                        <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition hover:opacity-90"
-                                               style="background:#2563eb;color:#fff">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                        <label class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all w-44 justify-center hover:opacity-90"
+                                               style="background:#2563eb;color:#fff;border:1.5px solid #1d4ed8">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                                             Subir digital
                                             <input type="file" name="archivo" class="hidden" onchange="this.form.submit()" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
                                         </label>
                                     </form>
                                 @endif
-                            @endif
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Info adicional cuando tiene archivo --}}
-                    @if($doc->recibido_fisico && $doc->recibido_fisico_at)
-                    <p class="text-xs text-gray-400 mt-2 ml-6">
-                        📎 Recibido físicamente: {{ \Carbon\Carbon::parse($doc->recibido_fisico_at)->format('d/m/Y H:i') }}
+                    {{-- Timestamps (solo si tiene algo) --}}
+                    @if($fisico && $doc->recibido_fisico_at)
+                    <div class="flex items-center gap-3 mt-1.5 ml-10 flex-wrap">
+                        <span class="text-xs text-gray-400">
+                            📎 Físico: {{ \Carbon\Carbon::parse($doc->recibido_fisico_at)->format('d/m/Y H:i') }}
+                        </span>
                         @if($doc->archivo_subido_at)
-                        &nbsp;·&nbsp; 📄 Digitalizado: {{ \Carbon\Carbon::parse($doc->archivo_subido_at)->format('d/m/Y H:i') }}
+                        <span class="text-xs text-gray-400">
+                            📄 Digital: {{ \Carbon\Carbon::parse($doc->archivo_subido_at)->format('d/m/Y H:i') }}
+                        </span>
                         @endif
-                    </p>
+                    </div>
                     @endif
                 </div>
                 @endforeach
             </div>
         </div>
 
-        {{-- Botón aprobar y enviar --}}
+        {{-- Botón enviar a siguiente etapa --}}
         @if($recibido)
-        <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
-            <form method="POST" action="{{ route('unidad.aprobar.etapa2', $proceso->id) }}">
-                @csrf
-                @php
-                    $puedeEnviar = $todosCompletos;
-                @endphp
-                <button type="submit"
-                    @if(!$puedeEnviar) disabled title="Debes recibir y digitalizar todos los documentos requeridos" @endif
-                    @if($puedeEnviar) onclick="return confirm('¿Confirmar que todos los documentos del contratista están completos y enviar a la siguiente etapa?')" @endif
-                    class="w-full px-4 py-3 rounded-xl text-sm font-semibold transition"
-                    style="background:{{ $puedeEnviar ? '#15803d' : '#9ca3af' }};color:#fff;cursor:{{ $puedeEnviar ? 'pointer' : 'not-allowed' }};opacity:{{ $puedeEnviar ? '1' : '0.6' }}">
-                    @if($puedeEnviar)
-                        ✅ Documentos verificados — Enviar a siguiente etapa
-                    @else
-                        🔒 Completa todos los documentos requeridos para poder enviar
+        <div class="rounded-2xl border p-5" style="border-color:{{ $todosCompletos ? '#86efac' : '#e2e8f0' }};background:{{ $todosCompletos ? '#f0fdf4' : '#fff' }}">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm font-semibold" style="color:{{ $todosCompletos ? '#15803d' : '#374151' }}">
+                        {{ $todosCompletos ? '✅ Todos los documentos requeridos están completos' : '🔒 Completa todos los documentos requeridos para poder enviar' }}
+                    </p>
+                    @if(!$todosCompletos)
+                    @php
+                        $faltanFisico  = $documentos->where('requerido', true)->where('recibido_fisico', false)->count();
+                        $faltanDigital = $documentos->where('requerido', true)->filter(fn($d)=>empty($d->archivo_path))->count();
+                    @endphp
+                    <p class="text-xs text-gray-400 mt-1">
+                        @if($faltanFisico > 0) {{ $faltanFisico }} pendientes de recibir físicamente &nbsp;·&nbsp; @endif
+                        @if($faltanDigital > 0) {{ $faltanDigital }} sin digitalizar @endif
+                    </p>
                     @endif
-                </button>
-            </form>
+                </div>
+                <form method="POST" action="{{ route('unidad.aprobar.etapa2', $proceso->id) }}" class="shrink-0">
+                    @csrf
+                    <button type="submit"
+                        @if(!$todosCompletos) disabled @endif
+                        @if($todosCompletos) onclick="return confirm('¿Confirmar que todos los documentos del contratista están completos y enviar a la siguiente etapa?')" @endif
+                        class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all"
+                        style="background:{{ $todosCompletos ? '#15803d' : '#d1d5db' }};
+                               color:{{ $todosCompletos ? '#fff' : '#9ca3af' }};
+                               cursor:{{ $todosCompletos ? 'pointer' : 'not-allowed' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Enviar a siguiente etapa
+                    </button>
+                </form>
+            </div>
         </div>
         @endif
 

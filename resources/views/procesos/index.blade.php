@@ -47,7 +47,7 @@
               class="bg-white rounded-2xl p-5" style="border:1px solid #e2e8f0">
             @php $esAdminOPlaneacion = !$miRolDoc && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('planeacion')); @endphp
             @if($esAdminOPlaneacion)
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-{{ auth()->user()->hasRole('admin') ? '4' : '3' }} gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1.5">Buscar</label>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
@@ -66,6 +66,7 @@
                         <option value="RECHAZADO"  @selected(request('estado')=='RECHAZADO')>Rechazado</option>
                     </select>
                 </div>
+                @if(auth()->user()->hasRole('admin'))
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1.5">Etapa</label>
                     <select name="etapa"
@@ -79,6 +80,7 @@
                         @endforeach
                     </select>
                 </div>
+                @endif
                 <div class="flex gap-2">
                     <button type="submit"
                             class="flex-1 px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
@@ -149,7 +151,6 @@
                             default              => null,
                         };
                         $canOpen = auth()->user()->hasRole('admin')
-                            || auth()->user()->hasRole('planeacion')
                             || auth()->user()->hasRole($p->area_actual_role);
                         $ac = $areaColors[$p->area_actual_role] ?? ['bg'=>'#f1f5f9','text'=>'#475569','label'=>$p->area_actual_role];
                         $ec = $estadoConfig[$p->estado] ?? ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8','label'=>$p->estado];

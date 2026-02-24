@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-lg font-bold text-gray-900 leading-none">Mi Bandeja — Descentralización</h1>
-                <p class="text-xs text-gray-400 mt-1">Todos los procesos activos del sistema</p>
+                <p class="text-xs text-gray-400 mt-1">Procesos pendientes en tu área</p>
             </div>
             <div class="ml-8">
                 <a href="{{ route('procesos.create') }}"
@@ -48,7 +48,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1.5">Buscar</label>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
-                           placeholder="Código, objeto, contratista..."
+                           placeholder="Buscar por código..."
                            class="w-full border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                            style="border-color:#e2e8f0">
                 </div>
@@ -58,9 +58,8 @@
                             class="w-full border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                             style="border-color:#e2e8f0">
                         <option value="">Todos</option>
-                        <option value="EN_CURSO"   @selected(request('estado')=='EN_CURSO')>En curso</option>
-                        <option value="FINALIZADO" @selected(request('estado')=='FINALIZADO')>Finalizado</option>
-                        <option value="RECHAZADO"  @selected(request('estado')=='RECHAZADO')>Rechazado</option>
+                        <option value="EN_CURSO"  @selected(request('estado')=='EN_CURSO')>En curso</option>
+                        <option value="RECHAZADO" @selected(request('estado')=='RECHAZADO')>Rechazado</option>
                     </select>
                 </div>
                 <div class="flex gap-2">
@@ -78,26 +77,7 @@
             </div>
         </form>
 
-        {{-- KPIs rápidos --}}
-        @php
-            $enPlaneacion   = $procesos->where('estado','EN_CURSO')->where('area_actual_role','planeacion')->count();
-            $enCursoTotal   = $procesos->where('estado','EN_CURSO')->count();
-            $finalizadosCnt = $procesos->where('estado','FINALIZADO')->count();
-        @endphp
-        <div class="grid grid-cols-3 gap-4">
-            <div class="bg-white rounded-2xl px-5 py-4" style="border:1px solid #e2e8f0">
-                <p class="text-xs font-medium text-gray-500 mb-1">Total mostrados</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $procesos->count() }}</p>
-            </div>
-            <div class="bg-white rounded-2xl px-5 py-4" style="border:1px solid #e2e8f0">
-                <p class="text-xs font-medium text-gray-500 mb-1">En mi bandeja</p>
-                <p class="text-2xl font-bold" style="color:#15803d">{{ $enPlaneacion }}</p>
-            </div>
-            <div class="bg-white rounded-2xl px-5 py-4" style="border:1px solid #e2e8f0">
-                <p class="text-xs font-medium text-gray-500 mb-1">Finalizados</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $finalizadosCnt }}</p>
-            </div>
-        </div>
+
 
         {{-- Tabla --}}
         <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">

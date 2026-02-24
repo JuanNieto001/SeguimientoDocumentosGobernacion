@@ -13,7 +13,7 @@ class PlaneacionController extends Controller
 {
     public function index(Request $request)
     {
-        // Planeación supervisa TODOS los procesos (En curso y finalizados)
+        // Bandeja de Descentralización: solo procesos pendientes en su área
         $query = DB::table('procesos')
             ->leftJoin('users as creador', 'creador.id', '=', 'procesos.created_by')
             ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id')
@@ -23,6 +23,7 @@ class PlaneacionController extends Controller
                 'etapas.nombre as etapa_nombre',
                 'etapas.orden as etapa_orden'
             )
+            ->where('procesos.area_actual_role', 'planeacion')
             ->orderByDesc('procesos.id');
 
         if ($request->filled('buscar')) {

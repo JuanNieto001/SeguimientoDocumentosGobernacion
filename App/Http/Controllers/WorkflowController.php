@@ -251,16 +251,18 @@ class WorkflowController extends Controller
                     return redirect()->back()->with('error', 'Debes marcar "Recibí" antes de poder enviar a la siguiente secretaría.');
                 }
 
-                // Validar checks requeridos
-                $faltantes = DB::table('proceso_etapa_checks as pec')
-                    ->join('etapa_items as ei', 'ei.id', '=', 'pec.etapa_item_id')
-                    ->where('pec.proceso_etapa_id', $procesoEtapa->id)
-                    ->where('ei.requerido', 1)
-                    ->where('pec.checked', 0)
-                    ->count();
+                // Validar checks requeridos (no aplica para planeacion, que usa flujo de documentos paralelos)
+                if ($etapaActual->area_role !== 'planeacion') {
+                    $faltantes = DB::table('proceso_etapa_checks as pec')
+                        ->join('etapa_items as ei', 'ei.id', '=', 'pec.etapa_item_id')
+                        ->where('pec.proceso_etapa_id', $procesoEtapa->id)
+                        ->where('ei.requerido', 1)
+                        ->where('pec.checked', 0)
+                        ->count();
 
-                if ($faltantes > 0) {
-                    return redirect()->back()->with('error', "No puedes enviar: faltan {$faltantes} ítem(s) requerido(s) en el checklist.");
+                    if ($faltantes > 0) {
+                        return redirect()->back()->with('error', "No puedes enviar: faltan {$faltantes} ítem(s) requerido(s) en el checklist.");
+                    }
                 }
                 
                 // Validar que todos los archivos de la etapa estén aprobados

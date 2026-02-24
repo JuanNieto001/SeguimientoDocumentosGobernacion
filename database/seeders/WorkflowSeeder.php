@@ -184,15 +184,9 @@ class WorkflowSeeder extends Seeder
                         'notas'       => 'IMPORTANTE: Antes de la radicación en Jurídica, la Secretaría Jurídica procede a la validación de la hoja de vida SIGEP para verificar estudios y experiencia del contratista. Honorarios según tabla de la Gobernación.',
                         'items' => [
                             [
-                                'label' => 'Hoja de Vida SIGEP (cargada y actualizada en plataforma SIGEP II)',
+                                'label' => 'Hoja de Vida SIGEP (cargada, actualizada y validada por Secretaría Jurídica)',
                                 'tipo_documento' => 'documento_contratista', 'responsable_unidad' => 'Contratista',
-                                'responsable_secretaria' => null, 'notas' => 'El contratista debe registrar y actualizar su HV en SIGEP II. Insumo indispensable para la validación jurídica.', 'requerido' => true,
-                            ],
-                            [
-                                'label' => 'Hoja de Vida SIGEP validada por Secretaría Jurídica',
-                                'tipo_documento' => 'certificado', 'responsable_unidad' => 'Abogado Enlace',
-                                'responsable_secretaria' => 'Secretaría Jurídica',
-                                'notas' => 'Jurídica verifica que la HV cuente con los estudios y experiencia requeridos.', 'requerido' => true,
+                                'responsable_secretaria' => 'Secretaría Jurídica', 'notas' => 'El contratista debe registrar y actualizar su HV en SIGEP II. Jurídica verifica estudios y experiencia requeridos.', 'requerido' => true,
                             ],
                             [
                                 'label' => 'Certificados de estudio (diplomas / actas de grado pregrado y posgrado)',
@@ -414,7 +408,7 @@ class WorkflowSeeder extends Seeder
                             ['label' => 'Matrícula o tarjeta profesional (si aplica)',             'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => 'Si aplica',    'requerido' => false],
                             ['label' => 'Ausencia de sanciones disciplinarias profesionales',     'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => '< 30 días, si aplica', 'requerido' => false],
                             ['label' => 'Acreditación situación militar (si aplica)',              'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => '< 30 días, si aplica', 'requerido' => false],
-                            ['label' => 'Hoja de Vida SIGEP validada por Secretaría Jurídica',    'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => null,           'requerido' => true],
+                            ['label' => 'Hoja de Vida SIGEP (cargada, actualizada y validada por Secretaría Jurídica)', 'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => null, 'requerido' => true],
                             ['label' => 'Certificados de estudio',                                 'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => null,           'requerido' => true],
                             ['label' => 'Certificados de experiencia laboral',                     'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => null,           'requerido' => true],
                             ['label' => 'Certificado de Idoneidad y Experiencia',                  'tipo_documento' => 'checklist', 'responsable_unidad' => null, 'responsable_secretaria' => null, 'notas' => null,           'requerido' => true],

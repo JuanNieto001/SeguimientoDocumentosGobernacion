@@ -13,143 +13,20 @@ class UnidadController extends Controller
 {
     public function index()
     {
-        $areaRole = 'unidad_solicitante';
         $user = auth()->user();
 
-        // 1) Listado de procesos que están actualmente en Unidad
-        // Admin ve todos los que están en esta área.
-        // Unidad solicitante ve solo los creados por él/ella.
-        $procesosQuery = DB::table('procesos')
-            ->where('area_actual_role', $areaRole)
-            ->orderByDesc('id');
+        $procesos = DB::table('procesos as p')
+            ->leftJoin('etapas as e', 'e.id', '=', 'p.etapa_actual_id')
+            ->where('p.area_actual_role', 'unidad_solicitante')
+            ->orderByDesc('p.id')
+            ->select(
+                'p.id', 'p.codigo', 'p.objeto', 'p.estado',
+                'p.valor_estimado', 'p.created_at',
+                'e.nombre as etapa_nombre', 'e.orden as etapa_orden'
+            )
+            ->get();
 
-        if (!$user->hasRole('admin')) {
-            // Unidad puede ver todos los procesos en su bandeja, aunque los haya creado otro usuario (ej. admin)
-            // Por eso no filtramos por created_by para este rol.
-        }
-
-        $procesos = $procesosQuery->get();
-
-        // 2) Selección segura: si viene proceso_id por querystring, validar que exista en la lista
-        $requestedId = request('proceso_id');
-        $selectedId = null;
-
-        if ($requestedId) {
-            $existsInList = $procesos->firstWhere('id', (int) $requestedId);
-            $selectedId = $existsInList ? (int) $requestedId : null;
-        }
-
-        if (!$selectedId) {
-            $selectedId = $procesos->first()->id ?? null;
-        }
-
-        // 3) Cargar proceso seleccionado (si hay)
-        $proceso = $selectedId
-            ? DB::table('procesos')->where('id', $selectedId)->first()
-            : null;
-
-        $procesoEtapa = null;
-        $checks = collect();
-        $enviarHabilitado = false;
-        $archivos = collect();
-        $puedeEditar = false; // Nueva variable para controlar si puede editar
-
-        if ($proceso) {
-
-            // 4) Traer/crear la instancia de la etapa actual del proceso (proceso_etapas)
-            // IMPORTANTE: aquí lo creamos si no existe para evitar null->id
-            $procesoEtapa = DB::table('proceso_etapas')
-                ->where('proceso_id', $proceso->id)
-                ->where('etapa_id', $proceso->etapa_actual_id)
-                ->first();
-
-            if (!$procesoEtapa) {
-                $procesoEtapaId = DB::table('proceso_etapas')->insertGetId([
-                    'proceso_id' => $proceso->id,
-                    'etapa_id'   => $proceso->etapa_actual_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $procesoEtapa = DB::table('proceso_etapas')->where('id', $procesoEtapaId)->first();
-            }
-
-            // ✅ NUEVO: Determinar si puede editar (solo si NO ha enviado)
-            $puedeEditar = !$procesoEtapa->enviado;
-
-            // 5) Seed checks si faltan (para que la vista siempre tenga checklist)
-            $checksCount = DB::table('proceso_etapa_checks')
-                ->where('proceso_etapa_id', $procesoEtapa->id)
-                ->count();
-
-            if ($checksCount === 0) {
-                $items = DB::table('etapa_items')
-                    ->where('etapa_id', $proceso->etapa_actual_id)
-                    ->orderBy('orden')
-                    ->get(['id']);
-
-                foreach ($items as $item) {
-                    DB::table('proceso_etapa_checks')->insert([
-                        'proceso_etapa_id' => $procesoEtapa->id,
-                        'etapa_item_id'    => $item->id,
-                        'checked'          => false,
-                        'created_at'       => now(),
-                        'updated_at'       => now(),
-                    ]);
-                }
-            }
-
-            // 6) Cargar checklist
-            $checks = DB::table('proceso_etapa_checks as pc')
-                ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
-                ->select('pc.id as check_id', 'pc.checked', 'ei.label', 'ei.requerido')
-                ->where('pc.proceso_etapa_id', $procesoEtapa->id)
-                ->orderBy('ei.orden')
-                ->get();
-
-            // 7) Habilitar envío según etapa
-            $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
-            $ordenEtapa = $etapaActual ? $etapaActual->orden : 0;
-            
-            // Verificar archivos según la etapa
-            if ($ordenEtapa == 0) {
-                // Etapa 0: requiere solo Estudios Previos
-                $enviarHabilitado = DB::table('proceso_etapa_archivos')
-                    ->where('proceso_id', $proceso->id)
-                    ->where('etapa_id', $proceso->etapa_actual_id)
-                    ->where('tipo_archivo', 'estudios_previos')
-                    ->exists();
-            } else {
-                // Otras etapas: habilitar si hay al menos 1 archivo
-                $enviarHabilitado = DB::table('proceso_etapa_archivos')
-                    ->where('proceso_id', $proceso->id)
-                    ->where('etapa_id', $proceso->etapa_actual_id)
-                    ->exists();
-            }
-            
-            // 8) Cargar archivos de la etapa actual
-            $archivos = DB::table('proceso_etapa_archivos as pea')
-                ->join('users as u', 'u.id', '=', 'pea.uploaded_by')
-                ->select([
-                    'pea.*',
-                    'u.name as uploaded_by_name'
-                ])
-                ->where('pea.proceso_id', $proceso->id)
-                ->where('pea.etapa_id', $proceso->etapa_actual_id)
-                ->orderByDesc('pea.uploaded_at')
-                ->get();
-        }
-
-        return view('areas.unidad', compact(
-            'areaRole',
-            'procesos',
-            'proceso',
-            'procesoEtapa',
-            'checks',
-            'enviarHabilitado',
-            'archivos',
-            'puedeEditar' // ✅ NUEVO: Pasar variable a la vista
-        ));
+        return view('areas.unidad', compact('procesos'));
     }
 
     /**
@@ -236,11 +113,37 @@ class UnidadController extends Controller
                     ->get();
             }
 
-            // Calcular progreso
-            $totalDocs = $documentos->count();
-            $recibidosFisico = $documentos->where('recibido_fisico', true)->count();
-            $archivosSubidos = $documentos->whereNotNull('archivo_path')->count();
-            $todosCompletos = $totalDocs > 0 && $recibidosFisico === $totalDocs && $archivosSubidos === $totalDocs;
+            // Calcular progreso (total y sólo requeridos para habilitar el botón)
+            $totalDocs        = $documentos->count();
+            $docsRequeridos   = $documentos->where('requerido', true);
+            $totalRequeridos  = $docsRequeridos->count();
+            $recibidosFisico  = $documentos->where('recibido_fisico', true)->count();
+            $archivosSubidos  = $documentos->whereNotNull('archivo_path')->count();
+            $reqFisico        = $docsRequeridos->where('recibido_fisico', true)->count();
+            $reqArchivo       = $docsRequeridos->filter(fn($d) => !is_null($d->archivo_path))->count();
+            $todosCompletos   = $totalRequeridos > 0 && $reqFisico === $totalRequeridos && $reqArchivo === $totalRequeridos;
+
+            // ── Documentos recibidos de Descentralización (etapa 1) ───────────
+            $docsDescentralizacion = DB::table('proceso_documentos_solicitados as pds')
+                ->leftJoin('proceso_etapa_archivos as pea', 'pea.id', '=', 'pds.archivo_id')
+                ->leftJoin('users as u', 'u.id', '=', 'pds.subido_por')
+                ->leftJoin('etapas as e', 'e.id', '=', 'pds.etapa_id')
+                ->where('pds.proceso_id', $proceso->id)
+                ->select(
+                    'pds.id',
+                    'pds.nombre_documento',
+                    'pds.area_responsable_nombre',
+                    'pds.area_responsable_rol',
+                    'pds.estado',
+                    'pds.subido_at',
+                    'pds.archivo_id',
+                    'pea.nombre_original as archivo_nombre',
+                    'pea.ruta as archivo_ruta',
+                    'u.name as subido_por_nombre',
+                    'e.nombre as etapa_nombre'
+                )
+                ->orderBy('pds.id')
+                ->get();
 
             return view('areas.unidad-abogado', compact(
                 'proceso',
@@ -251,7 +154,8 @@ class UnidadController extends Controller
                 'recibidosFisico',
                 'archivosSubidos',
                 'todosCompletos',
-                'ordenEtapa'
+                'ordenEtapa',
+                'docsDescentralizacion'
             ));
         }
 
@@ -447,42 +351,47 @@ class UnidadController extends Controller
                     'updated_at'  => now(),
                 ]);
 
-            // Buscar siguiente etapa
-            $siguienteEtapa = DB::table('etapas')
-                ->where('workflow_id', $proceso->workflow_id)
-                ->where('orden', '>', $proceso->etapaActual->orden)
-                ->where('activa', 1)
-                ->orderBy('orden')
-                ->first();
+            // Buscar siguiente etapa usando next_etapa_id
+            $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+            $siguienteEtapa = $etapaActual && $etapaActual->next_etapa_id
+                ? DB::table('etapas')->where('id', $etapaActual->next_etapa_id)->first()
+                : null;
 
             if ($siguienteEtapa) {
                 $proceso->update([
                     'etapa_actual_id'  => $siguienteEtapa->id,
                     'area_actual_role' => $siguienteEtapa->area_role,
-                    'estado'           => 'en_proceso',
+                    'estado'           => 'EN_CURSO',
                 ]);
 
-                // Crear proceso_etapa para la siguiente
-                DB::table('proceso_etapas')->insert([
-                    'proceso_id' => $proceso->id,
-                    'etapa_id'   => $siguienteEtapa->id,
-                    'recibido'   => false,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                // Crear proceso_etapa para la siguiente si no existe
+                $yaExiste = DB::table('proceso_etapas')
+                    ->where('proceso_id', $proceso->id)
+                    ->where('etapa_id', $siguienteEtapa->id)
+                    ->exists();
+
+                if (!$yaExiste) {
+                    DB::table('proceso_etapas')->insert([
+                        'proceso_id' => $proceso->id,
+                        'etapa_id'   => $siguienteEtapa->id,
+                        'recibido'   => false,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
 
                 ProcesoAuditoria::registrar(
                     $proceso->id,
                     'etapa_aprobada',
                     'unidad_solicitante',
                     $siguienteEtapa->nombre,
-                    $proceso->etapaActual->nombre ?? null,
+                    $etapaActual->nombre ?? null,
                     'Documentos del contratista verificados. Proceso enviado a: ' . $siguienteEtapa->nombre
                 );
             }
 
             return redirect()->route('unidad.show', $proceso->id)
-                ->with('success', 'Documentos verificados y proceso enviado a la siguiente etapa.');
+                ->with('success', 'Documentos verificados y proceso enviado a la siguiente etapa: ' . ($siguienteEtapa->nombre ?? '—'));
         });
     }
 

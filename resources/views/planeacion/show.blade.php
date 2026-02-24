@@ -324,7 +324,18 @@
                 </div>
                 @endif
 
-                {{-- Botón Enviar — siempre visible, deshabilitado hasta que todos los documentos estén completos --}}
+                {{-- Botón Enviar — se oculta una vez enviado --}}
+                @if($procesoEtapaActual && $procesoEtapaActual->enviado)
+                <div class="mt-4 p-3 rounded-xl flex items-center gap-3 text-sm font-semibold"
+                     style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">
+                    <span>✅</span>
+                    <span>Expediente enviado al Abogado de la Unidad Solicitante
+                        @if($procesoEtapaActual->enviado_at)
+                            — {{ \Carbon\Carbon::parse($procesoEtapaActual->enviado_at)->format('d/m/Y H:i') }}
+                        @endif
+                    </span>
+                </div>
+                @else
                 <form method="POST" action="{{ route('workflow.enviar', $proceso->id) }}" class="mt-4">
                     @csrf
                     <input type="hidden" name="area_role" value="planeacion">
@@ -346,6 +357,7 @@
                         @endif
                     </button>
                 </form>
+                @endif
             </div>
         </div>
         @endif

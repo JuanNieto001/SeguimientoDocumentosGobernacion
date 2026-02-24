@@ -101,9 +101,8 @@ class TiposArchivoSeeder extends Seeder
                 // Declaraciones SIGEP / Ley 2013
                 ['tipo' => 'declaracion_bienes_rentas_sigep', 'label' => 'Declaración de Bienes y Rentas SIGEP II (descargado de plataforma)',      'requerido' => true,  'orden' => 19],
                 ['tipo' => 'declaracion_conflicto_intereses', 'label' => 'Declaración Bienes/Renta y Conflicto de Intereses (Ley 2013)',            'requerido' => true,  'orden' => 20],
-                // HV y validación jurídica
-                ['tipo' => 'hoja_vida_sigep',                 'label' => 'Hoja de Vida SIGEP (cargada en plataforma SIGEP II)',                    'requerido' => true,  'orden' => 21],
-                ['tipo' => 'hv_validada_juridica',            'label' => 'Hoja de Vida SIGEP validada por Secretaría Jurídica',                     'requerido' => true,  'orden' => 22],
+                // HV y validación jurídica (fusionado en un solo item)
+                ['tipo' => 'hoja_vida_sigep',                 'label' => 'Hoja de Vida SIGEP (cargada, actualizada y validada por Secretaría Jurídica)', 'requerido' => true, 'orden' => 21],
             ]);
         }
 

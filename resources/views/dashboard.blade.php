@@ -66,68 +66,39 @@
         </div>
         @endif
 
-        {{-- KPIs --}}
-        <div class="grid grid-cols-3 gap-4">
-            @if($esAreaDocumentos)
-            {{-- KPIs específicos para áreas de documentos --}}
-            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
-                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#dbeafe">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900">{{ $solicitudesPendientes->count() }}</p>
-                    <p class="text-xs text-gray-400">Procesos asignados</p>
-                </div>
+        {{-- ── Métricas del mes por rol ────────────────────────────────── --}}
+        @if(!empty($metricas['tarjetas']))
+        @php
+            $colorMap = [
+                'blue'   => ['bg'=>'#dbeafe','text'=>'#1d4ed8','num'=>'#1e40af'],
+                'green'  => ['bg'=>'#dcfce7','text'=>'#15803d','num'=>'#166534'],
+                'yellow' => ['bg'=>'#fef9c3','text'=>'#a16207','num'=>'#92400e'],
+                'red'    => ['bg'=>'#fee2e2','text'=>'#b91c1c','num'=>'#991b1b'],
+                'gray'   => ['bg'=>'#f1f5f9','text'=>'#475569','num'=>'#334155'],
+            ];
+        @endphp
+        <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">
+            <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:#f1f5f9">
+                <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Resumen — {{ $metricas['mes'] }}</h2>
             </div>
-            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
-                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#fef3c7">
-                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0" style="divide-color:#f1f5f9">
+                @foreach($metricas['tarjetas'] as $t)
+                @php $c = $colorMap[$t['color']] ?? $colorMap['gray']; @endphp
+                <div class="flex items-center gap-3 px-5 py-4">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg"
+                         style="background:{{ $c['bg'] }}">
+                        {{ $t['icono'] }}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-2xl font-black leading-none" style="color:{{ $c['num'] }}">{{ $t['valor'] }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5 leading-tight">{{ $t['label'] }}</p>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900">{{ $totalSolPendientes }}</p>
-                    <p class="text-xs text-gray-400">Docs pendientes</p>
-                </div>
+                @endforeach
             </div>
-            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
-                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#dcfce7">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900">{{ $totalSolSubidos }}</p>
-                    <p class="text-xs text-gray-400">Docs entregados</p>
-                </div>
-            </div>
-            @else
-            {{-- KPIs generales --}}
-            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
-                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#dbeafe">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900">{{ $total }}</p>
-                    <p class="text-xs text-gray-400">Total procesos</p>
-                </div>
-            </div>
-            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
-                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#fefce8">
-                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900">{{ $enCursoCount }}</p>
-                    <p class="text-xs text-gray-400">En curso</p>
-                </div>
-            </div>
-            <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="border:1px solid #e2e8f0">
-                <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:#dcfce7">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900">{{ $finalizadoCount }}</p>
-                    <p class="text-xs text-gray-400">Finalizados</p>
-                </div>
-            </div>
-            @endif
         </div>
+        @endif
+        {{-- ── Fin métricas del mes ─────────────────────────────────────── --}}
 
         {{-- Acciones rápidas --}}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">

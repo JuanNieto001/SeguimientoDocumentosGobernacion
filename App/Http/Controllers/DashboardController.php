@@ -76,7 +76,174 @@ class DashboardController extends Controller
         $enCurso = $all->where('estado', 'EN_CURSO')->values();
         $finalizados = $all->where('estado', 'FINALIZADO')->values();
 
-        return view('dashboard', compact('enCurso', 'finalizados', 'solicitudesPendientes'));
+        $metricas = $this->computeMetricas($user, $userRolesDoc);
+
+        return view('dashboard', compact('enCurso', 'finalizados', 'solicitudesPendientes', 'metricas'));
+    }
+
+    /**
+     * Métricas mensuales personalizadas según el rol del usuario
+     */
+    private function computeMetricas($user, $userRolesDoc)
+    {
+        $inicioMes = now()->startOfMonth();
+        $finMes    = now()->endOfMonth();
+
+        // ── Áreas de documentos (compras, talento_humano, rentas, etc.) ───────
+        if ($userRolesDoc->isNotEmpty()) {
+            $roles = $userRolesDoc->values()->toArray();
+
+            $asignadosMes = DB::table('proceso_documentos_solicitados as pds')
+                ->join('procesos', 'procesos.id', '=', 'pds.proceso_id')
+                ->whereIn('pds.area_responsable_rol', $roles)
+                ->whereBetween('pds.created_at', [$inicioMes, $finMes])
+                ->distinct('pds.proceso_id')->count('pds.proceso_id');
+
+            $subidosMes = DB::table('proceso_documentos_solicitados')
+                ->whereIn('area_responsable_rol', $roles)
+                ->where('estado', 'subido')
+                ->whereBetween('subido_at', [$inicioMes, $finMes])
+                ->count();
+
+            $pendientesActual = DB::table('proceso_documentos_solicitados')
+                ->whereIn('area_responsable_rol', $roles)
+                ->where('estado', 'pendiente')
+                ->count();
+
+            $totalHistorico = DB::table('proceso_documentos_solicitados')
+                ->whereIn('area_responsable_rol', $roles)
+                ->count();
+
+            return [
+                'tipo' => 'area_doc',
+                'mes'  => now()->translatedFormat('F Y'),
+                'tarjetas' => [
+                    ['icono' => '📂', 'valor' => $asignadosMes,    'label' => 'Procesos asignados este mes', 'color' => 'blue'],
+                    ['icono' => '✅', 'valor' => $subidosMes,       'label' => 'Documentos subidos este mes',  'color' => 'green'],
+                    ['icono' => '⏳', 'valor' => $pendientesActual,  'label' => 'Documentos pendientes',        'color' => 'yellow'],
+                    ['icono' => '📊', 'valor' => $totalHistorico,    'label' => 'Total histórico asignados',    'color' => 'gray'],
+                ],
+            ];
+        }
+
+        // ── Unidad Solicitante ─────────────────────────────────────────────────
+        if ($user->hasRole('unidad_solicitante')) {
+            $creadosMes = DB::table('procesos')
+                ->where('created_by', $user->id)
+                ->whereBetween('created_at', [$inicioMes, $finMes])
+                ->count();
+
+            $finalizadosMes = DB::table('procesos')
+                ->where('created_by', $user->id)
+                ->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])
+                ->whereBetween('updated_at', [$inicioMes, $finMes])
+                ->count();
+
+            $rechazadosMes = DB::table('procesos')
+                ->where('created_by', $user->id)
+                ->where('estado', 'RECHAZADO')
+                ->whereBetween('updated_at', [$inicioMes, $finMes])
+                ->count();
+
+            $enCursoActual = DB::table('procesos')
+                ->where('created_by', $user->id)
+                ->where('estado', 'EN_CURSO')
+                ->count();
+
+            return [
+                'tipo' => 'unidad_solicitante',
+                'mes'  => now()->translatedFormat('F Y'),
+                'tarjetas' => [
+                    ['icono' => '📋', 'valor' => $creadosMes,      'label' => 'Solicitudes creadas este mes',  'color' => 'blue'],
+                    ['icono' => '🔄', 'valor' => $enCursoActual,    'label' => 'Procesos activos actualmente',  'color' => 'yellow'],
+                    ['icono' => '✅', 'valor' => $finalizadosMes,    'label' => 'Finalizados este mes',          'color' => 'green'],
+                    ['icono' => '❌', 'valor' => $rechazadosMes,     'label' => 'Rechazados este mes',           'color' => 'red'],
+                ],
+            ];
+        }
+
+        // ── Planeación ────────────────────────────────────────────────────────
+        if ($user->hasRole('planeacion')) {
+            $recibidosMes = DB::table('proceso_etapas as pe')
+                ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
+                ->where('e.area_role', 'planeacion')
+                ->where('pe.recibido', true)
+                ->whereBetween('pe.recibido_at', [$inicioMes, $finMes])
+                ->count();
+
+            $enviadosMes = DB::table('proceso_etapas as pe')
+                ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
+                ->where('e.area_role', 'planeacion')
+                ->where('pe.enviado', true)
+                ->whereBetween('pe.enviado_at', [$inicioMes, $finMes])
+                ->count();
+
+            $rechazadosMes = DB::table('procesos')
+                ->where('estado', 'RECHAZADO')
+                ->whereBetween('updated_at', [$inicioMes, $finMes])
+                ->count();
+
+            $enPlaneacion = DB::table('procesos')
+                ->where('area_actual_role', 'planeacion')
+                ->where('estado', 'EN_CURSO')
+                ->count();
+
+            return [
+                'tipo' => 'planeacion',
+                'mes'  => now()->translatedFormat('F Y'),
+                'tarjetas' => [
+                    ['icono' => '📥', 'valor' => $recibidosMes,  'label' => 'Recibidos este mes',           'color' => 'blue'],
+                    ['icono' => '📤', 'valor' => $enviadosMes,   'label' => 'Enviados a áreas este mes',    'color' => 'green'],
+                    ['icono' => '🔄', 'valor' => $enPlaneacion,  'label' => 'En tu bandeja ahora',          'color' => 'yellow'],
+                    ['icono' => '❌', 'valor' => $rechazadosMes, 'label' => 'Rechazados este mes (sistema)', 'color' => 'red'],
+                ],
+            ];
+        }
+
+        // ── Hacienda / Jurídica / SECOP ───────────────────────────────────────
+        $rolesArea = ['hacienda', 'juridica', 'secop'];
+        $miRolArea = collect($rolesArea)->first(fn($r) => $user->hasRole($r));
+        if ($miRolArea) {
+            $recibidosMes = DB::table('proceso_etapas as pe')
+                ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
+                ->where('e.area_role', $miRolArea)
+                ->where('pe.recibido', true)
+                ->whereBetween('pe.recibido_at', [$inicioMes, $finMes])
+                ->count();
+
+            $enviadosMes = DB::table('proceso_etapas as pe')
+                ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
+                ->where('e.area_role', $miRolArea)
+                ->where('pe.enviado', true)
+                ->whereBetween('pe.enviado_at', [$inicioMes, $finMes])
+                ->count();
+
+            $enBandeja = DB::table('procesos')
+                ->where('area_actual_role', $miRolArea)
+                ->where('estado', 'EN_CURSO')
+                ->count();
+
+            $rechazadosMes = DB::table('proceso_etapas as pe')
+                ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
+                ->join('procesos as p', 'p.id', '=', 'pe.proceso_id')
+                ->where('e.area_role', $miRolArea)
+                ->where('p.estado', 'RECHAZADO')
+                ->whereBetween('p.updated_at', [$inicioMes, $finMes])
+                ->count();
+
+            return [
+                'tipo' => $miRolArea,
+                'mes'  => now()->translatedFormat('F Y'),
+                'tarjetas' => [
+                    ['icono' => '📥', 'valor' => $recibidosMes, 'label' => 'Recibidos este mes',   'color' => 'blue'],
+                    ['icono' => '📤', 'valor' => $enviadosMes,  'label' => 'Enviados este mes',    'color' => 'green'],
+                    ['icono' => '🔄', 'valor' => $enBandeja,    'label' => 'En tu bandeja ahora',  'color' => 'yellow'],
+                    ['icono' => '❌', 'valor' => $rechazadosMes,'label' => 'Rechazados este mes',  'color' => 'red'],
+                ],
+            ];
+        }
+
+        return ['tipo' => 'generic', 'mes' => now()->translatedFormat('F Y'), 'tarjetas' => []];
     }
 
     /**
