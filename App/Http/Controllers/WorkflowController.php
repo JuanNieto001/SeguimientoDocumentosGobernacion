@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\ProcesoAuditoria;
+use App\Models\TrackingEvento;
 
 class WorkflowController extends Controller
 {
@@ -397,6 +398,35 @@ class WorkflowController extends Controller
                 ['etapa_anterior' => $etapaActual->nombre, 'area_anterior' => $etapaActual->area_role],
                 ['etapa_siguiente' => $nextEtapa->nombre, 'area_siguiente' => $nextEtapa->area_role]
             );
+
+            // Registrar movimiento automático de tracking
+            $areaOrigenLabel = match($etapaActual->area_role) {
+                'unidad_solicitante' => 'Unidad Solicitante',
+                'planeacion'         => 'Planeación',
+                'hacienda'           => 'Hacienda',
+                'juridica'           => 'Jurídica',
+                'secop'              => 'SECOP',
+                default              => ucfirst($etapaActual->area_role),
+            };
+            $areaDestinoLabel = match($nextEtapa->area_role) {
+                'unidad_solicitante' => 'Unidad Solicitante',
+                'planeacion'         => 'Planeación',
+                'hacienda'           => 'Hacienda',
+                'juridica'           => 'Jurídica',
+                'secop'              => 'SECOP',
+                default              => ucfirst($nextEtapa->area_role),
+            };
+            TrackingEvento::create([
+                'codigo_proceso'     => $proceso->codigo,
+                'proceso_id'         => $proceso->id,
+                'user_id'            => auth()->id(),
+                'tipo'               => 'entrega',
+                'area_origen'        => $areaOrigenLabel,
+                'area_destino'       => $areaDestinoLabel,
+                'responsable_nombre' => auth()->user()->name,
+                'observaciones'      => "Avance automático: {$etapaActual->nombre} → {$nextEtapa->nombre}",
+                'ip_address'         => request()->ip(),
+            ]);
 
             $areaLabel = match($nextEtapa->area_role) {
                 'unidad_solicitante' => 'Unidad Solicitante',
