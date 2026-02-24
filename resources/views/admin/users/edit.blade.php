@@ -69,6 +69,28 @@
                     </div>
                 </form>
             </div>
+
+            {{-- Tarjeta restablecer contraseña --}}
+            @if($usuario->id !== auth()->id())
+            <div class="mt-4 bg-white rounded-2xl p-5 flex items-center justify-between gap-4"
+                 style="border:1px solid #fde68a">
+                <div>
+                    <p class="text-sm font-semibold text-gray-800">Restablecer contraseña</p>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        Genera una contraseña temporal para que <strong>{{ $usuario->name }}</strong> pueda ingresar.
+                    </p>
+                </div>
+                <a href="{{ route('admin.reset-password.show', $usuario) }}"
+                   class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                   style="background:linear-gradient(135deg,#d97706,#92400e)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    Generar contraseña temporal
+                </a>
+            </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

@@ -21,6 +21,10 @@ use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ModificacionContractualController;
 use App\Http\Controllers\Admin\LogsController;
+use App\Http\Controllers\Admin\AuthEventsController;
+use App\Http\Controllers\Admin\ResetPasswordAdminController;
+use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\SupervisionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -434,5 +438,35 @@ Route::middleware(['auth'])->prefix('contract-processes')->name('contract-proces
 Route::get('/documents/expiring', [ProcessDocumentController::class, 'expiring'])
     ->middleware('auth')
     ->name('documents.expiring');
+
+// RF-17: Log de eventos de autenticación (solo admin)
+Route::get('/admin/auth-events', [AuthEventsController::class, 'index'])
+    ->middleware('auth')
+    ->name('admin.auth-events');
+
+// RF-14: Restablecimiento de contraseña por administrador (sin email)
+Route::get('/admin/usuarios/{usuario}/reset-password', [ResetPasswordAdminController::class, 'show'])
+    ->middleware('auth')
+    ->name('admin.reset-password.show');
+Route::post('/admin/usuarios/{usuario}/reset-password', [ResetPasswordAdminController::class, 'generate'])
+    ->middleware('auth')
+    ->name('admin.reset-password.generate');
+
+// RF-20: Rastreo físico de documentos por código (solo admin)
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking.index');
+    Route::get('/tracking/buscar', [TrackingController::class, 'buscar'])->name('tracking.buscar');
+    Route::post('/tracking/registrar', [TrackingController::class, 'registrar'])->name('tracking.registrar');
+});
+
+// RF-27: Supervisión e informes de pago
+Route::middleware('auth')->prefix('supervision')->name('supervision.')->group(function () {
+    Route::get('/{procesoId}', [SupervisionController::class, 'index'])->name('index');
+    Route::get('/{procesoId}/informe/crear', [SupervisionController::class, 'crearInforme'])->name('crear-informe');
+    Route::post('/{procesoId}/informe', [SupervisionController::class, 'guardarInforme'])->name('guardar-informe');
+    Route::get('/{procesoId}/pago/crear', [SupervisionController::class, 'crearPago'])->name('crear-pago');
+    Route::post('/{procesoId}/pago', [SupervisionController::class, 'guardarPago'])->name('guardar-pago');
+    Route::patch('/{procesoId}/pago/{pago}', [SupervisionController::class, 'actualizarPago'])->name('pago.actualizar');
+});
 
 require __DIR__.'/auth.php';
