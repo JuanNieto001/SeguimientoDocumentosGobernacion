@@ -143,6 +143,16 @@ class PlaneacionController extends Controller
             'observaciones' => 'nullable|string|max:500',
         ]);
 
+        // ── Validar que el proceso haya sido marcado como recibido ──
+        $procesoEtapaActual = DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $proceso->etapa_actual_id)
+            ->first();
+        if (!$procesoEtapaActual || !$procesoEtapaActual->recibido) {
+            return redirect()->back()->with('error',
+                'Debes marcar el documento como recibido antes de aprobar.');
+        }
+
         // ── Validar que todos los documentos paralelos hayan sido recibidos ──
         $solicitudes = DB::table('proceso_documentos_solicitados')
             ->where('proceso_id', $proceso->id)

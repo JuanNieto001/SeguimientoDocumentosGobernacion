@@ -113,6 +113,16 @@ class ProcesoController extends Controller
         }
         if ($user->unidad_id) {
             $userUnidad = DB::table('unidades')->where('id', $user->unidad_id)->first();
+            // Si el usuario tiene unidad pero no secretaría, derivarla automáticamente
+            if (!$userSecretaria && $userUnidad && $userUnidad->secretaria_id) {
+                $userSecretaria  = DB::table('secretarias')->where('id', $userUnidad->secretaria_id)->first();
+                $unidadesPreload = DB::table('unidades')
+                    ->where('secretaria_id', $userUnidad->secretaria_id)
+                    ->where('activo', 1)
+                    ->orderBy('nombre')
+                    ->get(['id', 'nombre'])
+                    ->toArray();
+            }
         }
 
         return view('procesos.create', compact('workflows', 'secretarias', 'unidadesPreload', 'userSecretaria', 'userUnidad'));
@@ -252,10 +262,14 @@ class ProcesoController extends Controller
             
             // 6) ✅ Crear instancia de Etapa 1 (Descentralización) si existe
             if ($segundaEtapa) {
+                // Si el creador es planeación (misma área), auto-marcar como recibido
+                $creadoPorMismaArea = $user->hasRole('planeacion');
                 $procesoEtapa1Id = DB::table('proceso_etapas')->insertGetId([
                     'proceso_id'   => $procesoId,
                     'etapa_id'     => $segundaEtapa->id,
-                    'recibido'     => false,
+                    'recibido'     => $creadoPorMismaArea,
+                    'recibido_por' => $creadoPorMismaArea ? $user->id : null,
+                    'recibido_at'  => $creadoPorMismaArea ? now() : null,
                     'created_at'   => now(),
                     'updated_at'   => now(),
                 ]);

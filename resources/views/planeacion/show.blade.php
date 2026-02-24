@@ -165,11 +165,20 @@
                                 class="w-full border rounded-xl px-3 py-2 text-sm bg-white resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
                                 style="border-color:#d1fae5"
                                 placeholder="Observaciones (opcional)..."></textarea>
+                            @php
+                                $aprobBg     = $recibido ? '#15803d' : '#9ca3af';
+                                $aprobCursor = $recibido ? 'pointer' : 'not-allowed';
+                            @endphp
                             <button type="submit"
-                                onclick="return confirm('¿Confirmar aprobación y enviar a la siguiente área?')"
-                                class="w-full px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
-                                style="background:#15803d">
-                                Aprobar y enviar a siguiente área
+                                @if(!$recibido) disabled title="Debes marcar el documento como recibido antes de aprobar" @endif
+                                @if($recibido) onclick="return confirm('¿Confirmar aprobación y enviar a la siguiente área?')" @else onclick="return false" @endif
+                                class="w-full px-4 py-2 rounded-xl text-sm font-semibold transition"
+                                style="background:{{ $aprobBg }};color:#fff;cursor:{{ $aprobCursor }};opacity:{{ $recibido ? '1' : '0.6' }}">
+                                @if($recibido)
+                                    Aprobar y enviar a siguiente área
+                                @else
+                                    🔒 Primero marca el documento como recibido
+                                @endif
                             </button>
                         </div>
                     </form>
