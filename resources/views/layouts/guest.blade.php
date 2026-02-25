@@ -18,10 +18,7 @@
         {{-- Overlay oscuro verde para legibilidad --}}
         <div class="absolute inset-0" style="background:linear-gradient(155deg,rgba(5,46,22,0.93) 0%,rgba(20,83,45,0.89) 55%,rgba(22,101,52,0.91) 100%)"></div>
 
-        {{-- Sello de fondo decorativo --}}
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <img src="/images/gobernacion.png" alt="" class="w-80 h-80 object-contain opacity-10 select-none">
-        </div>
+
 
         <div class="relative z-10 flex flex-col h-full justify-between p-14">
             {{-- Logo --}}
@@ -31,7 +28,7 @@
                 </div>
                 <div>
                     <p class="text-white font-bold text-base leading-tight">Gobernación de Caldas</p>
-                    <p class="text-green-300 text-xs font-light">Secretaría General · Manizales, Colombia</p>
+                    <p class="text-green-300 text-xs font-light">Unidad de Sistemas &middot; Manizales, Colombia</p>
                 </div>
             </div>
 
@@ -39,12 +36,12 @@
             <div>
                 <h1 class="text-white font-extrabold leading-none mb-5" style="font-size:3rem">Sistema de<br>Seguimiento<br><span style="color:#86efac">Contractual</span></h1>
                 <p class="text-green-100 text-base font-light leading-relaxed mb-10" style="max-width:22rem">
-                    Gestión integral del proceso de contratación pública desde la solicitud hasta la publicación en SECOP.
+                    Gestión integral del proceso de contratación.
                 </p>
 
             </div>
 
-            <p class="text-green-500 text-xs">© {{ date('Y') }} Gobernación de Manizales &mdash; Todos los derechos reservados</p>
+            <p class="text-green-500 text-xs">&copy; {{ date('Y') }} Gobernación de Caldas &mdash; Todos los derechos reservados</p>
         </div>
     </div>
 

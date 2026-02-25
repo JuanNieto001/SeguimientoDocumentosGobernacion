@@ -5,6 +5,11 @@
         $cls = $active ? 'sidebar-link active' : 'sidebar-link';
         return "<a href=\"{$href}\" class=\"{$cls}\"><svg fill='none' stroke='currentColor' viewBox='0 0 24 24'>{$icon}</svg>{$label}</a>";
     }
+    // Secretarías con unidades para accordion (solo carga si admin está logueado)
+    $secretariasNav = auth()->user()?->hasRole('admin')
+        ? \App\Models\Secretaria::with(['unidades' => fn($q) => $q->where('activo', true)->orderBy('nombre')])
+            ->where('activo', true)->orderBy('nombre')->get()
+        : collect();
 @endphp
 
 {{-- Dashboard siempre visible --}}
@@ -18,11 +23,89 @@
 {!! sideLink(route('admin.auth-events'),'Log autenticaci&oacute;n','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>',$r->routeIs('admin.auth-events')) !!}
 
 <p class="sidebar-section">Bandeja por &Aacute;rea</p>
-{!! sideLink(url('/unidad'),'Unidad Solicitante','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('unidad*')) !!}
-{!! sideLink(url('/planeacion'),'Planeaci&oacute;n','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>',$r->is('planeacion*')) !!}
-{!! sideLink(url('/hacienda'),'Hacienda','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',$r->is('hacienda*')) !!}
-{!! sideLink(url('/juridica'),'Jur&iacute;dica','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>',$r->is('juridica*')) !!}
-{!! sideLink(url('/secop'),'SECOP','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',$r->is('secop*')) !!}
+
+{{-- Accordion dinámico de secretarías → unidades --}}
+@php
+    $currentSecretariaId = (int) request('secretaria_id');
+    $currentUnidadId     = (int) request('unidad_id');
+    // Determinar qué secretaría debe estar abierta al cargar
+    $openSecId = $currentSecretariaId;
+    if (!$openSecId && $currentUnidadId) {
+        $openSecId = $secretariasNav->first(fn($s) => $s->unidades->contains('id', $currentUnidadId))?->id ?? 0;
+    }
+@endphp
+<div x-data="{ open: {{ $openSecId ?: 'null' }} }">
+@foreach($secretariasNav as $sec)
+    @php
+        $secActive = $currentSecretariaId === $sec->id;
+        $anyUnitActive = !$secActive && $sec->unidades->contains('id', $currentUnidadId);
+    @endphp
+    <div class="mb-0.5">
+        {{-- Cabecera de secretaría --}}
+        <button @click="open = open === {{ $sec->id }} ? null : {{ $sec->id }}"
+                class="sidebar-link w-full justify-between pr-2"
+                :class="open === {{ $sec->id }} ? 'active' : ''">
+            <span class="flex items-center gap-2.5 min-w-0">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4 shrink-0">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span class="truncate text-xs leading-tight">{{ $sec->nombre }}</span>
+            </span>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 class="w-3 h-3 shrink-0 transition-transform duration-200 opacity-60"
+                 :class="open === {{ $sec->id }} ? 'rotate-180' : ''">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+
+        {{-- Submenu de unidades --}}
+        <div x-show="open === {{ $sec->id }}"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 -translate-y-1"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="mt-0.5 ml-3 pl-2 space-y-0.5"
+             style="border-left:1px solid rgba(134,239,172,.25)">
+
+            {{-- Enlace: todos los procesos de esta secretaría --}}
+            <a href="{{ route('procesos.index', ['secretaria_id' => $sec->id]) }}"
+               class="sidebar-link py-1.5 text-xs {{ $secActive ? 'active' : '' }}"
+               style="padding-left:.875rem">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
+                </svg>
+                <span>Todos los procesos</span>
+            </a>
+
+            {{-- Unidades de la secretaría --}}
+            @foreach($sec->unidades as $unidad)
+                @php $unitActive = $currentUnidadId === $unidad->id; @endphp
+                <a href="{{ route('procesos.index', ['unidad_id' => $unidad->id]) }}"
+                   class="sidebar-link py-1.5 text-xs {{ $unitActive ? 'active' : '' }}"
+                   style="padding-left:.875rem">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span class="truncate">{{ $unidad->nombre }}</span>
+                </a>
+            @endforeach
+
+            @if($sec->unidades->isEmpty())
+                <p class="text-xs py-1 pl-3.5 opacity-40 italic" style="color:#bbf7d0">Sin unidades</p>
+            @endif
+        </div>
+    </div>
+@endforeach
+
+@if($secretariasNav->isEmpty())
+    <p class="text-xs py-2 px-3 opacity-40 italic" style="color:#bbf7d0">No hay secretarías activas</p>
+@endif
+</div>
+
 
 <p class="sidebar-section">Procesos</p>
 {!! sideLink(route('procesos.create'),'Nueva solicitud','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',$r->routeIs('procesos.create')) !!}

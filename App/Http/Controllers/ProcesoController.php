@@ -98,6 +98,12 @@ class ProcesoController extends Controller
         if ($etapa = $request->input('etapa')) {
             $query->where('etapas.orden', $etapa);
         }
+        if ($secretariaId = $request->input('secretaria_id')) {
+            $query->where('procesos.secretaria_origen_id', $secretariaId);
+        }
+        if ($unidadId = $request->input('unidad_id')) {
+            $query->where('procesos.unidad_origen_id', $unidadId);
+        }
 
         $procesos = $query->get();
 

@@ -10,11 +10,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         html,body{font-family:'Inter',sans-serif;}
-        .sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.625rem .75rem;border-radius:.875rem;font-size:.8125rem;font-weight:500;transition:all .15s;color:#bbf7d0;text-decoration:none}
+        .sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.625rem .75rem;border-radius:.875rem;font-size:.8125rem;font-weight:500;transition:all .15s;color:#bbf7d0;text-decoration:none;background:none;border:none;cursor:pointer;width:100%;text-align:left}
         .sidebar-link:hover{background:rgba(255,255,255,.1);color:#fff}
         .sidebar-link.active{background:rgba(255,255,255,.18);color:#fff;font-weight:600}
         .sidebar-link svg{width:1rem;height:1rem;flex-shrink:0;opacity:.85}
         .sidebar-link.active svg{opacity:1}
+        .sidebar-link.justify-between{justify-content:space-between}
         .sidebar-section{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#4ade80;padding:.75rem .75rem .375rem;margin-top:.5rem}
         /* Ocultar scrollbar del sidebar */
         .sidebar-nav::-webkit-scrollbar{width:0;background:transparent}
