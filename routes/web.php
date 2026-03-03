@@ -51,6 +51,11 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+
+    // Motor de Flujos Dinámico (admin)
+    Route::get('/motor-flujos', fn () => view('motor-flujos'))
+        ->name('motor-flujos')
+        ->middleware('role:admin|admin_general|admin_unidad');
     
     // Estadísticas y reportes
     Route::get('/dashboard/area', [DashboardController::class, 'estadisticasPorArea'])

@@ -111,4 +111,55 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     Route::middleware('permiso:asignar_roles')->group(function () {
         Route::post('/usuarios/{userId}/roles', [RolPermisoApiController::class, 'asignarRolUsuario'])->name('api.usuarios.roles');
     });
+
+    /*
+    |----------------------------------------------------------------------
+    | MOTOR DE FLUJOS CONFIGURABLE POR SECRETARÍA
+    |----------------------------------------------------------------------
+    | Permite que cada Secretaría defina sus propios flujos de contratación
+    | con pasos, orden, responsables, documentos y condiciones diferentes.
+    | Solo los administradores de unidad pueden modificar flujos.
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('motor-flujos')->group(function () {
+
+        $ctrl = \App\Http\Controllers\Api\MotorFlujoController::class;
+
+        // ── Catálogo de pasos (lectura: todos; escritura: admin) ──
+        Route::get('/catalogo-pasos',      [$ctrl, 'catalogoPasos'])->name('api.motor-flujos.catalogo');
+        Route::post('/catalogo-pasos',     [$ctrl, 'crearCatalogoPaso'])->name('api.motor-flujos.catalogo.store');
+
+        // ── Flujos por Secretaría ──
+        Route::get('/secretarias/{secretariaId}/flujos', [$ctrl, 'flujosPorSecretaria'])->name('api.motor-flujos.flujos.porSecretaria');
+        Route::post('/flujos',                           [$ctrl, 'crearFlujo'])->name('api.motor-flujos.flujos.store');
+        Route::post('/flujos/guardar-completo',          [$ctrl, 'guardarFlujoCompleto'])->name('api.motor-flujos.flujos.guardarCompleto');
+        Route::put('/flujos/{flujoId}',                  [$ctrl, 'actualizarFlujo'])->name('api.motor-flujos.flujos.update');
+        Route::delete('/flujos/{flujoId}',               [$ctrl, 'eliminarFlujo'])->name('api.motor-flujos.flujos.destroy');
+        Route::get('/flujos/{flujoId}/pasos',            [$ctrl, 'pasosDelFlujo'])->name('api.motor-flujos.flujos.pasos');
+
+        // ── Versiones ──
+        Route::get('/flujos/{flujoId}/versiones',        [$ctrl, 'versionesDelFlujo'])->name('api.motor-flujos.versiones.index');
+        Route::post('/flujos/{flujoId}/versiones',       [$ctrl, 'crearVersion'])->name('api.motor-flujos.versiones.store');
+        Route::post('/versiones/{versionId}/publicar',   [$ctrl, 'publicarVersion'])->name('api.motor-flujos.versiones.publicar');
+
+        // ── Gestión de pasos en versión borrador ──
+        Route::post('/versiones/{versionId}/pasos',      [$ctrl, 'agregarPaso'])->name('api.motor-flujos.pasos.store');
+        Route::put('/pasos/{pasoId}',                    [$ctrl, 'actualizarPaso'])->name('api.motor-flujos.pasos.update');
+        Route::delete('/pasos/{pasoId}',                 [$ctrl, 'eliminarPaso'])->name('api.motor-flujos.pasos.destroy');
+
+        // ── Condiciones, documentos y responsables por paso ──
+        Route::post('/pasos/{pasoId}/condiciones',       [$ctrl, 'agregarCondicion'])->name('api.motor-flujos.condiciones.store');
+        Route::post('/pasos/{pasoId}/documentos',        [$ctrl, 'agregarDocumento'])->name('api.motor-flujos.documentos.store');
+        Route::post('/pasos/{pasoId}/responsables',      [$ctrl, 'agregarResponsable'])->name('api.motor-flujos.responsables.store');
+        Route::delete('/condiciones/{condicionId}',      [$ctrl, 'eliminarCondicion'])->name('api.motor-flujos.condiciones.destroy');
+        Route::delete('/documentos/{documentoId}',       [$ctrl, 'eliminarDocumento'])->name('api.motor-flujos.documentos.destroy');
+        Route::delete('/responsables/{responsableId}',   [$ctrl, 'eliminarResponsable'])->name('api.motor-flujos.responsables.destroy');
+
+        // ── Instancias (procesos en ejecución) ──
+        Route::post('/instancias',                       [$ctrl, 'crearInstancia'])->name('api.motor-flujos.instancias.store');
+        Route::get('/instancias/{instanciaId}',          [$ctrl, 'detalleInstancia'])->name('api.motor-flujos.instancias.show');
+        Route::get('/flujos/{flujoId}/instancia-activa', [$ctrl, 'instanciaActiva'])->name('api.motor-flujos.instancias.activa');
+        Route::post('/instancias/{instanciaId}/avanzar', [$ctrl, 'avanzarInstancia'])->name('api.motor-flujos.instancias.avanzar');
+        Route::post('/instancias/{instanciaId}/devolver',[$ctrl, 'devolverInstancia'])->name('api.motor-flujos.instancias.devolver');
+    });
 });
