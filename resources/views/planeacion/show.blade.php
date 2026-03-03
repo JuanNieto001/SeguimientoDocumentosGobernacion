@@ -60,7 +60,7 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm border-t pt-4" style="border-color:#f1f5f9">
                 <div>
                     <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Tipo de contratación</p>
-                    <p class="font-medium text-gray-700">{{ $proceso->workflow->nombre ?? 'N/D' }}</p>
+                    <p class="font-medium text-gray-700">{{ $proceso->flujo_id ? optional(DB::table('flujos')->where('id', $proceso->flujo_id)->first())->nombre : ($proceso->workflow->nombre ?? 'N/D') }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Etapa actual</p>
@@ -186,11 +186,11 @@
                             @endphp
                             <button type="submit"
                                 @if(!$recibido) disabled title="Debes marcar el documento como recibido antes de aprobar" @endif
-                                @if($recibido) onclick="return confirm('¿Confirmar aprobación y solicitar documentos a las áreas?')" @else onclick="return false" @endif
+                                @if($recibido) onclick="return confirm('{{ $proceso->flujo_id ? '¿Confirmar aprobación y enviar a la siguiente etapa?' : '¿Confirmar aprobación y solicitar documentos a las áreas?' }}')" @else onclick="return false" @endif
                                 class="w-full px-4 py-2 rounded-xl text-sm font-semibold transition"
                                 style="background:{{ $aprobBg }};color:#fff;cursor:{{ $aprobCursor }};opacity:{{ $recibido ? '1' : '0.6' }}">
                                 @if($recibido)
-                                    Aprobar y solicitar documentos a áreas
+                                    {{ $proceso->flujo_id ? 'Aprobar y enviar a siguiente etapa' : 'Aprobar y solicitar documentos a áreas' }}
                                 @else
                                     🔒 Primero marca el documento como recibido
                                 @endif

@@ -159,8 +159,54 @@ class UnidadController extends Controller
             ));
         }
 
-        // Para etapa 0 u otras, usar la vista por defecto
-        return view('areas.unidad-detalle', compact('proceso'));
+        // Vista genérica para cualquier etapa (incluye flujo-based)
+        $recibido = $procesoEtapaActual && $procesoEtapaActual->recibido;
+
+        // Cargar checks de la etapa actual
+        $checks = collect();
+        if ($procesoEtapaActual) {
+            // Asegurar que existan checks
+            $checksCount = DB::table('proceso_etapa_checks')
+                ->where('proceso_etapa_id', $procesoEtapaActual->id)
+                ->count();
+
+            if ($checksCount === 0) {
+                $items = DB::table('etapa_items')
+                    ->where('etapa_id', $proceso->etapa_actual_id)
+                    ->orderBy('orden')
+                    ->get();
+
+                foreach ($items as $item) {
+                    DB::table('proceso_etapa_checks')->insert([
+                        'proceso_etapa_id' => $procesoEtapaActual->id,
+                        'etapa_item_id'    => $item->id,
+                        'checked'          => false,
+                        'created_at'       => now(),
+                        'updated_at'       => now(),
+                    ]);
+                }
+            }
+
+            $checks = DB::table('proceso_etapa_checks as pc')
+                ->join('etapa_items as ei', 'ei.id', '=', 'pc.etapa_item_id')
+                ->select('pc.id', 'pc.checked', 'pc.checked_by', 'pc.checked_at', 'ei.label', 'ei.requerido')
+                ->where('pc.proceso_etapa_id', $procesoEtapaActual->id)
+                ->orderBy('ei.orden')
+                ->get();
+        }
+
+        // Archivos del proceso
+        $archivosEtapa = $proceso->archivos->where('etapa_id', $proceso->etapa_actual_id);
+
+        // Todas las etapas para timeline
+        $etapas = DB::table('etapas')
+            ->where('workflow_id', $proceso->workflow_id)
+            ->orderBy('orden')
+            ->get();
+
+        return view('areas.unidad-detalle', compact(
+            'proceso', 'procesoEtapaActual', 'recibido', 'checks', 'archivosEtapa', 'etapas', 'ordenEtapa'
+        ));
     }
 
     /**

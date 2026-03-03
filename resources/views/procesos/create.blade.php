@@ -5,8 +5,8 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
             </a>
             <div>
-                <h1 class="text-lg font-bold text-gray-900 leading-none">Nueva solicitud CD-PN</h1>
-                <p class="text-xs text-gray-400 mt-1">Registrar un nuevo proceso de Contratación Directa — Prestación de Servicios</p>
+                <h1 class="text-lg font-bold text-gray-900 leading-none">Nueva solicitud</h1>
+                <p class="text-xs text-gray-400 mt-1">Registrar un nuevo proceso de contratación</p>
             </div>
         </div>
     </x-slot>
@@ -37,24 +37,29 @@
                     </div>
                     <div class="p-6 space-y-4">
 
-                        {{-- Workflow (oculto si solo hay uno) --}}
-                        @if(count($workflows) === 1)
-                            <input type="hidden" name="workflow_id" value="{{ $workflows->first()->id }}">
-                            <div class="flex items-center gap-2 text-sm text-gray-500 px-3 py-2 rounded-lg" style="background:#f0fdf4;border:1px solid #bbf7d0">
-                                <svg class="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <span>Workflow: <strong class="text-gray-700">{{ $workflows->first()->nombre }} ({{ $workflows->first()->codigo }})</strong></span>
-                            </div>
-                        @else
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tipo de proceso (Workflow) <span class="text-red-500">*</span></label>
-                                <select name="workflow_id" required class="w-full rounded-xl px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all" style="border:1px solid #e2e8f0">
-                                    <option value="">— Selecciona un workflow —</option>
-                                    @foreach($workflows as $w)
-                                        <option value="{{ $w->id }}" @selected(old('workflow_id') == $w->id)>{{ $w->nombre }} ({{ $w->codigo }})</option>
+                        {{-- Selector de Flujo (Motor de Flujos) --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Flujo de contratación <span class="text-red-500">*</span></label>
+                            @if($flujos->count() === 0)
+                                <div class="flex items-center gap-2 text-sm text-amber-700 px-3 py-2 rounded-lg" style="background:#fffbeb;border:1px solid #fde68a">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                                    <span>No hay flujos creados. <a href="{{ url('/motor-flujos') }}" class="underline font-semibold text-blue-600">Crear uno en Motor de Flujos</a>.</span>
+                                </div>
+                            @elseif($flujos->count() === 1)
+                                <input type="hidden" name="flujo_id" value="{{ $flujos->first()->id }}">
+                                <div class="flex items-center gap-2 text-sm text-gray-500 px-3 py-2 rounded-lg" style="background:#f0fdf4;border:1px solid #bbf7d0">
+                                    <svg class="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Flujo: <strong class="text-gray-700">{{ $flujos->first()->nombre }} ({{ $flujos->first()->codigo }})</strong></span>
+                                </div>
+                            @else
+                                <select name="flujo_id" required class="w-full rounded-xl px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all" style="border:1px solid #e2e8f0">
+                                    <option value="">— Selecciona un flujo —</option>
+                                    @foreach($flujos as $f)
+                                        <option value="{{ $f->id }}" @selected(old('flujo_id') == $f->id)>{{ $f->nombre }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Objeto del contrato <span class="text-red-500">*</span></label>
@@ -246,10 +251,17 @@
             }
             unidadSelect.innerHTML = '<option value="">Cargando...</option>';
             try {
-                const res = await fetch(`/api/secretarias/${secId}/unidades`);
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const res = await fetch(`/api/secretarias/${secId}/unidades`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrf },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
+                // Handle both {unidades: [...]} and flat array responses
+                const list = Array.isArray(data) ? data : (data.unidades || []);
                 unidadSelect.innerHTML = '<option value="">— Selecciona unidad —</option>';
-                data.forEach(u => {
+                list.forEach(u => {
                     const opt = document.createElement('option');
                     opt.value = u.id;
                     opt.textContent = u.nombre;
@@ -257,6 +269,7 @@
                     unidadSelect.appendChild(opt);
                 });
             } catch (e) {
+                console.error('Error cargando unidades:', e);
                 unidadSelect.innerHTML = '<option value="">Error al cargar</option>';
             }
         };

@@ -55,14 +55,6 @@ const AREAS = [
 ];
 const areaColor = v => AREAS.find(a => a.v === v)?.c || '#6B7280';
 const areaLabel = v => AREAS.find(a => a.v === v)?.l || v || 'Sin área';
-const TIPOS = [
-    { v: 'cd_pn', l: 'Contratación Directa – Persona Natural' },
-    { v: 'cd_pj', l: 'Contratación Directa – Persona Jurídica' },
-    { v: 'mc', l: 'Mínima Cuantía' },
-    { v: 'lp', l: 'Licitación Pública' },
-    { v: 'sa', l: 'Selección Abreviada' },
-    { v: 'cm', l: 'Concurso de Méritos' },
-];
 
 /* ── CSS-in-JS styles (inline) so they ALWAYS work ── */
 const S = {
@@ -97,13 +89,14 @@ function PasoCard({ paso, idx, total, allPasos, onChange, onRemove, onMove }) {
 
     const addDoc = () => {
         if (!newDoc.trim()) return;
-        onChange({ ...paso, documentos: [...paso.documentos, { nombre: newDoc.trim(), tipo: 'pdf', obligatorio: true }] });
+        onChange({ ...paso, documentos: [...paso.documentos, { nombre: newDoc.trim(), tipo: 'pdf', obligatorio: true, depende_de_doc: null }] });
         setNewDoc('');
     };
     const rmDoc = i => { const d = [...paso.documentos]; d.splice(i, 1); onChange({ ...paso, documentos: d }); };
     const toggleDocObl = i => { const d = [...paso.documentos]; d[i] = { ...d[i], obligatorio: !d[i].obligatorio }; onChange({ ...paso, documentos: d }); };
     const editDocNombre = (i, val) => { const d = [...paso.documentos]; d[i] = { ...d[i], nombre: val }; onChange({ ...paso, documentos: d }); };
     const editDocTipo = (i, val) => { const d = [...paso.documentos]; d[i] = { ...d[i], tipo: val }; onChange({ ...paso, documentos: d }); };
+    const setDocDep = (i, val) => { const d = [...paso.documentos]; d[i] = { ...d[i], depende_de_doc: val || null }; onChange({ ...paso, documentos: d }); };
     const toggleDep = depIdx => {
         const deps = paso.depende_de || [];
         onChange({ ...paso, depende_de: deps.includes(depIdx) ? deps.filter(d => d !== depIdx) : [...deps, depIdx] });
@@ -174,23 +167,48 @@ function PasoCard({ paso, idx, total, allPasos, onChange, onRemove, onMove }) {
                                 📄 Documentos / Requisitos (Checks)
                             </label>
                             <p style={{ fontSize:11, color:'#9ca3af', marginBottom:8 }}>
-                                Cada documento es un "check" que se debe cumplir en este paso. Marque ✓ si es obligatorio.
+                                Cada documento es un "check" que se debe cumplir en este paso. Marque ✓ si es obligatorio. Use "Depende de" para que un check solo se active cuando otro anterior esté completado.
                             </p>
-                            {paso.documentos.map((doc, di) => (
-                                <div key={di} style={S.docRow}>
-                                    <div style={S.check(doc.obligatorio)} onClick={() => toggleDocObl(di)} title={doc.obligatorio ? 'Obligatorio (click para opcional)' : 'Opcional (click para obligatorio)'}>
-                                        {doc.obligatorio && '✓'}
+                            {(() => {
+                                /* Collect all docs from previous steps for dependency selection */
+                                const prevDocs = [];
+                                allPasos.forEach((p, pi) => {
+                                    if (pi >= idx) return;
+                                    (p.documentos || []).forEach((d, di) => {
+                                        prevDocs.push({ pasoIdx: pi, docIdx: di, pasoNombre: p.nombre || `Paso ${pi+1}`, docNombre: d.nombre, key: `${pi}:${di}` });
+                                    });
+                                });
+                                return paso.documentos.map((doc, di) => (
+                                    <div key={di} style={{ ...S.docRow, flexWrap:'wrap' }}>
+                                        <div style={{ display:'flex', alignItems:'center', gap:8, width:'100%' }}>
+                                            <div style={S.check(doc.obligatorio)} onClick={() => toggleDocObl(di)} title={doc.obligatorio ? 'Obligatorio (click para opcional)' : 'Opcional (click para obligatorio)'}>
+                                                {doc.obligatorio && '✓'}
+                                            </div>
+                                            <input type="text" value={doc.nombre} onChange={e => editDocNombre(di, e.target.value)}
+                                                style={{ flex:1, border:'none', background:'transparent', fontSize:12, outline:'none', padding:'2px 4px' }} />
+                                            <select value={doc.tipo || 'pdf'} onChange={e => editDocTipo(di, e.target.value)}
+                                                style={{ fontSize:10, border:'1px solid #e5e7eb', borderRadius:4, padding:'2px 4px', background:'#fff' }}>
+                                                <option value="pdf">PDF</option><option value="excel">Excel</option>
+                                                <option value="word">Word</option><option value="imagen">Imagen</option><option value="otro">Otro</option>
+                                            </select>
+                                            <button onClick={() => rmDoc(di)} style={{ cursor:'pointer', color:'#ef4444', background:'none', border:'none', fontSize:14 }} title="Quitar documento">✕</button>
+                                        </div>
+                                        {prevDocs.length > 0 && (
+                                            <div style={{ width:'100%', paddingLeft:28, marginTop:2 }}>
+                                                <select value={doc.depende_de_doc || ''} onChange={e => setDocDep(di, e.target.value)}
+                                                    style={{ fontSize:10, border:'1px solid #e5e7eb', borderRadius:4, padding:'2px 6px', background: doc.depende_de_doc ? '#faf5ff' : '#fff', color: doc.depende_de_doc ? '#7c3aed' : '#6b7280', width:'100%', maxWidth:350 }}>
+                                                    <option value="">Sin dependencia de documento</option>
+                                                    {prevDocs.map(pd => (
+                                                        <option key={pd.key} value={pd.key}>
+                                                            Depende de: Paso {pd.pasoIdx+1} → {pd.docNombre}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
                                     </div>
-                                    <input type="text" value={doc.nombre} onChange={e => editDocNombre(di, e.target.value)}
-                                        style={{ flex:1, border:'none', background:'transparent', fontSize:12, outline:'none', padding:'2px 4px' }} />
-                                    <select value={doc.tipo || 'pdf'} onChange={e => editDocTipo(di, e.target.value)}
-                                        style={{ fontSize:10, border:'1px solid #e5e7eb', borderRadius:4, padding:'2px 4px', background:'#fff' }}>
-                                        <option value="pdf">PDF</option><option value="excel">Excel</option>
-                                        <option value="word">Word</option><option value="imagen">Imagen</option><option value="otro">Otro</option>
-                                    </select>
-                                    <button onClick={() => rmDoc(di)} style={{ cursor:'pointer', color:'#ef4444', background:'none', border:'none', fontSize:14 }} title="Quitar documento">✕</button>
-                                </div>
-                            ))}
+                                ));
+                            })()}
                             <div style={{ display:'flex', gap:6, marginTop:4 }}>
                                 <input type="text" value={newDoc} onChange={e => setNewDoc(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && addDoc()}
@@ -242,7 +260,6 @@ function PasoCard({ paso, idx, total, allPasos, onChange, onRemove, onMove }) {
 function Builder({ flujoEdit, catalogo, secretariaId, onDone, onCancel, toast }) {
     const [codigo, setCodigo] = useState(flujoEdit?.codigo || '');
     const [nombre, setNombre] = useState(flujoEdit?.nombre || '');
-    const [tipo, setTipo] = useState(flujoEdit?.tipo_contratacion || 'cd_pn');
     const [desc, setDesc] = useState(flujoEdit?.descripcion || '');
     const [pasos, setPasos] = useState([]);
     const [saving, setSaving] = useState(false);
@@ -267,6 +284,7 @@ function Builder({ flujoEdit, catalogo, secretariaId, onDone, onCancel, toast })
                     obligatorio: p.es_obligatorio !== false,
                     documentos: (p.documentos || []).map(doc => ({
                         nombre: doc.nombre, tipo: doc.tipo_archivo || 'pdf', obligatorio: doc.es_obligatorio !== false,
+                        depende_de_doc: doc.depende_de_doc || null,
                     })),
                     depende_de: [],
                 })));
@@ -327,11 +345,11 @@ function Builder({ flujoEdit, catalogo, secretariaId, onDone, onCancel, toast })
                 method: 'POST',
                 body: JSON.stringify({
                     flujo_id: flujoEdit?.id || null, codigo, nombre,
-                    tipo_contratacion: tipo, descripcion: desc || null, secretaria_id: secretariaId,
+                    descripcion: desc || null, secretaria_id: secretariaId,
                     pasos: pasos.map(p => ({
                         catalogo_paso_id: p.catalogo_paso_id, nombre: p.nombre, area_responsable: p.area,
                         dias_estimados: p.dias, instrucciones: p.instrucciones || null, obligatorio: p.obligatorio !== false,
-                        documentos: p.documentos.map(d => ({ nombre: d.nombre, tipo: d.tipo || 'pdf', obligatorio: d.obligatorio !== false })),
+                        documentos: p.documentos.map(d => ({ nombre: d.nombre, tipo: d.tipo || 'pdf', obligatorio: d.obligatorio !== false, depende_de_doc: d.depende_de_doc || null })),
                         depende_de: p.depende_de || [],
                     })),
                 }),
@@ -364,20 +382,12 @@ function Builder({ flujoEdit, catalogo, secretariaId, onDone, onCancel, toast })
             {/* ═══ FORM INFO ═══ */}
             <div style={{ background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'20px 24px' }}>
                 <h3 style={{ fontSize:12, fontWeight:700, color:'#6b7280', textTransform:'uppercase', marginBottom:12 }}>Información del Flujo</h3>
-                <div style={S.grid2}>
-                    <div>
-                        <label style={S.label}>Código</label>
-                        <input type="text" value={codigo}
-                            onChange={e => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
-                            disabled={!!flujoEdit?.id} style={{ ...S.input, ...(flujoEdit?.id ? { background:'#f3f4f6', color:'#6b7280' } : {}) }}
-                            placeholder="CD_PN_CULTURA" />
-                    </div>
-                    <div>
-                        <label style={S.label}>Tipo de Contratación</label>
-                        <select value={tipo} onChange={e => setTipo(e.target.value)} style={{ ...S.select, width:'100%' }}>
-                            {TIPOS.map(t => <option key={t.v} value={t.v}>{t.l}</option>)}
-                        </select>
-                    </div>
+                <div>
+                    <label style={S.label}>Código</label>
+                    <input type="text" value={codigo}
+                        onChange={e => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
+                        disabled={!!flujoEdit?.id} style={{ ...S.input, ...(flujoEdit?.id ? { background:'#f3f4f6', color:'#6b7280' } : {}) }}
+                        placeholder="CD_PN_CULTURA" />
                 </div>
                 <div style={{ marginTop:12 }}>
                     <label style={S.label}>Nombre del Flujo</label>
@@ -530,7 +540,7 @@ function FlujosList({ flujos, loading, onView, onEdit, onNew, onDelete, toast })
                                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
                                     <div style={{ minWidth:0, flex:1 }}>
                                         <h4 style={{ margin:0, fontSize:14, fontWeight:700, color:'#1f2937', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.nombre}</h4>
-                                        <p style={{ margin:'2px 0 0', fontSize:11, color:'#9ca3af' }}>{f.codigo} · {f.tipo_contratacion}</p>
+                                        <p style={{ margin:'2px 0 0', fontSize:11, color:'#9ca3af' }}>{f.codigo}</p>
                                     </div>
                                     <span style={{ ...S.badge('#dcfce7'), color:'#15803d', marginLeft:8 }}>v{f.version_activa?.numero_version || '1'}</span>
                                 </div>
@@ -606,10 +616,20 @@ function DetailView({ flujo, onBack, onEdit }) {
                                             <div style={{ marginTop:12, paddingLeft:16, borderLeft:'3px solid #bfdbfe' }}>
                                                 <p style={{ fontSize:10, fontWeight:700, color:'#2563eb', textTransform:'uppercase', marginBottom:4 }}>Documentos requeridos (checks)</p>
                                                 {p.documentos.map(doc => (
-                                                    <div key={doc.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'2px 0' }}>
+                                                    <div key={doc.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'2px 0', flexWrap:'wrap' }}>
                                                         <div style={S.check(doc.es_obligatorio)}>{doc.es_obligatorio && '✓'}</div>
                                                         <span style={{ fontSize:12, color:'#4b5563' }}>{doc.nombre}</span>
                                                         <span style={{ fontSize:9, color:'#9ca3af' }}>({doc.tipo_archivo})</span>
+                                                        {doc.depende_de_doc && (() => {
+                                                            const [pi, di] = doc.depende_de_doc.split(':').map(Number);
+                                                            const depPaso = pasos[pi];
+                                                            const depDoc = depPaso?.documentos?.[di];
+                                                            return depDoc ? (
+                                                                <span style={{ fontSize:9, color:'#7c3aed', background:'#f5f3ff', padding:'1px 6px', borderRadius:8 }}>
+                                                                    ↳ Depende de: Paso {pi+1} → {depDoc.nombre}
+                                                                </span>
+                                                            ) : null;
+                                                        })()}
                                                     </div>
                                                 ))}
                                             </div>

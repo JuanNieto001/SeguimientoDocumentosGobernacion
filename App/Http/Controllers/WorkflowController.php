@@ -164,7 +164,7 @@ class WorkflowController extends Controller
             // ========== VALIDACIONES ESPECÍFICAS POR ÁREA ==========
 
             // 1) UNIDAD SOLICITANTE: validar archivos requeridos según etapa
-            if ($etapaActual->area_role === 'unidad_solicitante') {
+            if ($etapaActual->area_role === 'unidad_solicitante' && !$proceso->flujo_id) {
                 
                 // Determinar archivos requeridos según la etapa
                 $tiposRequeridos = [];
@@ -245,7 +245,7 @@ class WorkflowController extends Controller
                 
             } else {
                 
-                // 2) OTRAS ÁREAS: validar recibido + checks + archivos aprobados
+                // 2) OTRAS ÁREAS (y flujo-based unidad_solicitante): validar recibido + checks + archivos aprobados
                 
                 // Debe estar recibido
                 if (!(bool)$procesoEtapa->recibido) {
@@ -281,9 +281,9 @@ class WorkflowController extends Controller
             // ========== FIN VALIDACIONES ESPECÍFICAS ==========
 
             // ========== VALIDACIÓN ETAPA 1: DESCENTRALIZACIÓN - DOCUMENTOS PARALELOS ==========
-            // Cuando Descentralización envía, NO avanza hasta que TODAS las áreas
-            // hayan devuelto sus documentos (PAA, No Planta, Paz y Salvos, Compatibilidad, CDP)
-            if ($etapaActual->orden == 1 && $etapaActual->area_role === 'planeacion') {
+            // Solo aplica para procesos del workflow viejo (sin flujo_id).
+            // Los procesos basados en flujo no usan el mecanismo de solicitudes hardcoded.
+            if ($etapaActual->orden == 1 && $etapaActual->area_role === 'planeacion' && !$proceso->flujo_id) {
                 
                 // Verificar si existen solicitudes de documentos para este proceso
                 $totalSolicitudes = DB::table('proceso_documentos_solicitados')

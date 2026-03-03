@@ -92,7 +92,7 @@ class MotorFlujoController extends Controller
             'codigo'            => ['required', 'string', 'max:50', 'unique:flujos,codigo'],
             'nombre'            => ['required', 'string', 'max:255'],
             'descripcion'       => ['nullable', 'string'],
-            'tipo_contratacion' => ['required', 'string', 'max:50'],
+            'tipo_contratacion' => ['nullable', 'string', 'max:50'],
             'secretaria_id'     => ['required', 'exists:secretarias,id'],
         ]);
 
@@ -615,7 +615,7 @@ class MotorFlujoController extends Controller
             'codigo'            => ['required', 'string', 'max:50'],
             'nombre'            => ['required', 'string', 'max:255'],
             'descripcion'       => ['nullable', 'string'],
-            'tipo_contratacion' => ['required', 'string', 'max:50'],
+            'tipo_contratacion' => ['nullable', 'string', 'max:50'],
             'secretaria_id'     => ['required', 'exists:secretarias,id'],
             'pasos'             => ['required', 'array', 'min:1'],
             'pasos.*.nombre'              => ['required', 'string', 'max:255'],
@@ -628,6 +628,7 @@ class MotorFlujoController extends Controller
             'pasos.*.documentos.*.nombre'      => ['required', 'string', 'max:255'],
             'pasos.*.documentos.*.tipo'        => ['nullable', 'string', 'max:50'],
             'pasos.*.documentos.*.obligatorio' => ['nullable', 'boolean'],
+            'pasos.*.documentos.*.depende_de_doc' => ['nullable', 'string', 'max:20'],
             'pasos.*.depende_de'          => ['nullable', 'array'],
             'pasos.*.depende_de.*'        => ['integer', 'min:0'],
         ]);
@@ -642,7 +643,7 @@ class MotorFlujoController extends Controller
                 $flujo->update([
                     'nombre'            => $data['nombre'],
                     'descripcion'       => $data['descripcion'] ?? null,
-                    'tipo_contratacion' => $data['tipo_contratacion'],
+                    'tipo_contratacion' => $data['tipo_contratacion'] ?? $flujo->tipo_contratacion,
                 ]);
             } else {
                 // Verificar código único
@@ -653,7 +654,7 @@ class MotorFlujoController extends Controller
                     'codigo'            => $data['codigo'],
                     'nombre'            => $data['nombre'],
                     'descripcion'       => $data['descripcion'] ?? null,
-                    'tipo_contratacion' => $data['tipo_contratacion'],
+                    'tipo_contratacion' => $data['tipo_contratacion'] ?? null,
                     'secretaria_id'     => $data['secretaria_id'],
                     'activo'            => true,
                 ]);
@@ -710,12 +711,13 @@ class MotorFlujoController extends Controller
                 // Crear documentos del paso
                 foreach (($pasoData['documentos'] ?? []) as $docOrden => $docData) {
                     \App\Models\FlujoPasoDocumento::create([
-                        'flujo_paso_id'  => $paso->id,
-                        'nombre'         => $docData['nombre'],
-                        'tipo_archivo'   => $docData['tipo'] ?? 'pdf',
-                        'es_obligatorio' => $docData['obligatorio'] ?? true,
-                        'orden'          => $docOrden,
-                        'activo'         => true,
+                        'flujo_paso_id'   => $paso->id,
+                        'nombre'          => $docData['nombre'],
+                        'tipo_archivo'    => $docData['tipo'] ?? 'pdf',
+                        'es_obligatorio'  => $docData['obligatorio'] ?? true,
+                        'depende_de_doc'  => $docData['depende_de_doc'] ?? null,
+                        'orden'           => $docOrden,
+                        'activo'          => true,
                     ]);
                 }
 

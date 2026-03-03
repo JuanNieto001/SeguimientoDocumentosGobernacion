@@ -12,6 +12,7 @@ class Proceso extends Model
 
     protected $fillable = [
         'workflow_id',
+        'flujo_id',
         'codigo',
         'objeto',
         'descripcion',
@@ -107,6 +108,14 @@ class Proceso extends Model
     public function workflow(): BelongsTo
     {
         return $this->belongsTo(Workflow::class);
+    }
+
+    /**
+     * Relación: Flujo del Motor de Flujos asociado
+     */
+    public function flujo(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Flujo::class);
     }
 
     /**

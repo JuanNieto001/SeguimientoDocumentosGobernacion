@@ -22,6 +22,7 @@ class FlujoPasoDocumento extends Model
         'max_tamano_mb',
         'plantilla_url',
         'orden',
+        'depende_de_doc',
         'activo',
     ];
 

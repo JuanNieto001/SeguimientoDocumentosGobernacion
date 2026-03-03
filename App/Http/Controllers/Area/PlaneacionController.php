@@ -167,14 +167,18 @@ class PlaneacionController extends Controller
                     "No se puede aprobar: faltan documentos por recibir de las áreas → {$faltantes}");
             }
         } else {
-            // Si no existen solicitudes aún, crearlas primero (primera vez que aprueba)
-            // Esto llama a la lógica del WorkflowController para crear solicitudes
-            $wfController = app(\App\Http\Controllers\WorkflowController::class);
-            $wfController->solicitarDocumentosEtapa1($proceso);
-            
-            return redirect()->back()->with('info', 
-                'Se han enviado las solicitudes de documentos a las áreas correspondientes. ' .
-                'Espera a que todas las áreas suban sus documentos antes de aprobar.');
+            // Para procesos basados en flujo: NO crear solicitudes hardcoded.
+            // El flujo define sus propios pasos/documentos que se manejan como etapas.
+            if (!$proceso->flujo_id) {
+                // Solo el workflow viejo (sin flujo) usa solicitudes hardcoded
+                $wfController = app(\App\Http\Controllers\WorkflowController::class);
+                $wfController->solicitarDocumentosEtapa1($proceso);
+                
+                return redirect()->back()->with('info', 
+                    'Se han enviado las solicitudes de documentos a las áreas correspondientes. ' .
+                    'Espera a que todas las áreas suban sus documentos antes de aprobar.');
+            }
+            // Flujo-based: sin solicitudes — avanzar directamente
         }
         // ── FIN Validación documentos paralelos ──
 

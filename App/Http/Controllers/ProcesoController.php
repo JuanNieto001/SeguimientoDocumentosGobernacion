@@ -127,9 +127,13 @@ class ProcesoController extends Controller
             403
         );
 
-        $workflows = DB::table('workflows')
-            ->where('activo', 1)
-            ->orderBy('nombre')
+        // Cargar flujos del Motor de Flujos para el selector
+        $flujos = DB::table('flujos')
+            ->join('secretarias', 'secretarias.id', '=', 'flujos.secretaria_id')
+            ->where('flujos.activo', 1)
+            ->orderBy('secretarias.nombre')
+            ->orderBy('flujos.nombre')
+            ->select('flujos.*', 'secretarias.nombre as secretaria_nombre')
             ->get();
 
         $secretarias = DB::table('secretarias')
@@ -164,7 +168,7 @@ class ProcesoController extends Controller
             }
         }
 
-        return view('procesos.create', compact('workflows', 'secretarias', 'unidadesPreload', 'userSecretaria', 'userUnidad'));
+        return view('procesos.create', compact('flujos', 'secretarias', 'unidadesPreload', 'userSecretaria', 'userUnidad'));
     }
 
     public function store(Request $request)
@@ -177,7 +181,7 @@ class ProcesoController extends Controller
         );
 
         $data = $request->validate([
-            'workflow_id'                => ['required', 'exists:workflows,id'],
+            'flujo_id'                   => ['required', 'exists:flujos,id'],
             'objeto'                     => ['required', 'string', 'max:255'],
             'descripcion'                => ['nullable', 'string'],
             'secretaria_origen_id'       => ['required', 'exists:secretarias,id'],
@@ -197,33 +201,40 @@ class ProcesoController extends Controller
             'plazo_ejecucion_meses.max' => 'El plazo de ejecución no puede superar 60 meses.',
         ]);
 
-        // Autogenerar código consecutivo por workflow y año
-        $data['codigo'] = $this->generarCodigoConsecutivo((int) $data['workflow_id']);
+        // Buscar el flujo seleccionado
+        $flujo = DB::table('flujos')->where('id', $data['flujo_id'])->first();
+        abort_unless($flujo, 422, 'Flujo no encontrado.');
 
-        return DB::transaction(function () use ($data, $user, $request) {
+        // Sincronizar flujo → workflow/etapas/items (bridge)
+        $workflowId = $this->syncFlujoToWorkflow($flujo);
 
-            // 1) Buscar etapa inicial del workflow: la de menor orden (incluye 0 si existe)
-            $primeraEtapa = DB::table('etapas')
-                ->where('workflow_id', $data['workflow_id'])
-                ->where('activa', 1)
-                ->orderBy('orden')
-                ->first();
+        // Autogenerar código consecutivo usando el código del flujo
+        $data['codigo'] = $this->generarCodigoConsecutivoFlujo($flujo->codigo);
 
-            if (!$primeraEtapa) {
-                abort(422, 'El workflow seleccionado no tiene etapas activas.');
+        return DB::transaction(function () use ($data, $user, $request, $flujo, $workflowId) {
+
+            // 1) Buscar etapas del workflow sincronizado
+            $primeraEtapa = null;
+            $segundaEtapa = null;
+            if ($workflowId) {
+                $primeraEtapa = DB::table('etapas')
+                    ->where('workflow_id', $workflowId)
+                    ->where('activa', 1)
+                    ->orderBy('orden')
+                    ->first();
+
+                $segundaEtapa = DB::table('etapas')
+                    ->where('workflow_id', $workflowId)
+                    ->where('activa', 1)
+                    ->orderBy('orden')
+                    ->skip(1)
+                    ->first();
             }
-            
-            // ✅ NUEVO: Buscar segunda etapa (Descentralización) para auto-envío
-            $segundaEtapa = DB::table('etapas')
-                ->where('workflow_id', $data['workflow_id'])
-                ->where('activa', 1)
-                ->orderBy('orden')
-                ->skip(1)
-                ->first();
 
-            // 2) Crear proceso - AHORA EMPIEZA EN DESCENTRALIZACIÓN
+            // 2) Crear proceso
             $procesoId = DB::table('procesos')->insertGetId([
-                'workflow_id'                => $data['workflow_id'],
+                'workflow_id'                => $workflowId,
+                'flujo_id'                   => $data['flujo_id'],
                 'codigo'                     => $data['codigo'],
                 'objeto'                     => $data['objeto'],
                 'descripcion'                => $data['descripcion'] ?? null,
@@ -235,14 +246,20 @@ class ProcesoController extends Controller
                 'secretaria_origen_id'       => $data['secretaria_origen_id'],
                 'unidad_origen_id'           => $data['unidad_origen_id'],
                 'estado'                     => 'EN_CURSO',
-                'etapa_actual_id'            => $segundaEtapa ? $segundaEtapa->id : $primeraEtapa->id,
-                'area_actual_role'           => $segundaEtapa ? $segundaEtapa->area_role : $primeraEtapa->area_role,
+                'etapa_actual_id'            => $segundaEtapa ? $segundaEtapa->id : ($primeraEtapa ? $primeraEtapa->id : null),
+                'area_actual_role'           => $segundaEtapa ? $segundaEtapa->area_role : ($primeraEtapa ? $primeraEtapa->area_role : null),
                 'created_by'                 => $user->id,
                 'created_at'                 => now(),
                 'updated_at'                 => now(),
             ]);
 
-            // 3) ✅ Crear instancia de Etapa 0 como COMPLETADA AUTOMÁTICAMENTE
+            // 3) ✅ Crear instancia de Etapa 0 como COMPLETADA AUTOMÁTICAMENTE (si hay etapas)
+            if (!$primeraEtapa) {
+                // Sin workflow/etapas: solo redirigir
+                return redirect()->route('procesos.index')
+                    ->with('success', 'Solicitud creada correctamente.');
+            }
+
             $procesoEtapa0Id = DB::table('proceso_etapas')->insertGetId([
                 'proceso_id'   => $procesoId,
                 'etapa_id'     => $primeraEtapa->id,
@@ -401,6 +418,118 @@ class ProcesoController extends Controller
     }
 
         /**
+         * Sincroniza un flujo del Motor de Flujos al sistema viejo de workflow/etapas/etapa_items.
+         * Crea (o actualiza) un workflow exclusivo para el flujo, con etapas e items que
+         * reflejan los pasos y documentos configurados en el Motor de Flujos.
+         * De esta forma, todas las vistas de bandejas existentes siguen funcionando.
+         */
+        private function syncFlujoToWorkflow($flujo): ?int
+        {
+            if (!$flujo || !$flujo->version_activa_id) {
+                return null;
+            }
+
+            $workflowCodigo = 'FLUJO_' . $flujo->id;
+
+            // 1) Encontrar o crear workflow exclusivo para este flujo
+            $workflow = DB::table('workflows')->where('codigo', $workflowCodigo)->first();
+
+            if (!$workflow) {
+                $workflowId = DB::table('workflows')->insertGetId([
+                    'codigo'     => $workflowCodigo,
+                    'nombre'     => $flujo->nombre,
+                    'activo'     => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                $workflowId = $workflow->id;
+                DB::table('workflows')->where('id', $workflowId)->update([
+                    'nombre'     => $flujo->nombre,
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // 2) Verificar si ya hay procesos activos usando este workflow
+            //    Si los hay, NO resincrono etapas (podrían romper procesos en curso)
+            $procesosActivos = DB::table('procesos')
+                ->where('workflow_id', $workflowId)
+                ->where('estado', 'EN_CURSO')
+                ->count();
+
+            // 3) Obtener pasos del flujo (versión activa)
+            $pasos = DB::table('flujo_pasos')
+                ->where('flujo_version_id', $flujo->version_activa_id)
+                ->where('activo', 1)
+                ->orderBy('orden')
+                ->get();
+
+            if ($pasos->isEmpty()) {
+                return $workflowId;
+            }
+
+            // 4) Obtener etapas actuales del workflow
+            $etapasActuales = DB::table('etapas')
+                ->where('workflow_id', $workflowId)
+                ->orderBy('orden')
+                ->get();
+
+            // Si no hay etapas o no hay procesos activos, reconstruir etapas
+            if ($etapasActuales->isEmpty() || $procesosActivos === 0) {
+                // Limpiar etapas antiguas (cascade borra etapa_items)
+                if ($etapasActuales->isNotEmpty()) {
+                    $etapaIds = $etapasActuales->pluck('id');
+                    DB::table('etapa_items')->whereIn('etapa_id', $etapaIds)->delete();
+                    DB::table('etapas')->whereIn('id', $etapaIds)->delete();
+                }
+
+                // Crear etapas desde los pasos del flujo
+                $prevEtapaId = null;
+                foreach ($pasos as $paso) {
+                    $etapaId = DB::table('etapas')->insertGetId([
+                        'workflow_id'    => $workflowId,
+                        'orden'          => $paso->orden,
+                        'nombre'         => $paso->nombre_personalizado ?? 'Paso ' . ($paso->orden + 1),
+                        'descripcion'    => $paso->instrucciones,
+                        'area_role'      => $paso->area_responsable_default ?? 'unidad_solicitante',
+                        'dias_estimados' => $paso->dias_estimados,
+                        'activa'         => true,
+                        'created_at'     => now(),
+                        'updated_at'     => now(),
+                    ]);
+
+                    // Encadenar etapas
+                    if ($prevEtapaId) {
+                        DB::table('etapas')->where('id', $prevEtapaId)->update([
+                            'next_etapa_id' => $etapaId,
+                        ]);
+                    }
+                    $prevEtapaId = $etapaId;
+
+                    // Crear etapa_items desde flujo_paso_documentos
+                    $docs = DB::table('flujo_paso_documentos')
+                        ->where('flujo_paso_id', $paso->id)
+                        ->where('activo', 1)
+                        ->orderBy('orden')
+                        ->get();
+
+                    foreach ($docs as $doc) {
+                        DB::table('etapa_items')->insert([
+                            'etapa_id'   => $etapaId,
+                            'orden'      => $doc->orden,
+                            'label'      => $doc->nombre,
+                            'requerido'  => $doc->es_obligatorio,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            return $workflowId;
+        }
+
+        /**
          * Genera un código único: PREFIJO-AAAA-#### por workflow y año.
          */
         private function generarCodigoConsecutivo(int $workflowId): string
@@ -411,7 +540,6 @@ class ProcesoController extends Controller
             $prefijo = $workflow->codigo ?? 'WF';
             $year = now()->year;
 
-            // Buscar el mayor consecutivo existente para ese prefijo-año
             $like = $prefijo . '-' . $year . '-%';
             $ultimo = DB::table('procesos')
                 ->where('codigo', 'like', $like)
@@ -420,7 +548,31 @@ class ProcesoController extends Controller
 
             $siguiente = 1;
             if ($ultimo) {
-                // Extraer la última parte numérica
+                $partes = explode('-', $ultimo);
+                $numero = (int) end($partes);
+                $siguiente = $numero + 1;
+            }
+
+            $numeroFmt = str_pad((string) $siguiente, 4, '0', STR_PAD_LEFT);
+            return "$prefijo-$year-$numeroFmt";
+        }
+
+        /**
+         * Genera código consecutivo usando el código del flujo como prefijo.
+         */
+        private function generarCodigoConsecutivoFlujo(string $flujoCodigo): string
+        {
+            $prefijo = $flujoCodigo;
+            $year = now()->year;
+
+            $like = $prefijo . '-' . $year . '-%';
+            $ultimo = DB::table('procesos')
+                ->where('codigo', 'like', $like)
+                ->orderByDesc('codigo')
+                ->value('codigo');
+
+            $siguiente = 1;
+            if ($ultimo) {
                 $partes = explode('-', $ultimo);
                 $numero = (int) end($partes);
                 $siguiente = $numero + 1;

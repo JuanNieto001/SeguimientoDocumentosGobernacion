@@ -64,8 +64,8 @@
                             <p class="font-mono font-bold text-gray-900">{{ $proceso->codigo }}</p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Workflow</p>
-                            <p class="font-medium text-gray-700">{{ optional($proceso->workflow)->codigo ?? 'N/D' }}</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Flujo</p>
+                            <p class="font-medium text-gray-700">{{ $proceso->flujo_id ? optional(\App\Models\Flujo::find($proceso->flujo_id))->nombre : (optional($proceso->workflow)->codigo ?? 'N/D') }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Creado el</p>
