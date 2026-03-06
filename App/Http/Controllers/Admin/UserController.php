@@ -23,17 +23,34 @@ class UserController extends Controller
         }
 
         // Filtros opcionales desde la UI
+        if ($request->filled('buscar')) {
+            $buscar = $request->buscar;
+            $query->where(function ($q) use ($buscar) {
+                $q->where('name', 'like', "%{$buscar}%")
+                  ->orWhere('email', 'like', "%{$buscar}%");
+            });
+        }
         if ($request->filled('secretaria_id')) {
             $query->where('secretaria_id', $request->secretaria_id);
         }
         if ($request->filled('unidad_id')) {
             $query->where('unidad_id', $request->unidad_id);
         }
+        if ($request->filled('rol')) {
+            $roleFiltro = $request->rol;
+            $query->whereHas('roles', fn($q) => $q->where('name', $roleFiltro));
+        }
 
-        $users = $query->paginate(15);
+        $users = $query->paginate(15)->appends($request->query());
         $secretarias = Secretaria::activas()->orderBy('nombre')->get();
+        $roles = Role::orderBy('name')->get();
+        $unidades = collect();
+        if ($request->filled('secretaria_id')) {
+            $unidades = Unidad::where('secretaria_id', $request->secretaria_id)
+                ->activas()->orderBy('nombre')->get();
+        }
 
-        return view('admin.users.index', compact('users', 'secretarias'));
+        return view('admin.users.index', compact('users', 'secretarias', 'roles', 'unidades'));
     }
 
     public function create()

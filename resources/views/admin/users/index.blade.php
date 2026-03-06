@@ -36,12 +36,119 @@
         </div>
         @endif
 
+        {{-- ============================================================ --}}
+        {{--  BARRA DE FILTROS                                            --}}
+        {{-- ============================================================ --}}
+        <div x-data="{
+                secretariaId: '{{ request('secretaria_id') }}',
+                unidades: {{ isset($unidades) ? $unidades->toJson() : '[]' }},
+                loadingUnidades: false,
+                async fetchUnidades() {
+                    if (!this.secretariaId) { this.unidades = []; return; }
+                    this.loadingUnidades = true;
+                    try {
+                        const res = await fetch('/api/secretarias/' + this.secretariaId + '/unidades');
+                        this.unidades = await res.json();
+                    } catch(e) { this.unidades = []; }
+                    this.loadingUnidades = false;
+                }
+             }"
+             class="bg-white rounded-2xl p-4" style="border:1px solid #e2e8f0">
+            <form method="GET" action="{{ url('/admin/usuarios') }}" class="space-y-3">
+                {{-- Fila 1: Búsqueda + Secretaría --}}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    {{-- Buscar por nombre/email --}}
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" name="buscar" value="{{ request('buscar') }}"
+                               placeholder="Buscar por nombre o email..."
+                               class="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+                               style="background:#f8fafc">
+                    </div>
+
+                    {{-- Filtro Secretaría --}}
+                    <div>
+                        <select name="secretaria_id"
+                                x-model="secretariaId"
+                                @change="fetchUnidades(); $refs.unidadSelect.value = ''"
+                                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none"
+                                style="background:#f8fafc">
+                            <option value="">Todas las secretarías</option>
+                            @foreach($secretarias as $sec)
+                                <option value="{{ $sec->id }}" {{ request('secretaria_id') == $sec->id ? 'selected' : '' }}>
+                                    {{ $sec->nombre }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Filtro Unidad (dinámico) --}}
+                    <div>
+                        <select name="unidad_id" x-ref="unidadSelect"
+                                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none"
+                                style="background:#f8fafc"
+                                :disabled="!secretariaId">
+                            <option value="">Todas las unidades</option>
+                            <template x-for="u in unidades" :key="u.id">
+                                <option :value="u.id" x-text="u.nombre" :selected="u.id == {{ request('unidad_id', 0) }}"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    {{-- Filtro Rol --}}
+                    <div>
+                        <select name="rol"
+                                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none"
+                                style="background:#f8fafc">
+                            <option value="">Todos los roles</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role->name }}" {{ request('rol') == $role->name ? 'selected' : '' }}>
+                                    {{ \App\Support\RoleLabels::label($role->name) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Fila 2: Botones de acción --}}
+                <div class="flex items-center gap-2">
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-semibold shadow-sm hover:shadow-md hover:opacity-95 transition-all"
+                            style="background:linear-gradient(135deg,#15803d,#14532d)">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filtrar
+                    </button>
+
+                    @if(request()->hasAny(['buscar', 'secretaria_id', 'unidad_id', 'rol']))
+                    <a href="{{ url('/admin/usuarios') }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-gray-600 hover:bg-gray-100 transition-all"
+                       style="border:1px solid #e2e8f0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Limpiar filtros
+                    </a>
+                    @endif
+
+                    {{-- Contador de resultados --}}
+                    <span class="ml-auto text-xs text-gray-400">
+                        {{ $users->total() }} usuario{{ $users->total() !== 1 ? 's' : '' }} encontrado{{ $users->total() !== 1 ? 's' : '' }}
+                    </span>
+                </div>
+            </form>
+        </div>
+
         <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">
             <table class="w-full text-sm">
                 <thead>
                     <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc">
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Secretaría / Unidad</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rol</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
@@ -62,6 +169,18 @@
                             </div>
                         </td>
                         <td class="px-5 py-3.5 text-gray-500">{{ $u->email }}</td>
+                        <td class="px-5 py-3.5">
+                            @if($u->secretaria)
+                            <div class="text-xs">
+                                <span class="font-medium text-gray-700">{{ $u->secretaria->nombre }}</span>
+                                @if($u->unidad)
+                                <span class="block text-gray-400 mt-0.5">{{ $u->unidad->nombre }}</span>
+                                @endif
+                            </div>
+                            @else
+                            <span class="text-gray-300 text-xs italic">Sin asignar</span>
+                            @endif
+                        </td>
                         <td class="px-5 py-3.5">
                             @if($rol)
                             <span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium" style="background:{{ $rc['bg'] }};color:{{ $rc['text'] }}">
@@ -93,10 +212,16 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-5 py-16 text-center">
+                        <td colspan="5" class="px-5 py-16 text-center">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <p class="text-sm text-gray-400 font-medium">No hay usuarios registrados</p>
+                                <p class="text-sm text-gray-400 font-medium">
+                                    @if(request()->hasAny(['buscar', 'secretaria_id', 'unidad_id', 'rol']))
+                                        No se encontraron usuarios con los filtros aplicados
+                                    @else
+                                        No hay usuarios registrados
+                                    @endif
+                                </p>
                             </div>
                         </td>
                     </tr>
