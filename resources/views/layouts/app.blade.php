@@ -113,5 +113,9 @@
         </main>
     </div>
 </div>
+
+{{-- Agente Estiven – Asistente flotante --}}
+@include('partials.agente-estiven')
+
 </body>
 </html>
