@@ -37,6 +37,7 @@ class RoleLabels
         'revisor_juridico'          => 'Revisor Jurídico',
         'consulta'                  => 'Consulta',
         'unidad_solicitante'        => 'Unidad Solicitante',
+        'gobernador'                => 'Gobernador',
         'planeacion'                => 'Planeación',
         'hacienda'                  => 'Hacienda',
         'juridica'                  => 'Jurídica',

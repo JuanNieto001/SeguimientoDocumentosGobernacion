@@ -29,9 +29,17 @@ class SecopDatosAbiertoService
         $cacheKey = 'secop_ref_' . md5($referencia);
 
         return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($referencia) {
+            $escaped = $this->escapeSoql($referencia);
+            $conditions = [
+                "referencia_del_contrato LIKE '%{$escaped}%'",
+                "id_contrato LIKE '%{$escaped}%'",
+                "proceso_de_compra LIKE '%{$escaped}%'",
+                "documento_proveedor = '{$escaped}'",
+                "proveedor_adjudicado LIKE '%{$escaped}%'",
+            ];
             return $this->query([
-                '$where' => "referencia_del_contrato LIKE '%{$this->escapeSoql($referencia)}%' OR id_contrato LIKE '%{$this->escapeSoql($referencia)}%' OR proceso_de_compra LIKE '%{$this->escapeSoql($referencia)}%'",
-                '$limit' => 20,
+                '$where' => "nit_entidad = '{$this->entidadNit}' AND (" . implode(' OR ', $conditions) . ')',
+                '$limit' => 50,
                 '$order' => 'ultima_actualizacion DESC',
             ]);
         });
@@ -58,6 +66,10 @@ class SecopDatosAbiertoService
 
         if (!empty($filtros['contratista'])) {
             $where[] = "proveedor_adjudicado LIKE '%{$this->escapeSoql($filtros['contratista'])}%'";
+        }
+
+        if (!empty($filtros['cedula'])) {
+            $where[] = "documento_proveedor = '{$this->escapeSoql($filtros['cedula'])}'";
         }
 
         if (!empty($filtros['objeto'])) {

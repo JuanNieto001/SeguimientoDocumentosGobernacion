@@ -149,6 +149,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'profesional_contratacion'  => 'Profesional de Contratación – Crea y edita procesos',
             'revisor_juridico'          => 'Revisor Jurídico – Aprueba/rechaza procesos',
             'consulta'                  => 'Consulta – Solo lectura',
+            'gobernador'                => 'Gobernador – Despacho del Gobernador, consulta general y SECOP',
         ];
 
         foreach ($nuevosRoles as $roleName => $description) {

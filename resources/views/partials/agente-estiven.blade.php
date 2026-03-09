@@ -334,8 +334,55 @@
         ];
     }
 
+    // GOBERNADOR
+    elseif ($roleName === 'gobernador') {
+        $roleGuides = [
+            [
+                'icon'  => '📊',
+                'title' => 'Ver panorama general de procesos',
+                'steps' => [
+                    'En el <strong>Panel principal</strong> verás un resumen de todos los procesos activos.',
+                    'Usa <strong>"Ver procesos"</strong> para explorar el listado completo con filtros.',
+                    'Haz clic en un proceso para ver su seguimiento detallado por etapa.',
+                ],
+            ],
+            [
+                'icon'  => '🌐',
+                'title' => 'Consultar contratos en SECOP II',
+                'steps' => [
+                    'Ve a <strong>"Consulta SECOP II"</strong> en el menú lateral.',
+                    'Verás las estadísticas generales de contratación de la Gobernación.',
+                    'Usa la barra de búsqueda para encontrar contratos específicos.',
+                    'Haz clic en un contrato para ver su detalle completo.',
+                ],
+            ],
+            [
+                'icon'  => '📈',
+                'title' => 'Revisar reportes y estadísticas',
+                'steps' => [
+                    'Ve a <strong>"Reportes"</strong> en el menú lateral.',
+                    'Consulta el estado general, reportes por dependencia y actividad por actor.',
+                    'Usa los filtros de fecha y secretaría para acotar la información.',
+                ],
+            ],
+        ];
+    }
+
     // Combinar guías (primero las del rol, luego las comunes)
     $allGuides = array_merge($roleGuides, $commonGuides);
+
+    // ── Guías dinámicas desde la BD (creadas por admin) ──
+    // Si existen guías en BD, reemplazan las hardcoded para evitar duplicados
+    $dbGuides = \App\Models\EstivenGuide::with('steps')
+        ->where('activo', true)
+        ->whereIn('role', [$roleName, '_common'])
+        ->orderBy('role')
+        ->orderBy('orden')
+        ->get();
+
+    if ($dbGuides->isNotEmpty()) {
+        $allGuides = $dbGuides->map(fn($g) => $g->toEstivenArray())->toArray();
+    }
 @endphp
 
 {{-- ═══════════════════════════════════════════════════

@@ -239,11 +239,44 @@
                     @endforeach
                 </div>
 
-                {{-- Origen de recursos --}}
-                @if(!empty($contrato['origen_de_los_recursos']))
-                <div class="mt-3 p-2.5 rounded-lg" style="background:#f8fafc">
-                    <p class="text-xs text-gray-400 font-medium mb-1">Origen de los recursos</p>
-                    <p class="text-sm text-gray-700 font-medium">{{ $contrato['origen_de_los_recursos'] ?? $contrato['destino_gasto'] ?? 'N/D' }}</p>
+                {{-- Valores adicionales --}}
+                @php
+                    $valoresExtra = [
+                        ['label' => 'Pago Adelantado', 'valor' => $contrato['valor_de_pago_adelantado'] ?? 0, 'color' => '#0e7490', 'bg' => '#cffafe'],
+                        ['label' => 'Valor Amortizado', 'valor' => $contrato['valor_amortizado'] ?? 0, 'color' => '#4338ca', 'bg' => '#e0e7ff'],
+                        ['label' => 'Saldo CDP', 'valor' => $contrato['saldo_cdp'] ?? 0, 'color' => '#0f766e', 'bg' => '#ccfbf1'],
+                        ['label' => 'Saldo Vigencia', 'valor' => $contrato['saldo_vigencia'] ?? 0, 'color' => '#b45309', 'bg' => '#fef3c7'],
+                    ];
+                    $tieneValoresExtra = collect($valoresExtra)->contains(fn($v) => (float)$v['valor'] > 0);
+                @endphp
+                @if($tieneValoresExtra)
+                <div class="mt-3 space-y-2">
+                    @foreach($valoresExtra as $v)
+                        @if((float)$v['valor'] > 0)
+                        <div class="flex items-center justify-between p-2.5 rounded-lg" style="background:{{ $v['bg'] }}20">
+                            <span class="text-xs font-medium" style="color:{{ $v['color'] }}">{{ $v['label'] }}</span>
+                            <span class="text-sm font-bold" style="color:{{ $v['color'] }}">$ {{ number_format((float)$v['valor'], 0, ',', '.') }}</span>
+                        </div>
+                        @endif
+                    @endforeach
+                </div>
+                @endif
+
+                {{-- Origen y destino de recursos --}}
+                @if(!empty($contrato['origen_de_los_recursos']) || !empty($contrato['destino_gasto']))
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    @if(!empty($contrato['origen_de_los_recursos']))
+                    <div class="p-2.5 rounded-lg" style="background:#f8fafc">
+                        <p class="text-xs text-gray-400 font-medium mb-0.5">Origen de los recursos</p>
+                        <p class="text-sm text-gray-700 font-medium">{{ $contrato['origen_de_los_recursos'] }}</p>
+                    </div>
+                    @endif
+                    @if(!empty($contrato['destino_gasto']))
+                    <div class="p-2.5 rounded-lg" style="background:#f8fafc">
+                        <p class="text-xs text-gray-400 font-medium mb-0.5">Destino del gasto</p>
+                        <p class="text-sm text-gray-700 font-medium">{{ $contrato['destino_gasto'] }}</p>
+                    </div>
+                    @endif
                 </div>
                 @endif
             </div>
@@ -312,6 +345,79 @@
                 </div>
             </div>
         </div>
+
+        {{-- Características Adicionales --}}
+        @php
+            $flags = [
+                'Habilita Pago Adelantado' => $contrato['habilita_pago_adelantado'] ?? null,
+                'Liquidación' => $contrato['liquidaci_n'] ?? null,
+                'Obligación Ambiental' => $contrato['obligaci_n_ambiental'] ?? null,
+                'Obligaciones Postconsumo' => $contrato['obligaciones_postconsumo'] ?? null,
+                'Reversión' => $contrato['reversion'] ?? null,
+                'Días Adicionados' => $contrato['dias_adicionados'] ?? null,
+            ];
+            $flagsActivos = array_filter($flags, fn($v) => $v !== null && $v !== '' && $v !== '0');
+            $esPostConflicto = ($contrato['espostconflicto'] ?? 'No') === 'Si';
+        @endphp
+        @if(count($flagsActivos) > 0 || $esPostConflicto)
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {{-- Flags del contrato --}}
+            @if(count($flagsActivos) > 0)
+            <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:#f3e8ff">
+                        <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    </div>
+                    <h3 class="text-sm font-bold text-gray-700">Características Adicionales</h3>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($flagsActivos as $label => $value)
+                    @php
+                        $esSi = in_array(strtolower($value), ['si', 'sí', 'yes', '1', 'true']);
+                        $badgeBg = $esSi ? '#dcfce7' : '#f1f5f9';
+                        $badgeText = $esSi ? '#15803d' : '#64748b';
+                        $badgeBorder = $esSi ? '#bbf7d0' : '#e2e8f0';
+                        $displayVal = is_numeric($value) ? $value : ($esSi ? 'Sí' : $value);
+                    @endphp
+                    <span class="text-xs px-3 py-1.5 rounded-full font-medium"
+                          style="background:{{ $badgeBg }};color:{{ $badgeText }};border:1px solid {{ $badgeBorder }}">
+                        {{ $label }}: {{ $displayVal }}
+                    </span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Post-conflicto --}}
+            @if($esPostConflicto)
+            <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:#fef3c7">
+                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                    </div>
+                    <h3 class="text-sm font-bold text-gray-700">Información Post-conflicto</h3>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="p-3 rounded-xl" style="background:#fef3c7">
+                        <span class="text-xs font-bold text-amber-700 uppercase">Contrato Post-conflicto</span>
+                    </div>
+                    @if(!empty($contrato['pilares_del_acuerdo']))
+                    <div class="p-2.5 rounded-lg" style="background:#f8fafc">
+                        <p class="text-xs text-gray-400 font-medium mb-0.5">Pilares del Acuerdo</p>
+                        <p class="text-sm text-gray-700 font-medium">{{ $contrato['pilares_del_acuerdo'] }}</p>
+                    </div>
+                    @endif
+                    @if(!empty($contrato['puntos_del_acuerdo']))
+                    <div class="p-2.5 rounded-lg" style="background:#f8fafc">
+                        <p class="text-xs text-gray-400 font-medium mb-0.5">Puntos del Acuerdo</p>
+                        <p class="text-sm text-gray-700 font-medium">{{ $contrato['puntos_del_acuerdo'] }}</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
 
         {{-- Fuente --}}
         <div class="flex items-center justify-center gap-2 py-3">

@@ -29,7 +29,7 @@ echo Para detener el servidor presiona Ctrl+C
 echo ================================================
 echo.
 
-REM Iniciar servidor
-php artisan serve --host=0.0.0.0 --port=8000
+REM Iniciar servidor (router.php maneja URLs con puntos como CO1.PCCNTR.xxx)
+php -S 0.0.0.0:8000 -t public public/router.php
 
 pause

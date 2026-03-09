@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\ResetPasswordAdminController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\SecopConsultaController;
+use App\Http\Controllers\Admin\EstivenGuideController;
 
 /*
 |--------------------------------------------------------------------------
@@ -243,6 +244,11 @@ Route::middleware(['auth', 'role:admin|admin_general'])
 
         Route::get('logs', [LogsController::class, 'index'])->name('logs');
         Route::get('logs/proceso/{proceso}', [LogsController::class, 'show'])->name('logs.proceso');
+
+        // Guías de Agente Estiven
+        Route::resource('estiven-guides', EstivenGuideController::class)
+            ->except(['show'])
+            ->names('estiven-guides');
     });
 
 /*
@@ -324,13 +330,13 @@ Route::middleware(['auth', 'role:admin|secop'])
 | CONSULTA SECOP II – Datos Abiertos (datos.gov.co)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:admin|unidad_solicitante|gobernador'])
     ->prefix('secop-consulta')
     ->name('secop.consulta')
     ->group(function () {
         Route::get('/', [SecopConsultaController::class, 'index']);
-        Route::get('/contrato/{idContrato}', [SecopConsultaController::class, 'detalle'])->name('.detalle');
-        Route::post('/contrato/{idContrato}/refrescar', [SecopConsultaController::class, 'refrescar'])->name('.refrescar');
+        Route::get('/contrato/{idContrato}', [SecopConsultaController::class, 'detalle'])->where('idContrato', '.*')->name('.detalle');
+        Route::post('/contrato/{idContrato}/refrescar', [SecopConsultaController::class, 'refrescar'])->where('idContrato', '.*')->name('.refrescar');
     });
 
 /*

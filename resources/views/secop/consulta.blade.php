@@ -96,7 +96,7 @@
                 <div class="flex gap-3 mb-4">
                     <div class="flex-1 relative">
                         <input type="text" name="busqueda" value="{{ $busqueda ?? '' }}"
-                               placeholder="Buscar por N° proceso, N° contrato o referencia SECOP..."
+                               placeholder="Buscar por N° proceso, contrato, cédula o nombre del contratista..."
                                class="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all"
                                style="border-color:#e2e8f0">
                         <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -143,6 +143,12 @@
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Contratista</label>
                             <input type="text" name="contratista" value="{{ $filtros['contratista'] ?? '' }}"
                                    placeholder="Nombre del contratista..."
+                                   class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">C&eacute;dula / NIT Contratista</label>
+                            <input type="text" name="cedula" value="{{ $filtros['cedula'] ?? '' }}"
+                                   placeholder="N&uacute;mero de documento..."
                                    class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
                         </div>
                         <div>
@@ -223,6 +229,9 @@
                                 <span class="flex items-center gap-1">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                     {{ $c['proveedor_adjudicado'] }}
+                                    @if(!empty($c['documento_proveedor']) && $c['documento_proveedor'] !== 'No Definido')
+                                        <span class="text-gray-300">&middot;</span> CC/NIT {{ $c['documento_proveedor'] }}
+                                    @endif
                                 </span>
                                 @endif
                                 @if(!empty($c['modalidad_de_contratacion']))
