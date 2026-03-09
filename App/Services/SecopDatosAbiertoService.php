@@ -24,11 +24,11 @@ class SecopDatosAbiertoService
     /**
      * Buscar contratos en SECOP II por número de proceso o contrato.
      */
-    public function buscarPorReferencia(string $referencia): array
+    public function buscarPorReferencia(string $referencia, array $filtros = []): array
     {
-        $cacheKey = 'secop_ref_' . md5($referencia);
+        $cacheKey = 'secop_ref_' . md5($referencia . json_encode($filtros));
 
-        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($referencia) {
+        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($referencia, $filtros) {
             $escaped = $this->escapeSoql($referencia);
             $conditions = [
                 "referencia_del_contrato LIKE '%{$escaped}%'",
@@ -37,8 +37,30 @@ class SecopDatosAbiertoService
                 "documento_proveedor = '{$escaped}'",
                 "proveedor_adjudicado LIKE '%{$escaped}%'",
             ];
+
+            $where = [
+                "nit_entidad = '{$this->entidadNit}'",
+                '(' . implode(' OR ', $conditions) . ')'
+            ];
+
+            // Aplicar filtros adicionales
+            if (!empty($filtros['anio'])) {
+                $anio = (int) $filtros['anio'];
+                $where[] = "fecha_de_firma >= '{$anio}-01-01T00:00:00.000'";
+                $where[] = "fecha_de_firma <= '{$anio}-12-31T23:59:59.000'";
+            }
+            if (!empty($filtros['estado'])) {
+                $where[] = "estado_contrato = '{$this->escapeSoql($filtros['estado'])}'";
+            }
+            if (!empty($filtros['tipo_contrato'])) {
+                $where[] = "tipo_de_contrato = '{$this->escapeSoql($filtros['tipo_contrato'])}'";
+            }
+            if (!empty($filtros['modalidad'])) {
+                $where[] = "modalidad_de_contratacion LIKE '%{$this->escapeSoql($filtros['modalidad'])}%'";
+            }
+
             return $this->query([
-                '$where' => "nit_entidad = '{$this->entidadNit}' AND (" . implode(' OR ', $conditions) . ')',
+                '$where' => implode(' AND ', $where),
                 '$limit' => 50,
                 '$order' => 'ultima_actualizacion DESC',
             ]);
@@ -51,6 +73,12 @@ class SecopDatosAbiertoService
     public function buscarPorEntidad(array $filtros = []): array
     {
         $where = ["nit_entidad = '{$this->entidadNit}'"];
+
+        if (!empty($filtros['anio'])) {
+            $anio = (int) $filtros['anio'];
+            $where[] = "fecha_de_firma >= '{$anio}-01-01T00:00:00.000'";
+            $where[] = "fecha_de_firma <= '{$anio}-12-31T23:59:59.000'";
+        }
 
         if (!empty($filtros['estado'])) {
             $where[] = "estado_contrato = '{$this->escapeSoql($filtros['estado'])}'";

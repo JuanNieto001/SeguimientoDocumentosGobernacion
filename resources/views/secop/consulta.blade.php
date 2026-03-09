@@ -109,36 +109,74 @@
                     </button>
                 </div>
 
+                {{-- Filtros rápidos (visibles tras buscar) --}}
+                @if($busqueda || count($contratos) > 0 || array_filter($filtros ?? []))
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Año</label>
+                        <select name="anio" onchange="this.form.submit()" class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
+                            <option value="">Todos los años</option>
+                            @for($y = date('Y'); $y >= 2018; $y--)
+                            <option value="{{ $y }}" {{ ($filtros['anio'] ?? '') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Estado</label>
+                        <select name="estado" onchange="this.form.submit()" class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
+                            <option value="">Todos</option>
+                            <option value="Activo" {{ ($filtros['estado'] ?? '') === 'Activo' ? 'selected' : '' }}>Activo</option>
+                            <option value="Borrador" {{ ($filtros['estado'] ?? '') === 'Borrador' ? 'selected' : '' }}>Borrador</option>
+                            <option value="Cerrado" {{ ($filtros['estado'] ?? '') === 'Cerrado' ? 'selected' : '' }}>Cerrado</option>
+                            <option value="Liquidado" {{ ($filtros['estado'] ?? '') === 'Liquidado' ? 'selected' : '' }}>Liquidado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Tipo de Contrato</label>
+                        <select name="tipo_contrato" onchange="this.form.submit()" class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
+                            <option value="">Todos</option>
+                            <option value="Prestación de servicios" {{ ($filtros['tipo_contrato'] ?? '') === 'Prestación de servicios' ? 'selected' : '' }}>Prestación de Servicios</option>
+                            <option value="Compraventa" {{ ($filtros['tipo_contrato'] ?? '') === 'Compraventa' ? 'selected' : '' }}>Compraventa</option>
+                            <option value="Suministros" {{ ($filtros['tipo_contrato'] ?? '') === 'Suministros' ? 'selected' : '' }}>Suministros</option>
+                            <option value="Consultoría" {{ ($filtros['tipo_contrato'] ?? '') === 'Consultoría' ? 'selected' : '' }}>Consultoría</option>
+                            <option value="Obra" {{ ($filtros['tipo_contrato'] ?? '') === 'Obra' ? 'selected' : '' }}>Obra</option>
+                            <option value="Interventoría" {{ ($filtros['tipo_contrato'] ?? '') === 'Interventoría' ? 'selected' : '' }}>Interventoría</option>
+                            <option value="Arrendamiento" {{ ($filtros['tipo_contrato'] ?? '') === 'Arrendamiento' ? 'selected' : '' }}>Arrendamiento</option>
+                            <option value="Seguros" {{ ($filtros['tipo_contrato'] ?? '') === 'Seguros' ? 'selected' : '' }}>Seguros</option>
+                            <option value="Concesión" {{ ($filtros['tipo_contrato'] ?? '') === 'Concesión' ? 'selected' : '' }}>Concesión</option>
+                            <option value="Comodato" {{ ($filtros['tipo_contrato'] ?? '') === 'Comodato' ? 'selected' : '' }}>Comodato</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Modalidad</label>
+                        <select name="modalidad" onchange="this.form.submit()" class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
+                            <option value="">Todas</option>
+                            <option value="Contratación directa" {{ ($filtros['modalidad'] ?? '') === 'Contratación directa' ? 'selected' : '' }}>Contratación Directa</option>
+                            <option value="Mínima cuantía" {{ ($filtros['modalidad'] ?? '') === 'Mínima cuantía' ? 'selected' : '' }}>Mínima Cuantía</option>
+                            <option value="Selección abreviada" {{ ($filtros['modalidad'] ?? '') === 'Selección abreviada' ? 'selected' : '' }}>Selección Abreviada</option>
+                            <option value="Licitación pública" {{ ($filtros['modalidad'] ?? '') === 'Licitación pública' ? 'selected' : '' }}>Licitación Pública</option>
+                            <option value="Concurso de méritos" {{ ($filtros['modalidad'] ?? '') === 'Concurso de méritos' ? 'selected' : '' }}>Concurso de Méritos</option>
+                            <option value="régimen especial" {{ ($filtros['modalidad'] ?? '') === 'régimen especial' ? 'selected' : '' }}>Régimen Especial</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit"
+                                class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:shadow-lg"
+                                style="background:linear-gradient(135deg,#7c3aed,#9333ea)">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+
                 {{-- Filtros avanzados --}}
-                <div x-data="{ open: {{ array_filter($filtros ?? []) ? 'true': 'false' }} }">
+                <div x-data="{ open: {{ !empty($filtros['contratista'] ?? '') || !empty($filtros['cedula'] ?? '') || !empty($filtros['objeto'] ?? '') || !empty($filtros['fecha_desde'] ?? '') || !empty($filtros['fecha_hasta'] ?? '') ? 'true': 'false' }} }">
                     <button type="button" @click="open = !open"
                             class="text-xs font-medium text-purple-600 hover:text-purple-800 flex items-center gap-1 mb-3 transition-colors">
                         <svg class="w-3.5 h-3.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        Filtros avanzados
+                        Más filtros
                     </button>
                     <div x-show="open" x-transition class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Estado</label>
-                            <select name="estado" class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
-                                <option value="">Todos</option>
-                                <option value="Activo" {{ ($filtros['estado'] ?? '') === 'Activo' ? 'selected' : '' }}>Activo</option>
-                                <option value="Borrador" {{ ($filtros['estado'] ?? '') === 'Borrador' ? 'selected' : '' }}>Borrador</option>
-                                <option value="Cerrado" {{ ($filtros['estado'] ?? '') === 'Cerrado' ? 'selected' : '' }}>Cerrado</option>
-                                <option value="Liquidado" {{ ($filtros['estado'] ?? '') === 'Liquidado' ? 'selected' : '' }}>Liquidado</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Modalidad</label>
-                            <select name="modalidad" class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
-                                <option value="">Todas</option>
-                                <option value="Contratación directa" {{ ($filtros['modalidad'] ?? '') === 'Contratación directa' ? 'selected' : '' }}>Contratación Directa</option>
-                                <option value="Mínima cuantía" {{ ($filtros['modalidad'] ?? '') === 'Mínima cuantía' ? 'selected' : '' }}>Mínima Cuantía</option>
-                                <option value="Selección abreviada" {{ ($filtros['modalidad'] ?? '') === 'Selección abreviada' ? 'selected' : '' }}>Selección Abreviada</option>
-                                <option value="Licitación pública" {{ ($filtros['modalidad'] ?? '') === 'Licitación pública' ? 'selected' : '' }}>Licitación Pública</option>
-                                <option value="Concurso de méritos" {{ ($filtros['modalidad'] ?? '') === 'Concurso de méritos' ? 'selected' : '' }}>Concurso de Méritos</option>
-                                <option value="régimen especial" {{ ($filtros['modalidad'] ?? '') === 'régimen especial' ? 'selected' : '' }}>Régimen Especial</option>
-                            </select>
-                        </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Contratista</label>
                             <input type="text" name="contratista" value="{{ $filtros['contratista'] ?? '' }}"
@@ -146,9 +184,9 @@
                                    class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">C&eacute;dula / NIT Contratista</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Cédula / NIT Contratista</label>
                             <input type="text" name="cedula" value="{{ $filtros['cedula'] ?? '' }}"
-                                   placeholder="N&uacute;mero de documento..."
+                                   placeholder="Número de documento..."
                                    class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
                         </div>
                         <div>
@@ -158,17 +196,52 @@
                                    class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Desde</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Fecha firma desde</label>
                             <input type="date" name="fecha_desde" value="{{ $filtros['fecha_desde'] ?? '' }}"
                                    class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Hasta</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Fecha firma hasta</label>
                             <input type="date" name="fecha_hasta" value="{{ $filtros['fecha_hasta'] ?? '' }}"
                                    class="w-full border rounded-xl text-sm py-2 px-3" style="border-color:#e2e8f0">
                         </div>
                     </div>
                 </div>
+
+                {{-- Filtros activos --}}
+                @php
+                    $filtrosActivos = array_filter($filtros ?? []);
+                @endphp
+                @if(count($filtrosActivos) > 0 || $busqueda)
+                <div class="flex flex-wrap items-center gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9">
+                    <span class="text-xs text-gray-400 font-medium">Filtros activos:</span>
+                    @if($busqueda)
+                    <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium" style="background:#ede9fe;color:#7c3aed">
+                        🔍 {{ \Illuminate\Support\Str::limit($busqueda, 25) }}
+                    </span>
+                    @endif
+                    @php
+                        $labelMap = [
+                            'anio' => 'Año',
+                            'estado' => 'Estado',
+                            'tipo_contrato' => 'Tipo',
+                            'modalidad' => 'Modalidad',
+                            'contratista' => 'Contratista',
+                            'cedula' => 'Cédula/NIT',
+                            'objeto' => 'Objeto',
+                            'fecha_desde' => 'Desde',
+                            'fecha_hasta' => 'Hasta',
+                        ];
+                    @endphp
+                    @foreach($filtrosActivos as $key => $value)
+                    <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium" style="background:#f1f5f9;color:#64748b">
+                        {{ $labelMap[$key] ?? $key }}: {{ \Illuminate\Support\Str::limit($value, 20) }}
+                    </span>
+                    @endforeach
+                    <a href="{{ route('secop.consulta') }}" class="text-xs text-red-400 hover:text-red-600 font-medium ml-1 transition-colors">✕ Limpiar todo</a>
+                </div>
+                @endif
+                @endif
             </form>
         </div>
 

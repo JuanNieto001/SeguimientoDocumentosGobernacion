@@ -17,10 +17,10 @@ class SecopConsultaController extends Controller
         $contratos = [];
         $estadisticas = null;
         $busqueda = $request->input('busqueda');
-        $filtros = $request->only(['estado', 'tipo_contrato', 'modalidad', 'contratista', 'cedula', 'objeto', 'fecha_desde', 'fecha_hasta']);
+        $filtros = $request->only(['anio', 'estado', 'tipo_contrato', 'modalidad', 'contratista', 'cedula', 'objeto', 'fecha_desde', 'fecha_hasta']);
 
         if ($busqueda) {
-            $contratos = $this->secop->buscarPorReferencia($busqueda);
+            $contratos = $this->secop->buscarPorReferencia($busqueda, $filtros);
             $estadisticas = $this->secop->obtenerEstadisticas();
         } elseif (array_filter($filtros)) {
             $contratos = $this->secop->buscarPorEntidad($filtros);
