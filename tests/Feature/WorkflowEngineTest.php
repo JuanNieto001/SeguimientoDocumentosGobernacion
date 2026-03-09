@@ -12,6 +12,7 @@ use App\Services\WorkflowEngine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class WorkflowEngineTest extends TestCase
@@ -27,6 +28,9 @@ class WorkflowEngineTest extends TestCase
         parent::setUp();
         
         $this->workflowEngine = app(WorkflowEngine::class);
+        
+        // Crear rol Super Admin si no existe
+        Role::findOrCreate('Super Admin', 'web');
         
         // Crear usuario admin
         $this->admin = User::factory()->create();

@@ -611,7 +611,7 @@ function PasoDetailPanel({ paso, allPasos, catalogo, onChange, onClose, onRemove
    FLOW CANVAS – Main builder using React Flow
    ================================================================ */
 const NODE_WIDTH = 250;
-const NODE_SPACING_Y = 130;
+const NODE_SPACING_Y = 240;
 const CANVAS_CENTER_X = 400;
 
 function buildNodesAndEdges(pasos, onDeleteNode) {
@@ -684,10 +684,20 @@ function FlowCanvasInner({ catalogo, pasos, setPasos, selectedNodeId, setSelecte
         if (selectedNodeId === nodeId) setSelectedNodeId(null);
     }, [setPasos, selectedNodeId, setSelectedNodeId]);
 
+    // Track custom positions from drag
+    const customPositions = useRef({});
+
     // Rebuild nodes/edges when pasos change
     useEffect(() => {
         const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(pasos, deletePasoByNodeId);
-        setNodes(newNodes);
+        // Preserve custom positions from drag
+        const mergedNodes = newNodes.map(n => {
+            if (customPositions.current[n.id]) {
+                return { ...n, position: customPositions.current[n.id] };
+            }
+            return n;
+        });
+        setNodes(mergedNodes);
         setEdges(newEdges);
     }, [pasos, deletePasoByNodeId]);
 
@@ -777,8 +787,11 @@ function FlowCanvasInner({ catalogo, pasos, setPasos, selectedNodeId, setSelecte
         setTimeout(() => reactFlowInstance.fitView({ padding: 0.3, duration: 300 }), 100);
     }, [setPasos, reactFlowInstance]);
 
-    // ── Node drag end to reorder ──
+    // ── Node drag end – save position freely ──
     const onNodeDragStop = useCallback((_, node) => {
+        // Save custom position so it persists across rerenders
+        customPositions.current[node.id] = { ...node.position };
+
         if (node.type !== 'pasoNode') return;
 
         // Get all paso nodes sorted by Y position
@@ -791,7 +804,6 @@ function FlowCanvasInner({ catalogo, pasos, setPasos, selectedNodeId, setSelecte
             const pasoMap = {};
             prev.forEach(p => { pasoMap[p._nodeId] = p; });
             const reordered = newOrder.map(id => pasoMap[id]).filter(Boolean);
-            // Add any that weren't found (shouldn't happen)
             prev.forEach(p => { if (!reordered.includes(p)) reordered.push(p); });
             return reordered;
         });
@@ -833,7 +845,7 @@ function FlowCanvasInner({ catalogo, pasos, setPasos, selectedNodeId, setSelecte
                     proOptions={{ hideAttribution: true }}
                     snapToGrid
                     snapGrid={[15, 15]}
-                    minZoom={0.3}
+                    minZoom={0.05}
                     maxZoom={2}>
                     <Controls position="bottom-left" />
                     <MiniMap

@@ -108,11 +108,9 @@ class HaciendaController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'cdp_emitido',
-                'Hacienda',
-                $proceso->etapaActual->nombre,
-                null,
-                "CDP emitido: {$validated['numero_cdp']} por valor de $" . number_format($validated['valor_cdp'], 2) .
-                ($validated['observaciones'] ? " - {$validated['observaciones']}" : "")
+                "CDP emitido por Hacienda: {$validated['numero_cdp']} por valor de $" . number_format($validated['valor_cdp'], 2) .
+                ($validated['observaciones'] ? " - {$validated['observaciones']}" : ""),
+                $proceso->etapa_actual_id
             );
 
             DB::commit();
@@ -151,11 +149,9 @@ class HaciendaController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'rp_emitido',
-                'Hacienda',
-                $proceso->etapaActual->nombre,
-                null,
-                "RP emitido: {$validated['numero_rp']} por valor de $" . number_format($validated['valor_rp'], 2) .
-                ($validated['observaciones'] ? " - {$validated['observaciones']}" : "")
+                "RP emitido por Hacienda: {$validated['numero_rp']} por valor de $" . number_format($validated['valor_rp'], 2) .
+                ($validated['observaciones'] ? " - {$validated['observaciones']}" : ""),
+                $proceso->etapa_actual_id
             );
 
             DB::commit();
@@ -224,10 +220,10 @@ class HaciendaController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'etapa_aprobada',
-                'Hacienda',
-                $proceso->etapaActual->nombre,
-                $siguienteEtapa->nombre,
-                $validated['observaciones'] ?? "Viabilidad económica aprobada. Proceso enviado a {$siguienteEtapa->area_role}"
+                "Viabilidad económica aprobada por Hacienda. Proceso enviado a {$siguienteEtapa->area_role}",
+                $proceso->etapa_actual_id,
+                null,
+                $validated['observaciones'] ?? null
             );
 
             DB::commit();
@@ -279,10 +275,9 @@ class HaciendaController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'etapa_rechazada',
-                'Hacienda',
-                $etapaActual->nombre,
-                $etapaAnterior->nombre,
-                "RECHAZADO POR HACIENDA: {$validated['motivo']}"
+                "Rechazado por Hacienda: {$validated['motivo']}",
+                $etapaActual->id,
+                ['etapa_anterior' => $etapaAnterior->nombre]
             );
 
             // Crear alerta para el responsable anterior
@@ -317,11 +312,9 @@ class HaciendaController extends Controller
         $stats = [
             'cdp_emitidos' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'cdp_emitido')
-                ->where('area', 'Hacienda')
                 ->count(),
             'rp_emitidos' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'rp_emitido')
-                ->where('area', 'Hacienda')
                 ->count(),
             'valor_total_cdp' => Proceso::whereNotNull('valor_cdp')
                 ->whereBetween('fecha_cdp', [$desde, $hasta])
@@ -331,11 +324,9 @@ class HaciendaController extends Controller
                 ->sum('valor_rp'),
             'procesos_aprobados' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'etapa_aprobada')
-                ->where('area', 'Hacienda')
                 ->count(),
             'procesos_rechazados' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'etapa_rechazada')
-                ->where('area', 'Hacienda')
                 ->count(),
         ];
 

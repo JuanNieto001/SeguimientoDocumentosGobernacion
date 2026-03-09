@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'secop' => [
+        'api_url' => env('SECOP_API_URL', 'https://www.datos.gov.co/resource/jbjy-vk9h.json'),
+        'key_id' => env('SECOP_KEY_ID'),
+        'key_secret' => env('SECOP_KEY_SECRET'),
+        'entidad_nit' => env('SECOP_ENTIDAD_NIT', '890801052'),
+    ],
+
 ];

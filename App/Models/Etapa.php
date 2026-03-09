@@ -80,6 +80,24 @@ class Etapa extends Model
     }
 
     /**
+     * Obtener la siguiente etapa del workflow (por next_etapa_id o por orden)
+     */
+    public function siguiente(): ?self
+    {
+        // Primero intentar por relación directa
+        if ($this->next_etapa_id) {
+            return $this->siguienteEtapa;
+        }
+
+        // Fallback: buscar por orden en el mismo workflow
+        return static::where('workflow_id', $this->workflow_id)
+            ->where('orden', '>', $this->orden)
+            ->where('activa', true)
+            ->orderBy('orden')
+            ->first();
+    }
+
+    /**
      * Verificar si la etapa es de Unidad Solicitante
      */
     public function esUnidadSolicitante(): bool

@@ -52,7 +52,7 @@ class AlertaService
         foreach ($certificadosProximos as $archivo) {
             $diasRestantes = now()->diffInDays($archivo->fecha_vigencia, false);
             
-            $existe = Alerta::where('proceso_id', $proceso->id)
+            $existe = Alerta::where('proceso_id', $archivo->proceso->id)
                 ->where('tipo', 'certificado_por_vencer')
                 ->where('leida', false)
                 ->get()

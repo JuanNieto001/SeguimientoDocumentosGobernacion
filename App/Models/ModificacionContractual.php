@@ -79,6 +79,42 @@ class ModificacionContractual extends Model
     }
 
     /**
+     * Calcular el porcentaje acumulado de adiciones aprobadas sobre el valor original del contrato
+     */
+    public static function porcentajeAdicionesAcumuladas(int $procesoId): float
+    {
+        $proceso = Proceso::find($procesoId);
+        if (!$proceso || !$proceso->valor_estimado || $proceso->valor_estimado == 0) {
+            return 0;
+        }
+
+        $totalAdiciones = static::where('proceso_id', $procesoId)
+            ->where('tipo_modificacion', 'adicion')
+            ->where('estado', 'aprobada')
+            ->sum('valor_modificacion');
+
+        return ($totalAdiciones / $proceso->valor_estimado) * 100;
+    }
+
+    /**
+     * Verificar si una nueva adición excedería el límite del 50%
+     */
+    public static function excedeLimite50(int $procesoId, float $valorNuevaAdicion): bool
+    {
+        $proceso = Proceso::find($procesoId);
+        if (!$proceso || !$proceso->valor_estimado || $proceso->valor_estimado == 0) {
+            return true;
+        }
+
+        $totalAdiciones = static::where('proceso_id', $procesoId)
+            ->where('tipo_modificacion', 'adicion')
+            ->where('estado', 'aprobada')
+            ->sum('valor_modificacion');
+
+        return (($totalAdiciones + $valorNuevaAdicion) / $proceso->valor_estimado) * 100 > 50;
+    }
+
+    /**
      * Scope: Por tipo de modificación
      */
     public function scopeTipo($query, string $tipo)

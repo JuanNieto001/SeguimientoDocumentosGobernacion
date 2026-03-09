@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\AuthEventsController;
 use App\Http\Controllers\Admin\ResetPasswordAdminController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\SupervisionController;
+use App\Http\Controllers\SecopConsultaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -316,6 +317,20 @@ Route::middleware(['auth', 'role:admin|secop'])
         Route::post('/procesos/{proceso}/cerrar', [SecopController::class, 'cerrar'])->name('cerrar');
         Route::post('/procesos/{proceso}/aprobar', [SecopController::class, 'aprobar'])->name('aprobar');
         Route::get('/reportes', [SecopController::class, 'reportes'])->name('reportes');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| CONSULTA SECOP II – Datos Abiertos (datos.gov.co)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])
+    ->prefix('secop-consulta')
+    ->name('secop.consulta')
+    ->group(function () {
+        Route::get('/', [SecopConsultaController::class, 'index']);
+        Route::get('/contrato/{idContrato}', [SecopConsultaController::class, 'detalle'])->name('.detalle');
+        Route::post('/contrato/{idContrato}/refrescar', [SecopConsultaController::class, 'refrescar'])->name('.refrescar');
     });
 
 /*

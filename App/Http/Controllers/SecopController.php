@@ -106,11 +106,9 @@ class SecopController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'publicado_secop',
-                'SECOP',
-                $proceso->etapaActual->nombre,
-                null,
                 "Proceso publicado en SECOP II: {$validated['numero_proceso_secop']}" .
-                ($validated['observaciones'] ? " - {$validated['observaciones']}" : "")
+                ($validated['observaciones'] ? " - {$validated['observaciones']}" : ""),
+                $proceso->etapa_actual_id
             );
 
             DB::commit();
@@ -153,13 +151,11 @@ class SecopController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'contrato_registrado',
-                'SECOP',
-                $proceso->etapaActual->nombre,
-                null,
-                "Contrato registrado: {$validated['numero_contrato']} - Valor: $" . 
+                "Contrato registrado en SECOP: {$validated['numero_contrato']} - Valor: $" . 
                 number_format($validated['valor_contrato'], 2) .
                 " - Plazo: {$validated['plazo']} {$validated['unidad_plazo']}" .
-                ($validated['observaciones'] ? " - {$validated['observaciones']}" : "")
+                ($validated['observaciones'] ? " - {$validated['observaciones']}" : ""),
+                $proceso->etapa_actual_id
             );
 
             DB::commit();
@@ -200,13 +196,11 @@ class SecopController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'acta_inicio_registrada',
-                'SECOP',
-                $proceso->etapaActual->nombre,
-                null,
-                "Acta de inicio registrada: {$validated['numero_acta']} - " .
+                "Acta de inicio registrada en SECOP: {$validated['numero_acta']} - " .
                 "Inicio: {$validated['fecha_inicio_ejecucion']} - " .
                 "Fin: {$validated['fecha_fin_ejecucion']}" .
-                ($validated['observaciones'] ? " - {$validated['observaciones']}" : "")
+                ($validated['observaciones'] ? " - {$validated['observaciones']}" : ""),
+                $proceso->etapa_actual_id
             );
 
             DB::commit();
@@ -243,10 +237,8 @@ class SecopController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'proceso_cerrado',
-                'SECOP',
-                $proceso->etapaActual->nombre,
-                null,
-                "Proceso cerrado en SECOP - {$validated['observaciones_cierre']}"
+                "Proceso cerrado en SECOP - {$validated['observaciones_cierre']}",
+                $proceso->etapa_actual_id
             );
 
             DB::commit();
@@ -300,10 +292,8 @@ class SecopController extends Controller
                 ProcesoAuditoria::registrar(
                     $proceso->id,
                     'proceso_completado',
-                    'SECOP',
-                    $proceso->etapaActual->nombre,
-                    null,
-                    "Proceso completado exitosamente"
+                    "Proceso completado exitosamente en SECOP",
+                    $proceso->etapa_actual_id
                 );
 
                 DB::commit();
@@ -332,10 +322,10 @@ class SecopController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'etapa_aprobada',
-                'SECOP',
-                $proceso->etapaActual->nombre,
-                $siguienteEtapa->nombre,
-                $validated['observaciones'] ?? "Proceso aprobado en SECOP y enviado a {$siguienteEtapa->area_role}"
+                "Proceso aprobado en SECOP y enviado a {$siguienteEtapa->area_role}",
+                $proceso->etapa_actual_id,
+                null,
+                $validated['observaciones'] ?? null
             );
 
             DB::commit();
@@ -361,19 +351,15 @@ class SecopController extends Controller
         $stats = [
             'publicaciones_secop' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'publicado_secop')
-                ->where('area', 'SECOP')
                 ->count(),
             'contratos_registrados' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'contrato_registrado')
-                ->where('area', 'SECOP')
                 ->count(),
             'actas_inicio' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'acta_inicio_registrada')
-                ->where('area', 'SECOP')
                 ->count(),
             'procesos_cerrados' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'proceso_cerrado')
-                ->where('area', 'SECOP')
                 ->count(),
             'valor_total_contratos' => Proceso::whereNotNull('valor_contrato')
                 ->whereBetween('fecha_contrato', [$desde, $hasta])

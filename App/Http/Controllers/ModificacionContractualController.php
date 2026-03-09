@@ -95,10 +95,8 @@ class ModificacionContractualController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'modificacion_solicitada',
-                auth()->user()->getRoleNames()->first() ?? 'usuario',
-                'Modificación Contractual',
-                null,
-                "Modificación tipo {$request->tipo} solicitada. Valor: " . ($request->valor_modificacion ?? 'N/A')
+                "Modificación tipo {$request->tipo} solicitada. Valor: " . ($request->valor_modificacion ?? 'N/A'),
+                $proceso->etapa_actual_id
             );
 
             return redirect()->route('modificaciones.index', $proceso->id)
@@ -143,10 +141,8 @@ class ModificacionContractualController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'modificacion_aprobada',
-                'juridica',
-                'Modificación Contractual',
-                null,
-                "Modificación #{$modificacion->id} tipo {$modificacion->tipo} aprobada"
+                "Modificación #{$modificacion->id} tipo {$modificacion->tipo} aprobada por Jurídica",
+                $proceso->etapa_actual_id
             );
         });
 
@@ -179,10 +175,8 @@ class ModificacionContractualController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'modificacion_rechazada',
-                'juridica',
-                'Modificación Contractual',
-                null,
-                "Modificación #{$modificacion->id} rechazada. Motivo: {$request->observaciones}"
+                "Modificación #{$modificacion->id} rechazada. Motivo: {$request->observaciones}",
+                $proceso->etapa_actual_id
             );
         });
 

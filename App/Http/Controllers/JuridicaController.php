@@ -107,11 +107,9 @@ class JuridicaController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'ajustado_derecho_emitido',
-                'Jurídica',
-                $proceso->etapaActual->nombre,
-                null,
-                "Ajustado a Derecho emitido: {$validated['numero_documento']}" .
-                ($validated['observaciones'] ? " - {$validated['observaciones']}" : "")
+                "Ajustado a Derecho emitido por Jurídica: {$validated['numero_documento']}" .
+                ($validated['observaciones'] ? " - {$validated['observaciones']}" : ""),
+                $proceso->etapa_actual_id
             );
 
             DB::commit();
@@ -234,10 +232,10 @@ class JuridicaController extends Controller
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'etapa_aprobada',
-                'Jurídica',
-                $proceso->etapaActual->nombre,
-                $siguienteEtapa->nombre,
-                $validated['observaciones'] ?? "Revisión jurídica aprobada. Proceso enviado a {$siguienteEtapa->area_role}"
+                "Revisión jurídica aprobada. Proceso enviado a {$siguienteEtapa->area_role}",
+                $proceso->etapa_actual_id,
+                null,
+                $validated['observaciones'] ?? null
             );
 
             DB::commit();
@@ -372,23 +370,18 @@ class JuridicaController extends Controller
         $stats = [
             'ajustados_emitidos' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'ajustado_derecho_emitido')
-                ->where('area', 'Jurídica')
                 ->count(),
             'contratistas_verificados' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'contratista_verificado')
-                ->where('area', 'Jurídica')
                 ->count(),
             'polizas_aprobadas' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'polizas_aprobadas')
-                ->where('area', 'Jurídica')
                 ->count(),
             'procesos_aprobados' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'etapa_aprobada')
-                ->where('area', 'Jurídica')
                 ->count(),
             'procesos_rechazados' => ProcesoAuditoria::whereBetween('created_at', [$desde, $hasta])
                 ->where('accion', 'etapa_rechazada')
-                ->where('area', 'Jurídica')
                 ->count(),
         ];
 
