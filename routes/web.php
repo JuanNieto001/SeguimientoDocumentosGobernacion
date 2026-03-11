@@ -27,6 +27,7 @@ use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\SecopConsultaController;
 use App\Http\Controllers\Admin\EstivenGuideController;
+use App\Http\Controllers\EstivenHelpController;
 
 /*
 |--------------------------------------------------------------------------
@@ -259,6 +260,15 @@ Route::middleware(['auth', 'role:admin|admin_general'])
             ->except(['show'])
             ->names('estiven-guides');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Agente Estiven – Solicitud de ayuda por correo
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')
+    ->post('/estiven/solicitar-ayuda', [EstivenHelpController::class, 'solicitarAyuda'])
+    ->name('estiven.solicitar-ayuda');
 
 /*
 |--------------------------------------------------------------------------

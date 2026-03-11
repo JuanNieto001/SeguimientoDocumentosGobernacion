@@ -40,11 +40,63 @@
         ],
         [
             'icon'  => '🔒',
-            'title' => 'Cambiar mi contraseña',
+            'title' => 'Restablecer mi contraseña',
             'steps' => [
-                'Solicita al administrador del sistema un restablecimiento de contraseña.',
-                'El administrador puede hacerlo desde <strong>Usuarios → Editar → Restablecer contraseña</strong>.',
-                'Recibirás las nuevas credenciales para iniciar sesión.',
+                'En la pantalla de inicio de sesión, intenta ingresar con tu correo.',
+                'Si la contraseña es incorrecta, aparecerá el botón <strong>"¿Olvidaste tu contraseña?"</strong>.',
+                'Haz clic en ese botón. Tu correo registrado se rellenará automáticamente.',
+                'Escribe un <strong>correo de destino</strong> donde puedas recibir el enlace (puede ser personal).',
+                'Haz clic en <strong>"Enviar enlace"</strong>. Revisa tu bandeja de entrada (o spam).',
+                'Abre el correo, haz clic en el botón <strong>"Restablecer contraseña"</strong> y escribe tu nueva contraseña.',
+                'El enlace expira en <strong>60 minutos</strong>. Si no lo recibes, vuelve a intentarlo.',
+            ],
+        ],
+        [
+            'icon'  => '👁️',
+            'title' => 'Previsualizar documentos',
+            'steps' => [
+                'Ve al detalle de un proceso y ubica la sección de <strong>documentos</strong>.',
+                'Haz clic en el ícono de <strong>vista previa (ojo)</strong> junto al documento que deseas ver.',
+                'Se abrirá un panel donde podrás ver PDFs e imágenes directamente sin descargar.',
+                'En el panel lateral verás las <strong>Versiones</strong> del documento. Haz clic en una versión para verla.',
+                'En la pestaña <strong>Acciones</strong> puedes reemplazar el documento o ver su información (tipo, peso, versión).',
+                'Para descargar, usa el botón <strong>"Descargar"</strong> en la parte superior del panel.',
+            ],
+        ],
+        [
+            'icon'  => '🔄',
+            'title' => 'Reemplazar un documento',
+            'steps' => [
+                'Abre la <strong>vista previa</strong> del documento que deseas reemplazar.',
+                'Ve a la pestaña <strong>"Acciones"</strong> en el panel lateral.',
+                'Haz clic en la zona de <strong>"Arrastra el archivo aquí o haz clic para seleccionar"</strong>.',
+                'Selecciona el nuevo archivo desde tu computador. Verás el nombre y tamaño del archivo seleccionado.',
+                'Si te equivocaste, presiona <strong>"Quitar"</strong> para limpiar la selección.',
+                'Haz clic en <strong>"Reemplazar"</strong>. El sistema creará una nueva versión y conservará las anteriores.',
+                'Si el documento está <strong>bloqueado</strong> (ya fue recibido por otra área), solo un administrador puede reemplazarlo e indicar un motivo.',
+            ],
+        ],
+        [
+            'icon'  => '📌',
+            'title' => 'Ver versiones de un documento',
+            'steps' => [
+                'Abre la <strong>vista previa</strong> del documento.',
+                'En el panel lateral derecho, ve a la pestaña <strong>"Versiones"</strong>.',
+                'Verás una lista con todas las versiones: número de versión, quién la subió, fecha y estado.',
+                'Haz clic en cualquier versión para cargar su previsualización.',
+                'La versión actual se resalta en <strong>azul</strong>. Las aprobadas tienen etiqueta verde, rechazadas roja, pendientes amarilla.',
+                'Si una versión fue un <strong>reemplazo administrativo</strong>, aparecerá etiquetada junto con el motivo.',
+            ],
+        ],
+        [
+            'icon'  => '📧',
+            'title' => 'Cómo funcionan las alertas por correo',
+            'steps' => [
+                'El sistema envía correos automáticos cuando cambia el estado de un proceso que te involucra.',
+                'Recibirás alertas cuando un proceso <strong>llega a tu área</strong>, es <strong>devuelto</strong> o necesita acción.',
+                'Los correos se envían al email de tu cuenta registrada en el sistema.',
+                'Dentro del correo verás un botón que te lleva directamente al proceso en el sistema.',
+                'Puedes complementar las alertas por correo con las <strong>notificaciones internas</strong> (ícono de campana 🔔).',
             ],
         ],
     ];
@@ -388,14 +440,7 @@
 {{-- ═══════════════════════════════════════════════════
      AGENTE ESTIVEN – Widget flotante
      ═══════════════════════════════════════════════════ --}}
-<div x-data="{
-        open: false,
-        activeGuide: null,
-        guides: {{ Js::from($allGuides) }},
-        get currentGuide() {
-            return this.activeGuide !== null ? this.guides[this.activeGuide] : null;
-        }
-     }"
+<div x-data="agenteEstiven()"
      x-cloak
      class="fixed z-50"
      style="bottom: 1.25rem; right: 1.25rem;">
@@ -447,7 +492,7 @@
                     </p>
                 </div>
             </div>
-            <button @click="open = false; activeGuide = null"
+            <button @click="open = false; activeGuide = null; vista = 'guias'"
                     class="absolute top-3.5 right-3.5 p-1.5 rounded-lg text-green-200 hover:text-white hover:bg-white/15 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
@@ -482,7 +527,7 @@
         <div class="flex-1 overflow-y-auto estiven-scroll">
 
             {{-- ── Lista de guías ── --}}
-            <div x-show="activeGuide === null" class="p-3 space-y-0.5">
+            <div x-show="activeGuide === null && vista === 'guias'" class="p-3 space-y-0.5">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-3 pt-2 pb-2.5">
                     Gu&iacute;as disponibles
                 </p>
@@ -497,10 +542,26 @@
                         </svg>
                     </button>
                 </template>
+
+                {{-- Separador + Botón solicitar ayuda --}}
+                <div class="pt-3 mt-2" style="border-top: 1px solid #f1f5f9;">
+                    <button @click="vista = 'ayuda'"
+                            class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-[13px] transition-all group"
+                            style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe;">
+                        <span class="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
+                              style="background: #2563eb; color: #fff;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </span>
+                        <span class="font-semibold leading-snug flex-1" style="color: #1e40af;">¿Necesitas más ayuda? Escríbenos</span>
+                        <svg class="w-4 h-4 shrink-0 text-blue-400 group-hover:text-blue-600 transition-all group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             {{-- ── Detalle paso a paso ── --}}
-            <div x-show="activeGuide !== null" class="p-4">
+            <div x-show="activeGuide !== null && vista === 'guias'" class="p-4">
                 <button @click="activeGuide = null"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-green-700 hover:text-green-900 hover:bg-green-50 transition-all mb-3">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -535,7 +596,89 @@
                         <path d="M11.983 1.907a.75.75 0 00-1.292-.657l-8.5 9.5A.75.75 0 002.75 12h6.572l-1.305 6.093a.75.75 0 001.292.657l8.5-9.5A.75.75 0 0017.25 8h-6.572l1.305-6.093z"/>
                     </svg>
                     <p class="text-xs text-amber-800 leading-relaxed">
-                        <strong>Consejo:</strong> Si necesitas m&aacute;s ayuda, contacta al administrador del sistema o revisa tus notificaciones.
+                        <strong>Consejo:</strong> Si necesitas m&aacute;s ayuda, usa el bot&oacute;n <strong>"&iquest;Necesitas m&aacute;s ayuda?"</strong> en la lista de gu&iacute;as para enviar un correo al equipo de soporte.
+                    </p>
+                </div>
+            </div>
+
+            {{-- ── Formulario de solicitud de ayuda por correo ── --}}
+            <div x-show="vista === 'ayuda'" class="p-4">
+                <button @click="vista = 'guias'; helpError = ''; helpEnviado = false"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-blue-700 hover:text-blue-900 hover:bg-blue-50 transition-all mb-3">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Volver a gu&iacute;as
+                </button>
+
+                <div class="flex items-center gap-2.5 mb-4 pb-3" style="border-bottom: 1px solid #f1f5f9;">
+                    <span class="w-9 h-9 rounded-lg flex items-center justify-center"
+                          style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                        <svg class="w-5 h-5" style="color:#2563eb" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </span>
+                    <h3 class="text-sm font-bold leading-snug" style="color:#1e293b">Solicitar ayuda por correo</h3>
+                </div>
+
+                {{-- Mensaje de éxito --}}
+                <div x-show="helpEnviado" x-transition class="mb-4 flex items-start gap-2.5 p-3.5 rounded-xl text-sm"
+                     style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d">
+                    <svg class="w-5 h-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    <span>&iexcl;Correo enviado! El equipo de soporte te responder&aacute; pronto.</span>
+                </div>
+
+                {{-- Mensaje de error --}}
+                <div x-show="helpError" x-transition class="mb-4 flex items-start gap-2.5 p-3.5 rounded-xl text-sm"
+                     style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c">
+                    <svg class="w-5 h-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                    <span x-text="helpError"></span>
+                </div>
+
+                <div x-show="!helpEnviado" class="space-y-3">
+                    <p class="text-xs leading-relaxed" style="color:#64748b">
+                        Describe tu problema o duda y el equipo de soporte te responder&aacute; al correo registrado (<strong>{{ $user->email }}</strong>).
+                    </p>
+
+                    <div>
+                        <label class="text-xs font-medium block mb-1" style="color:#374151">Asunto</label>
+                        <input x-model="helpAsunto" type="text" maxlength="150"
+                               placeholder="Ej: No puedo subir un documento en la etapa 3"
+                               class="w-full text-sm rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               style="border-color:#e2e8f0">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-medium block mb-1" style="color:#374151">Describe tu problema</label>
+                        <textarea x-model="helpMensaje" rows="4" maxlength="1500"
+                                  placeholder="Cuéntanos con detalle qué necesitas: en qué pantalla estás, qué intentas hacer y qué error ves..."
+                                  class="w-full text-sm rounded-lg border px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  style="border-color:#e2e8f0"></textarea>
+                        <p class="text-right text-[10px] mt-0.5" style="color:#94a3b8"><span x-text="helpMensaje.length"></span>/1500</p>
+                    </div>
+
+                    <button @click="enviarAyuda()" :disabled="helpEnviando"
+                            class="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2"
+                            style="background:#2563eb">
+                        <template x-if="!helpEnviando">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                Enviar solicitud de ayuda
+                            </span>
+                        </template>
+                        <template x-if="helpEnviando">
+                            <span class="flex items-center gap-2">
+                                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Enviando...
+                            </span>
+                        </template>
+                    </button>
+                </div>
+
+                <div class="mt-4 flex items-start gap-2.5 p-3 rounded-xl" style="background:#f8fafc;border:1px solid #e2e8f0">
+                    <svg class="w-4 h-4 shrink-0 mt-0.5" style="color:#94a3b8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-[11px] leading-relaxed" style="color:#94a3b8">
+                        Tu nombre, correo y rol se incluir&aacute;n autom&aacute;ticamente en el mensaje para que el equipo pueda ayudarte m&aacute;s r&aacute;pido.
                     </p>
                 </div>
             </div>
@@ -566,7 +709,7 @@
         </div>
 
         {{-- Botón circular --}}
-        <button @click="open = !open; if(!open) activeGuide = null"
+        <button @click="open = !open; if(!open) { activeGuide = null; vista = 'guias'; }"
                 class="estiven-fab relative flex items-center justify-center transition-all duration-300 focus:outline-none"
                 title="Agente Estiven">
 
@@ -686,4 +829,61 @@
         to { opacity: 1; transform: translateY(0) scale(1); }
     }
 </style>
+
+<script>
+function agenteEstiven() {
+    return {
+        open: false,
+        activeGuide: null,
+        vista: 'guias',
+        guides: @json($allGuides),
+        helpAsunto: '',
+        helpMensaje: '',
+        helpEnviando: false,
+        helpEnviado: false,
+        helpError: '',
+
+        get currentGuide() {
+            return this.activeGuide !== null ? this.guides[this.activeGuide] : null;
+        },
+
+        async enviarAyuda() {
+            this.helpError = '';
+            if (!this.helpAsunto.trim() || !this.helpMensaje.trim()) {
+                this.helpError = 'Completa ambos campos antes de enviar.';
+                return;
+            }
+            this.helpEnviando = true;
+            try {
+                var csrfToken = document.querySelector('meta[name="csrf-token"]');
+                var res = await fetch('{{ route("estiven.solicitar-ayuda") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken ? csrfToken.content : '',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ asunto: this.helpAsunto, mensaje: this.helpMensaje })
+                });
+                var data = await res.json();
+                if (data.success) {
+                    this.helpEnviado = true;
+                    this.helpAsunto = '';
+                    this.helpMensaje = '';
+                    var self = this;
+                    setTimeout(function() { self.helpEnviado = false; self.vista = 'guias'; }, 4000);
+                } else {
+                    this.helpError = data.message || 'No se pudo enviar. Intenta de nuevo.';
+                }
+            } catch (e) {
+                this.helpError = 'Error de conexión. Intenta de nuevo.';
+            } finally {
+                this.helpEnviando = false;
+            }
+        }
+    };
+}
+</script>
 @endauth
