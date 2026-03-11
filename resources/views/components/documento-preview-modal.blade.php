@@ -24,7 +24,9 @@
     <div x-show="abierto" 
          x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
          x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 translate-y-4"
-         class="fixed inset-4 sm:inset-8 flex flex-col rounded-2xl shadow-2xl overflow-hidden" style="background:#fff;z-index:51">
+         class="fixed inset-0 flex items-center justify-center p-4 sm:p-8"
+         style="z-index:51">
+        <div class="w-full h-full max-w-[1400px] max-h-[calc(100vh-64px)] flex flex-col rounded-2xl shadow-2xl overflow-hidden bg-white">
         
         {{-- Header --}}
         <div class="flex items-center justify-between px-5 py-3 border-b" style="background:#f8fafc;border-color:#e2e8f0">
@@ -88,7 +90,7 @@
         </div>
         
         {{-- Cuerpo: Preview + Panel lateral --}}
-        <div class="flex flex-1 overflow-hidden">
+            <div class="flex flex-1 overflow-hidden min-h-0">
             
             {{-- Área de preview --}}
             <div class="flex-1 flex items-center justify-center overflow-auto" style="background:#f1f5f9">
@@ -144,7 +146,7 @@
             </div>
 
             {{-- Panel lateral: Versiones + Acciones --}}
-            <div class="w-72 border-l flex flex-col overflow-hidden" style="border-color:#e2e8f0;background:#fff">
+            <div class="w-96 border-l flex flex-col overflow-hidden" style="border-color:#e2e8f0;background:#fff">
                 
                 {{-- Tabs --}}
                 <div class="flex border-b" style="border-color:#e2e8f0">
@@ -208,43 +210,74 @@
                     {{-- Reemplazar documento --}}
                     <template x-if="puedeReemplazar">
                         <div class="rounded-xl border p-3" style="border-color:#e2e8f0">
-                            <h4 class="text-xs font-semibold mb-2" style="color:#334155">
+                            <h4 class="text-sm font-semibold mb-3" style="color:#0f172a">
                                 <template x-if="bloqueado">
-                                    <span class="flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" style="color:#dc2626" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                                    <span class="flex items-center gap-2 text-sm">
+                                        <svg class="w-4 h-4" style="color:#dc2626" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
                                         Reemplazo administrativo
                                     </span>
                                 </template>
                                 <template x-if="!bloqueado">
-                                    <span>Reemplazar documento</span>
+                                    <span class="flex items-center gap-2 text-sm">
+                                        <svg class="w-4 h-4" style="color:#2563eb" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V7M16 3v4M8 3v4"/></svg>
+                                        Reemplazar documento
+                                    </span>
                                 </template>
                             </h4>
-                            
+
                             <form :action="'/workflow/procesos/archivos/' + archivo?.id + '/reemplazar'" 
                                   method="POST" enctype="multipart/form-data"
                                   @submit="enviando = true">
                                 <input type="hidden" name="_token" :value="csrfToken">
-                                
-                                <input type="file" name="archivo" required
-                                       class="w-full text-xs mb-2 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-medium"
-                                       style="file:background:#eff6ff;file:color:#2563eb">
-                                
+
+                                <div class="mb-3">
+                                    <label class="text-xs font-medium mb-1 block" style="color:#475569">Archivo nuevo</label>
+                                    <div class="border-dashed border-2 rounded-lg p-3 text-center transition hover:shadow-sm" 
+                                         :class="selectedFileName ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'"
+                                         @click="$refs.fileInput.click()" style="cursor:pointer">
+                                        <input x-ref="fileInput" type="file" name="archivo" required class="hidden" @change="handleFileInput($event)">
+
+                                        <template x-if="!selectedFileName">
+                                            <div class="flex flex-col items-center gap-2">
+                                                <svg class="w-8 h-8" style="color:#2563eb" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M16 3v4M8 3v4"/></svg>
+                                                <p class="text-sm" style="color:#0f172a">Arrastra el archivo aquí o haz clic para seleccionar</p>
+                                                <p class="text-xs text-gray-400">PDF, imágenes; máximo 10 MB</p>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="selectedFileName">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium truncate" style="color:#0f172a" x-text="selectedFileName"></p>
+                                                    <p class="text-xs text-gray-500 mt-0.5" x-text="selectedFileSize"></p>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button" @click.prevent="clearSelectedFile()" class="text-xs px-3 py-1 rounded-lg border" style="border-color:#e2e8f0">Quitar</button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
                                 {{-- Motivo obligatorio si está bloqueado (admin) --}}
                                 <template x-if="bloqueado">
-                                    <div class="mb-2">
+                                    <div class="mb-3">
                                         <label class="text-xs font-medium block mb-1" style="color:#64748b">Motivo del reemplazo *</label>
-                                        <textarea name="motivo_reemplazo" required minlength="10" rows="2"
-                                                  class="w-full text-xs rounded-lg border p-2 resize-none"
+                                        <textarea name="motivo_reemplazo" required minlength="10" rows="3"
+                                                  class="w-full text-sm rounded-lg border p-2 resize-none"
                                                   style="border-color:#e2e8f0"
                                                   placeholder="Explique el motivo del reemplazo administrativo..."></textarea>
                                     </div>
                                 </template>
-                                
-                                <button type="submit" :disabled="enviando"
-                                        class="w-full py-1.5 rounded-lg text-xs font-medium text-white transition"
-                                        :style="bloqueado ? 'background:#dc2626' : 'background:#2563eb'">
-                                    <span x-text="enviando ? 'Subiendo...' : (bloqueado ? 'Reemplazar (Admin)' : 'Reemplazar')"></span>
-                                </button>
+
+                                <div class="flex items-center gap-2">
+                                    <button type="button" @click.prevent="cerrar()" class="flex-1 py-2 rounded-lg text-sm font-medium border" style="border-color:#e2e8f0;color:#374151">Cancelar</button>
+                                    <button type="submit" :disabled="enviando || !selectedFileName" 
+                                            class="flex-1 py-2 rounded-lg text-sm font-semibold text-white"
+                                            :style="bloqueado ? 'background:#dc2626' : 'background:#14532d'">
+                                        <span x-text="enviando ? 'Subiendo...' : (bloqueado ? 'Reemplazar (Admin)' : 'Reemplazar')"></span>
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </template>
@@ -299,15 +332,43 @@
 <script>
 function documentoPreview() {
     return {
-        abierto: false,
-        cargando: false,
-        archivo: null,
-        versiones: [],
-        bloqueado: false,
-        puedeReemplazar: false,
-        tab: 'versiones',
-        enviando: false,
-        csrfToken: document.querySelector('meta[name="csrf-token"]')?.content || '',
+    abierto: false,
+    cargando: false,
+    archivo: null,
+    versiones: [],
+    bloqueado: false,
+    puedeReemplazar: false,
+    tab: 'versiones',
+    enviando: false,
+    csrfToken: document.querySelector('meta[name="csrf-token"]')?.content || '',
+    // file selection state for replace form
+    selectedFileName: null,
+    selectedFileSize: null,
+
+        handleFileInput(e) {
+            const f = e.target.files && e.target.files[0];
+            if (!f) {
+                this.selectedFileName = null;
+                this.selectedFileSize = null;
+                return;
+            }
+            this.selectedFileName = f.name;
+            this.selectedFileSize = this.humanFileSize(f.size);
+        },
+
+        clearSelectedFile() {
+            this.selectedFileName = null;
+            this.selectedFileSize = null;
+            if (this.$refs && this.$refs.fileInput) this.$refs.fileInput.value = null;
+        },
+
+        humanFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B','KB','MB','GB','TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        },
 
         abrir(archivoId) {
             this.abierto = true;
@@ -367,6 +428,12 @@ function documentoPreview() {
             this.abierto = false;
             this.archivo = null;
             this.versiones = [];
+            // reset file selection when modal closes
+            this.selectedFileName = null;
+            this.selectedFileSize = null;
+            if (this.$refs && this.$refs.fileInput) {
+                this.$refs.fileInput.value = null;
+            }
         }
     };
 }
