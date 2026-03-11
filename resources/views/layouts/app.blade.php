@@ -5,22 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Gobernación de Manizales') }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        html,body{font-family:'Inter',sans-serif;}
-        .sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.625rem .75rem;border-radius:.875rem;font-size:.8125rem;font-weight:500;transition:all .15s;color:#bbf7d0;text-decoration:none;background:none;border:none;cursor:pointer;width:100%;text-align:left}
-        .sidebar-link:hover{background:rgba(255,255,255,.1);color:#fff}
-        .sidebar-link.active{background:rgba(255,255,255,.18);color:#fff;font-weight:600}
-        .sidebar-link svg{width:1rem;height:1rem;flex-shrink:0;opacity:.85}
-        .sidebar-link.active svg{opacity:1}
-        .sidebar-link.justify-between{justify-content:space-between}
-        .sidebar-section{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#4ade80;padding:.75rem .75rem .375rem;margin-top:.5rem}
-        /* Ocultar scrollbar del sidebar */
-        .sidebar-nav::-webkit-scrollbar{width:0;background:transparent}
-        .sidebar-nav{-ms-overflow-style:none;scrollbar-width:none}
-    </style>
 </head>
 <body class="antialiased" style="background:#f1f5f9;font-family:'Inter',sans-serif" x-data="{ sidebar: false }">
 <div class="flex h-screen overflow-hidden">
@@ -101,16 +91,22 @@
                         $authUser->hasRole('secop') => 'secop',
                         default => null,
                     };
-                    $unread = \App\Models\Alerta::where('leida', false)
-                        ->where(function($q) use ($authUser, $areaUsuario) {
-                            $q->where('user_id', $authUser->id);
-                            if ($areaUsuario) {
-                                $q->orWhere('area_responsable', $areaUsuario);
-                            }
-                            if ($authUser->hasRole('admin')) {
-                                $q->orWhereNotNull('id');
-                            }
-                        })->count();
+                    $unread = cache()->remember(
+                        'alertas_unread_' . $authUser->id,
+                        30,
+                        function() use ($authUser, $areaUsuario) {
+                            return \App\Models\Alerta::where('leida', false)
+                                ->where(function($q) use ($authUser, $areaUsuario) {
+                                    $q->where('user_id', $authUser->id);
+                                    if ($areaUsuario) {
+                                        $q->orWhere('area_responsable', $areaUsuario);
+                                    }
+                                    if ($authUser->hasRole('admin')) {
+                                        $q->orWhereNotNull('id');
+                                    }
+                                })->count();
+                        }
+                    );
                 @endphp
                 <a href="{{ route('alertas.index') }}" class="relative p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -139,6 +135,9 @@
 
 {{-- Modal de previsualización de documentos --}}
 @include('components.documento-preview-modal')
+
+{{-- Prefetch: precarga páginas al pasar el mouse sobre enlaces (navegación instantánea) --}}
+<script src="//instant.page/5.2.0" type="module" integrity="sha384-jnZyxPjiipYXnSU0bbe5qXNB3owCJEElBhHxIivTO0TAoaXM70e3QRYPOjEL1E3v"></script>
 
 </body>
 </html>
