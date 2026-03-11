@@ -129,9 +129,8 @@ class ProcesoController extends Controller
 
         // Cargar flujos del Motor de Flujos para el selector
         $flujos = DB::table('flujos')
-            ->join('secretarias', 'secretarias.id', '=', 'flujos.secretaria_id')
+            ->leftJoin('secretarias', 'secretarias.id', '=', 'flujos.secretaria_id')
             ->where('flujos.activo', 1)
-            ->orderBy('secretarias.nombre')
             ->orderBy('flujos.nombre')
             ->select('flujos.*', 'secretarias.nombre as secretaria_nombre')
             ->get();
@@ -347,7 +346,28 @@ class ProcesoController extends Controller
                 }
             }
 
-            // 7) Redirigir a "Mis Solicitudes" (/procesos)
+            // 7) ✅ Notificar al área responsable de la Etapa 1 (1 alerta por área)
+            if ($segundaEtapa) {
+                $areaLabel = match($segundaEtapa->area_role) {
+                    'unidad_solicitante' => 'Unidad Solicitante',
+                    'planeacion'         => 'Planeación',
+                    'hacienda'           => 'Hacienda',
+                    'juridica'           => 'Jurídica',
+                    'secop'              => 'SECOP',
+                    default              => ucfirst($segundaEtapa->area_role),
+                };
+                \App\Models\Alerta::create([
+                    'proceso_id'       => $procesoId,
+                    'tipo'             => 'proceso_recibido',
+                    'titulo'           => 'Nuevo proceso asignado',
+                    'mensaje'          => "Nuevo proceso {$data['codigo']} recibido en {$areaLabel} - {$segundaEtapa->nombre}",
+                    'prioridad'        => 'alta',
+                    'area_responsable' => $segundaEtapa->area_role,
+                    'accion_url'       => route('procesos.show', $procesoId),
+                ]);
+            }
+
+            // 8) Redirigir a "Mis Solicitudes" (/procesos)
             return redirect()->route('procesos.index')
                 ->with('success', 'Solicitud creada y enviada a Descentralización correctamente.');
         });

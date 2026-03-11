@@ -211,18 +211,18 @@ enum EstadoProcesoCD: string
             self::ESTUDIO_PREVIO_CARGADO      => ['unidad_solicitante', 'admin'],
 
             // Etapa 2 – Planeación / Hacienda
-            self::EN_VALIDACION_PLANEACION    => ['planeacion', 'admin'],
+            self::EN_VALIDACION_PLANEACION    => ['unidad_solicitante', 'planeacion', 'admin'],
             self::COMPATIBILIDAD_APROBADA     => ['planeacion', 'admin'],
             self::CDP_SOLICITADO              => ['planeacion', 'admin'],
             self::CDP_APROBADO                => ['hacienda', 'admin'],
             self::CDP_BLOQUEADO               => ['planeacion', 'admin'],
 
             // Etapa 3 – Contratista / Abogado Unidad
-            self::DOCUMENTACION_INCOMPLETA    => ['unidad_solicitante', 'admin'],
+            self::DOCUMENTACION_INCOMPLETA    => ['unidad_solicitante', 'juridica', 'admin'],
             self::DOCUMENTACION_VALIDADA      => ['unidad_solicitante', 'admin'],
 
             // Etapa 4 – Secretaría Jurídica
-            self::EN_REVISION_JURIDICA        => ['juridica', 'admin'],
+            self::EN_REVISION_JURIDICA        => ['unidad_solicitante', 'juridica', 'admin'],
             self::PROCESO_NUMERO_GENERADO     => ['juridica', 'admin'],
             self::GENERACION_CONTRATO         => ['juridica', 'admin'],
 

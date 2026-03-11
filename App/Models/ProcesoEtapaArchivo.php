@@ -24,6 +24,8 @@ class ProcesoEtapaArchivo extends Model
         'uploaded_at',
         'estado',
         'observaciones',
+        'motivo_reemplazo',
+        'es_reemplazo_admin',
         'fecha_vigencia',
         'aprobado_por',
         'aprobado_at',

@@ -272,7 +272,14 @@ class WorkflowFilesController extends Controller
             ->first();
 
         if ($procesoEtapa && $procesoEtapa->enviado) {
-            return back()->withErrors(['archivo' => 'No puedes eliminar archivos porque esta etapa ya fue enviada.']);
+            // Si ya se envió, verificar si la siguiente área recibió
+            $archivoModel = ProcesoEtapaArchivo::find($archivo->id);
+            if ($archivoModel && $this->documentoBloqueado($archivoModel)) {
+                return back()->withErrors(['archivo' => 'No puedes eliminar archivos porque la siguiente área ya los recibió. Use la opción de reemplazo.']);
+            }
+            if (!$user->hasRole('admin')) {
+                return back()->withErrors(['archivo' => 'No puedes eliminar archivos porque esta etapa ya fue enviada.']);
+            }
         }
 
         if (!$user->hasRole('admin')) {
@@ -505,21 +512,38 @@ class WorkflowFilesController extends Controller
 
     /**
      * Reemplazar archivo (nueva versión)
+     * Control de versiones:
+     * - Antes de enviado: libre reemplazo por el creador
+     * - Después de enviado pero antes de recibido: creador puede reemplazar
+     * - Después de recibido por siguiente área: BLOQUEADO (solo admin con motivo)
      */
     public function reemplazar(Request $request, int $archivo)
     {
-        $request->validate([
-            'archivo' => ['required', 'file', 'max:10240'], // 10MB
-        ]);
+        $rules = [
+            'archivo' => ['required', 'file', 'max:10240'],
+        ];
 
         $archivoAnterior = ProcesoEtapaArchivo::with(['proceso', 'etapa'])->findOrFail($archivo);
         
-        // Solo el usuario que subió el archivo puede reemplazarlo
+        // Solo el usuario que subió el archivo puede reemplazarlo (o admin)
         if ($archivoAnterior->uploaded_by !== auth()->id() && !auth()->user()->hasRole('admin')) {
             abort(403, 'Solo puedes reemplazar tus propios archivos');
         }
 
-        return DB::transaction(function () use ($request, $archivoAnterior) {
+        // Verificar si el documento está bloqueado (siguiente área ya recibió)
+        $bloqueado = $this->documentoBloqueado($archivoAnterior);
+
+        if ($bloqueado) {
+            if (!auth()->user()->hasRole('admin')) {
+                return back()->withErrors(['archivo' => 'Este documento está bloqueado porque la siguiente área ya lo recibió. Solo un administrador puede reemplazarlo.']);
+            }
+            // Admin necesita justificación
+            $rules['motivo_reemplazo'] = ['required', 'string', 'min:10'];
+        }
+
+        $request->validate($rules);
+
+        return DB::transaction(function () use ($request, $archivoAnterior, $bloqueado) {
             $file = $request->file('archivo');
 
             // Generar nombre único
@@ -545,22 +569,33 @@ class WorkflowFilesController extends Controller
                 'tamanio'          => $file->getSize(),
                 'uploaded_by'      => auth()->id(),
                 'uploaded_at'      => now(),
-                'estado'           => 'pendiente',
+                'estado'           => $bloqueado ? 'pendiente' : 'aprobado',
                 'version'          => $archivoAnterior->version + 1,
                 'archivo_anterior_id' => $archivoAnterior->id,
+                'motivo_reemplazo' => $request->input('motivo_reemplazo'),
+                'es_reemplazo_admin' => $bloqueado && auth()->user()->hasRole('admin'),
             ]);
 
             // Registrar auditoría
+            $accion = $bloqueado ? 'reemplazo_administrativo' : 'documento_reemplazado';
+            $descripcion = $bloqueado
+                ? "Reemplazo administrativo: {$archivoAnterior->nombre_original} (v{$archivoAnterior->version}) → {$file->getClientOriginalName()} (v{$nuevoArchivo->version}). Motivo: {$request->motivo_reemplazo}"
+                : "Documento reemplazado: {$archivoAnterior->nombre_original} (v{$archivoAnterior->version}) → {$file->getClientOriginalName()} (v{$nuevoArchivo->version})";
+
             ProcesoAuditoria::registrar(
                 $archivoAnterior->proceso_id,
-                'documento_reemplazado',
-                $archivoAnterior->etapa->area_responsable,
-                $archivoAnterior->etapa->nombre,
+                $accion,
+                $archivoAnterior->etapa->area_responsable ?? 'Sistema',
+                $archivoAnterior->etapa->nombre ?? 'N/A',
                 null,
-                "Documento reemplazado: {$archivoAnterior->nombre_original} (v{$archivoAnterior->version}) → {$file->getClientOriginalName()} (v{$nuevoArchivo->version})"
+                $descripcion
             );
 
-            return redirect()->back()->with('success', 'Archivo reemplazado. Nueva versión en revisión');
+            $msg = $bloqueado
+                ? 'Archivo reemplazado por administrador. Queda en revisión.'
+                : 'Archivo reemplazado. Nueva versión en revisión';
+
+            return redirect()->back()->with('success', $msg);
         });
     }
 
@@ -594,5 +629,154 @@ class WorkflowFilesController extends Controller
                 "Documento desbloqueado: {$dependiente->nombre_documento} - Ahora {$dependiente->area_responsable_nombre} puede subirlo"
             );
         }
+    }
+
+    /**
+     * Verificar si un documento está bloqueado (la siguiente área ya recibió)
+     */
+    private function documentoBloqueado(ProcesoEtapaArchivo $archivo): bool
+    {
+        // Obtener la proceso_etapa del archivo
+        $procesoEtapa = DB::table('proceso_etapas')
+            ->where('proceso_id', $archivo->proceso_id)
+            ->where('etapa_id', $archivo->etapa_id)
+            ->first();
+
+        if (!$procesoEtapa || !$procesoEtapa->enviado) {
+            return false; // Aún no se ha enviado, no está bloqueado
+        }
+
+        // Buscar la siguiente etapa
+        $etapaActual = DB::table('etapas')->where('id', $archivo->etapa_id)->first();
+        if (!$etapaActual || !$etapaActual->next_etapa_id) {
+            return false;
+        }
+
+        // Verificar si la siguiente área ya recibió
+        $siguienteProcesoEtapa = DB::table('proceso_etapas')
+            ->where('proceso_id', $archivo->proceso_id)
+            ->where('etapa_id', $etapaActual->next_etapa_id)
+            ->first();
+
+        return $siguienteProcesoEtapa && $siguienteProcesoEtapa->recibido;
+    }
+
+    /**
+     * Preview: Devuelve datos del archivo para previsualización en modal
+     */
+    public function preview(int $archivo)
+    {
+        $archivo = ProcesoEtapaArchivo::with(['uploadedBy', 'etapa'])->findOrFail($archivo);
+
+        // Autorización: reusar lógica de download
+        $proceso = DB::table('procesos')->where('id', $archivo->proceso_id)->first();
+        abort_unless($proceso, 404);
+        $this->authorizeViewFiles($proceso);
+
+        $bloqueado = $this->documentoBloqueado($archivo);
+        $puedeReemplazar = !$bloqueado || auth()->user()->hasRole('admin');
+
+        // Obtener historial de versiones
+        $versiones = $this->obtenerCadenaVersiones($archivo);
+
+        return response()->json([
+            'success' => true,
+            'archivo' => [
+                'id' => $archivo->id,
+                'nombre_original' => $archivo->nombre_original,
+                'tipo_archivo' => $archivo->tipo_archivo,
+                'mime_type' => $archivo->mime_type,
+                'tamanio' => $archivo->tamanio_formateado,
+                'version' => $archivo->version,
+                'estado' => $archivo->estado,
+                'uploaded_by' => $archivo->uploadedBy->name ?? 'Desconocido',
+                'uploaded_at' => $archivo->uploaded_at?->format('d/m/Y H:i'),
+                'observaciones' => $archivo->observaciones,
+                'motivo_reemplazo' => $archivo->motivo_reemplazo,
+                'es_reemplazo_admin' => (bool) $archivo->es_reemplazo_admin,
+                'preview_url' => route('workflow.files.download', ['archivo' => $archivo->id, 'inline' => 1]),
+                'download_url' => route('workflow.files.download', $archivo->id),
+                'es_previsualizable' => $this->esPrevisualizable($archivo->mime_type),
+            ],
+            'bloqueado' => $bloqueado,
+            'puede_reemplazar' => $puedeReemplazar,
+            'versiones' => $versiones,
+        ]);
+    }
+
+    /**
+     * Historial de versiones de un archivo
+     */
+    public function historialVersiones(int $archivo)
+    {
+        $archivo = ProcesoEtapaArchivo::findOrFail($archivo);
+
+        $proceso = DB::table('procesos')->where('id', $archivo->proceso_id)->first();
+        abort_unless($proceso, 404);
+        $this->authorizeViewFiles($proceso);
+
+        $versiones = $this->obtenerCadenaVersiones($archivo);
+
+        return response()->json([
+            'success' => true,
+            'versiones' => $versiones,
+        ]);
+    }
+
+    /**
+     * Obtener toda la cadena de versiones de un archivo (desde v1 hasta la actual)
+     */
+    private function obtenerCadenaVersiones(ProcesoEtapaArchivo $archivo): array
+    {
+        // Ir al origen (v1)
+        $origen = $archivo;
+        while ($origen->archivo_anterior_id) {
+            $origen = ProcesoEtapaArchivo::find($origen->archivo_anterior_id);
+            if (!$origen) break;
+        }
+
+        // Recolectar toda la cadena hacia adelante
+        $versiones = [];
+        $current = $origen;
+        while ($current) {
+            $versiones[] = [
+                'id' => $current->id,
+                'version' => $current->version,
+                'nombre_original' => $current->nombre_original,
+                'tamanio' => $current->tamanio_formateado,
+                'estado' => $current->estado,
+                'uploaded_by' => $current->uploadedBy->name ?? 'Desconocido',
+                'uploaded_at' => $current->uploaded_at?->format('d/m/Y H:i'),
+                'es_reemplazo_admin' => (bool) $current->es_reemplazo_admin,
+                'motivo_reemplazo' => $current->motivo_reemplazo,
+                'preview_url' => route('workflow.files.download', ['archivo' => $current->id, 'inline' => 1]),
+                'download_url' => route('workflow.files.download', $current->id),
+            ];
+
+            // Buscar la siguiente versión
+            $next = ProcesoEtapaArchivo::where('archivo_anterior_id', $current->id)->first();
+            $current = $next;
+        }
+
+        return $versiones;
+    }
+
+    /**
+     * Verificar si un tipo MIME es previsualizable en el navegador
+     */
+    private function esPrevisualizable(string $mimeType): bool
+    {
+        $previsualizables = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'image/svg+xml',
+            'text/plain',
+            'text/html',
+        ];
+
+        return in_array($mimeType, $previsualizables);
     }
 }

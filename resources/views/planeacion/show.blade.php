@@ -99,12 +99,11 @@
                                 </p>
                             </div>
                             <div class="flex gap-2">
-                                <a href="{{ route('workflow.files.download', ['archivo' => $documentoEstudiosPrevios->id, 'inline' => 1]) }}" 
-                                   class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all"
-                                   target="_blank">
+                                <button onclick="window.dispatchEvent(new CustomEvent('abrir-preview', { detail: {{ $documentoEstudiosPrevios->id }} }))"
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     Ver
-                                </a>
+                                </button>
                                 <a href="{{ route('workflow.files.download', $documentoEstudiosPrevios->id) }}" 
                                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
                                    target="_blank">
@@ -298,10 +297,16 @@
                                         @if($subidoPor) · Por: {{ $subidoPor->name }} @endif
                                         @if($sol->subido_at) · {{ \Carbon\Carbon::parse($sol->subido_at)->format('d/m/Y H:i') }} @endif
                                     </span>
-                                    <a href="{{ route('workflow.files.download', $archivo->id) }}"
-                                       class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
-                                        Descargar
-                                    </a>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="window.dispatchEvent(new CustomEvent('abrir-preview', { detail: {{ $archivo->id }} }))"
+                                                class="text-xs font-medium text-green-600 hover:text-green-800 transition-colors">
+                                            Ver
+                                        </button>
+                                        <a href="{{ route('workflow.files.download', $archivo->id) }}"
+                                           class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                                            Descargar
+                                        </a>
+                                    </div>
                                 </div>
                             @elseif(!$sol->puede_subir)
                                 <p class="text-xs text-gray-400 mt-1 italic">
@@ -376,10 +381,14 @@
                     <div class="flex items-center justify-between p-3 rounded-xl" style="background:#f8fafc;border:1px solid #e2e8f0">
                         <div>
                             <p class="text-sm font-medium text-gray-700">{{ $archivo->nombre_original }}</p>
-                            <p class="text-xs text-gray-400">{{ str_replace('_',' ',$archivo->tipo_archivo) }}</p>
+                            <p class="text-xs text-gray-400">{{ str_replace('_',' ',$archivo->tipo_archivo) }}@if($archivo->version > 1) · v{{ $archivo->version }}@endif</p>
                         </div>
-                        <a href="{{ route('workflow.files.download', $archivo->id) }}"
-                           class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">Descargar</a>
+                        <div class="flex items-center gap-2">
+                            <button onclick="window.dispatchEvent(new CustomEvent('abrir-preview', { detail: {{ $archivo->id }} }))"
+                                    class="text-xs font-medium text-green-600 hover:text-green-800 transition-colors">Ver</button>
+                            <a href="{{ route('workflow.files.download', $archivo->id) }}"
+                               class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">Descargar</a>
+                        </div>
                     </div>
                     @endforeach
                 </div>

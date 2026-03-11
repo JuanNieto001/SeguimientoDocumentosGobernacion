@@ -11,6 +11,7 @@ use App\Models\ProcesoContratacionDirecta;
 use App\Models\Secretaria;
 use App\Models\Unidad;
 use App\Services\ContratoDirectoPNStateMachine;
+use App\Services\NotificacionCDService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -237,6 +238,14 @@ class ProcesoContratacionDirectaController extends Controller
                 );
             }
 
+            // Notificar a los usuarios afectados por la devolución
+            NotificacionCDService::notificarDevolucion(
+                $procesoCD,
+                $request->tipo_devolucion,
+                $request->observaciones,
+                auth()->user()
+            );
+
             return redirect()
                 ->route('proceso-cd.show', $procesoCD)
                 ->with('success', 'Proceso devuelto con observaciones.');
@@ -285,6 +294,9 @@ class ProcesoContratacionDirectaController extends Controller
         if ($request->tipo_documento === 'hoja_vida_sigep') {
             $procesoCD->update(['hoja_vida_cargada' => true]);
         }
+
+        // Notificar a usuarios del rol correspondiente
+        NotificacionCDService::notificarDocumentoCargado($procesoCD, $request->tipo_documento, auth()->user());
 
         return back()->with('success', 'Documento cargado correctamente.');
     }

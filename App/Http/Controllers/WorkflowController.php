@@ -101,6 +101,29 @@ class WorkflowController extends Controller
                     null,
                     ['mensaje' => $descripcionAuditoria]
                 );
+
+                // Notificar al creador que el proceso fue recibido en el área
+                $creador = \App\Models\User::find($proceso->created_by);
+                $areaLabel = match($proceso->area_actual_role) {
+                    'unidad_solicitante' => 'Unidad Solicitante',
+                    'planeacion'         => 'Planeación',
+                    'hacienda'           => 'Hacienda',
+                    'juridica'           => 'Jurídica',
+                    'secop'              => 'SECOP',
+                    default              => ucfirst($proceso->area_actual_role),
+                };
+                if ($creador) {
+                    \App\Models\Alerta::create([
+                        'proceso_id'       => $proceso->id,
+                        'tipo'             => 'documento_recibido',
+                        'titulo'           => 'Proceso recibido por área',
+                        'mensaje'          => "El proceso {$proceso->codigo} fue recibido en {$areaLabel}.",
+                        'prioridad'        => 'media',
+                        'user_id'          => $creador->id,
+                        'area_responsable' => 'unidad_solicitante',
+                        'accion_url'       => route('procesos.show', $proceso->id),
+                    ]);
+                }
             }
 
             return back()->with('success', 'Documento recibido.');
@@ -352,6 +375,21 @@ class WorkflowController extends Controller
                     ['mensaje' => $descripcionAuditoria]
                 );
 
+                // Notificar al creador del proceso que se finalizó
+                $creador = \App\Models\User::find($proceso->created_by);
+                if ($creador) {
+                    \App\Models\Alerta::create([
+                        'proceso_id'       => $proceso->id,
+                        'tipo'             => 'proceso_finalizado',
+                        'titulo'           => 'Proceso finalizado',
+                        'mensaje'          => "El proceso {$proceso->codigo} ha sido finalizado exitosamente.",
+                        'prioridad'        => 'alta',
+                        'user_id'          => $creador->id,
+                        'area_responsable' => 'unidad_solicitante',
+                        'accion_url'       => route('procesos.show', $proceso->id),
+                    ]);
+                }
+
                 return back()->with('success', 'Proceso finalizado.');
             }
 
@@ -436,6 +474,18 @@ class WorkflowController extends Controller
                 'secop'              => 'SECOP',
                 default              => ucfirst($nextEtapa->area_role),
             };
+
+            // Notificar al área de la siguiente etapa (1 alerta por área)
+            \App\Models\Alerta::create([
+                'proceso_id'       => $proceso->id,
+                'tipo'             => 'proceso_recibido',
+                'titulo'           => 'Proceso en nueva etapa',
+                'mensaje'          => "El proceso {$proceso->codigo} avanzó a {$nextEtapa->nombre} ({$areaLabel})",
+                'prioridad'        => 'alta',
+                'area_responsable' => $nextEtapa->area_role,
+                'accion_url'       => route('procesos.show', $proceso->id),
+            ]);
+
             return back()->with('success', "Proceso enviado a: {$nextEtapa->nombre} → Área: {$areaLabel}.");
         });
     }
@@ -525,6 +575,17 @@ class WorkflowController extends Controller
                 'updated_at' => now(),
             ]);
 
+            // Notificar al área responsable del documento (1 alerta por área)
+            \App\Models\Alerta::create([
+                'proceso_id'       => $proceso->id,
+                'tipo'             => 'documento_solicitado',
+                'titulo'           => 'Documento solicitado',
+                'mensaje'          => "Se solicita {$doc['nombre_documento']} para el proceso {$proceso->codigo}.",
+                'prioridad'        => 'alta',
+                'area_responsable' => $doc['area_responsable_rol'],
+                'accion_url'       => route('procesos.show', $proceso->id),
+            ]);
+
             // Guardar ID de Compatibilidad para usarlo en CDP
             if (isset($doc['es_requerido_para_cdp']) && $doc['es_requerido_para_cdp']) {
                 $solicitudCompatibilidadId = $solicitudId;
@@ -549,6 +610,17 @@ class WorkflowController extends Controller
             'solicitado_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+
+        // Notificar a presupuesto sobre el CDP (1 alerta por área)
+        \App\Models\Alerta::create([
+            'proceso_id'       => $proceso->id,
+            'tipo'             => 'documento_solicitado',
+            'titulo'           => 'CDP pendiente',
+            'mensaje'          => "Se solicita CDP para el proceso {$proceso->codigo}. Requiere primero Compatibilidad del Gasto.",
+            'prioridad'        => 'media',
+            'area_responsable' => 'presupuesto',
+            'accion_url'       => route('procesos.show', $proceso->id),
         ]);
 
         // Registrar auditoría

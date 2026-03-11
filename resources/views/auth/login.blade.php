@@ -29,18 +29,24 @@
         </div>
 
         <div>
-            <div class="flex items-center justify-between mb-1.5">
-                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" class="text-xs font-medium hover:underline" style="color:#166534">
-                        ¿Olvidaste tu contraseña?
-                    </a>
-                @endif
-            </div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">Contraseña</label>
             <input id="password" type="password" name="password"
                    class="w-full px-4 py-3 rounded-xl border text-sm transition bg-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent {{ $errors->has('password') ? 'border-red-300' : 'border-gray-200' }}"
                    placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
         </div>
+
+        @if ($errors->any() && Route::has('password.request'))
+            <div class="text-center">
+                <a href="{{ route('password.request') . '?usuario_email=' . urlencode(old('email', '')) }}"
+                   class="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl border transition hover:bg-green-50"
+                   style="color:#166534;border-color:#bbf7d0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    ¿Olvidaste tu contraseña?
+                </a>
+            </div>
+        @endif
 
         <div class="flex items-center gap-2.5">
             <input id="remember_me" type="checkbox" name="remember"

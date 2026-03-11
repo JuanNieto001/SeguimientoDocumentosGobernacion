@@ -220,6 +220,15 @@ Route::middleware(['auth'])->prefix('workflow/procesos')->name('workflow.files.'
     Route::post('/archivos/{archivo}/reemplazar',
         [WorkflowFilesController::class, 'reemplazar'])
         ->name('reemplazar');
+
+    // Preview y control de versiones
+    Route::get('/archivos/{archivo}/preview',
+        [WorkflowFilesController::class, 'preview'])
+        ->name('preview');
+
+    Route::get('/archivos/{archivo}/historial',
+        [WorkflowFilesController::class, 'historialVersiones'])
+        ->name('historial');
 });
 
 /*

@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Enums\EstadoProcesoCD;
 use App\Models\ProcesoCDAuditoria;
+use App\Models\ProcesoCDDocumento;
 use App\Models\ProcesoContratacionDirecta;
 use App\Models\User;
+use App\Services\NotificacionCDService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -59,6 +61,22 @@ class ContratoDirectoPNStateMachine
                 $user,
                 'Solicitud creada con Estudio Previo cargado.'
             );
+
+            // Registrar el Estudio Previo como documento del proceso
+            if (!empty($datos['estudio_previo_path'])) {
+                ProcesoCDDocumento::create([
+                    'proceso_cd_id'     => $proceso->id,
+                    'tipo_documento'    => 'estudios_previos',
+                    'nombre_archivo'    => basename($datos['estudio_previo_path']),
+                    'ruta_archivo'      => $datos['estudio_previo_path'],
+                    'mime_type'         => 'application/pdf',
+                    'tamano_bytes'      => 0,
+                    'etapa'             => 1,
+                    'estado_aprobacion' => 'aprobado',
+                    'subido_por'        => $user->id,
+                    'es_obligatorio'    => true,
+                ]);
+            }
 
             // Enviar automáticamente a Planeación (Descentralización)
             $this->transicionar(
@@ -144,6 +162,9 @@ class ContratoDirectoPNStateMachine
                 $comentario,
                 $datosExtra
             );
+
+            // Enviar notificaciones a los usuarios del rol correspondiente
+            NotificacionCDService::notificarTransicion($proceso, $destino, $user);
 
             return $proceso->fresh();
         });

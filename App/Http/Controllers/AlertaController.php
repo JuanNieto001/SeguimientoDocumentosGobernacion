@@ -23,15 +23,16 @@ class AlertaController extends Controller
         $prioridad = $request->input('prioridad');
         $leida = $request->input('leida', 'no_leidas');
 
-        $query = Alerta::with(['proceso', 'proceso.workflow']);
+        $query = Alerta::with(['proceso', 'proceso.workflow', 'procesoCd']);
 
         // Filtrar por área si no es admin
         if (!$user->hasRole('admin')) {
-            if ($area) {
-                $query->where('area_responsable', $area);
-            } else {
-                $query->where('user_id', $user->id);
-            }
+            $query->where(function ($q) use ($user, $area) {
+                $q->where('user_id', $user->id);
+                if ($area) {
+                    $q->orWhere('area_responsable', $area);
+                }
+            });
         }
 
         // Filtro de tipo
@@ -102,11 +103,12 @@ class AlertaController extends Controller
         $query = Alerta::query();
 
         if (!$user->hasRole('admin')) {
-            if ($area) {
-                $query->where('area_responsable', $area);
-            } else {
-                $query->where('user_id', $user->id);
-            }
+            $query->where(function ($q) use ($user, $area) {
+                $q->where('user_id', $user->id);
+                if ($area) {
+                    $q->orWhere('area_responsable', $area);
+                }
+            });
         }
 
         $count = $query->update([
@@ -168,15 +170,16 @@ class AlertaController extends Controller
         $user = auth()->user();
         $area = $this->obtenerAreaUsuario($user);
 
-        $query = Alerta::with(['proceso'])
+        $query = Alerta::with(['proceso', 'procesoCd'])
             ->where('leida', false);
 
         if (!$user->hasRole('admin')) {
-            if ($area) {
-                $query->where('area_responsable', $area);
-            } else {
-                $query->where('user_id', $user->id);
-            }
+            $query->where(function ($q) use ($user, $area) {
+                $q->where('user_id', $user->id);
+                if ($area) {
+                    $q->orWhere('area_responsable', $area);
+                }
+            });
         }
 
         $alertas = $query->orderBy('prioridad', 'desc')

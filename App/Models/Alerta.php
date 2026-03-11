@@ -11,6 +11,7 @@ class Alerta extends Model
 
     protected $fillable = [
         'proceso_id',
+        'proceso_cd_id',
         'user_id',
         'tipo',
         'prioridad',
@@ -30,11 +31,19 @@ class Alerta extends Model
     ];
 
     /**
-     * Relación: Una alerta pertenece a un proceso
+     * Relación: Una alerta pertenece a un proceso (legacy)
      */
     public function proceso(): BelongsTo
     {
         return $this->belongsTo(Proceso::class);
+    }
+
+    /**
+     * Relación: Una alerta pertenece a un proceso CD-PN
+     */
+    public function procesoCd(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\ProcesoContratacionDirecta::class, 'proceso_cd_id');
     }
 
     /**
