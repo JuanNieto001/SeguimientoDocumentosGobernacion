@@ -31,7 +31,7 @@
         {{-- Logo --}}
         <div class="flex items-center gap-3 h-16 px-5 border-b shrink-0" style="border-color:rgba(255,255,255,.1)">
             <div class="w-9 h-9 rounded-xl overflow-hidden shrink-0 flex items-center justify-center" style="background:rgba(255,255,255,0.95)">
-                <img src="/images/gobernacion.png" alt="Escudo" class="w-8 h-8 object-contain">
+                <img src="{{ asset('images/gobernacion.png') }}" alt="Escudo" class="w-8 h-8 object-contain">
             </div>
             <div>
                 <p class="text-white font-bold text-sm leading-none">Gobernación</p>

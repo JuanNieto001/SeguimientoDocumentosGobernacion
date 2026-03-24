@@ -441,23 +441,26 @@
      AGENTE ESTIVEN – Widget flotante
      ═══════════════════════════════════════════════════ --}}
 <div x-data="agenteEstiven()"
-     x-cloak
-     class="fixed z-50"
-     style="bottom: 1.25rem; right: 1.25rem;">
+    x-cloak
+    class="fixed z-50"
+    :style="posStyle">
 
     {{-- ── Panel desplegable ── --}}
-    <div x-show="open"
+        <div x-show="open"
          x-transition:enter="transition ease-out duration-250"
          x-transition:enter-start="opacity-0 translate-y-4 scale-95"
          x-transition:enter-end="opacity-100 translate-y-0 scale-100"
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-4 scale-95"
-         class="mb-3 rounded-2xl overflow-hidden flex flex-col estiven-panel"
-         style="width: 380px; max-height: 530px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 25px 60px -12px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.03);">
+         class="absolute right-0 z-10 rounded-2xl overflow-hidden flex flex-col estiven-panel"
+         :style="panelStyle"
+        >
 
         {{-- Cabecera --}}
-        <div class="shrink-0 px-5 py-4 text-white relative"
+         <div class="shrink-0 px-5 py-4 text-white relative"
+             @mousedown.prevent="startDrag($event)"
+             @click="if (!dragged) { closePanel(); } dragged = false;"
              style="background: linear-gradient(135deg, #052e16 0%, #166534 50%, #15803d 100%);">
             <div class="flex items-center gap-3.5">
                 <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0 estiven-avatar">
@@ -485,19 +488,13 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="font-bold text-base leading-tight">Agente Estiven</p>
+                    <p class="font-bold text-base leading-tight">Marsetiv bot</p>
                     <p class="text-green-300 text-xs mt-0.5 flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
                         En l&iacute;nea &middot; Listo para ayudarte
                     </p>
                 </div>
             </div>
-            <button @click="open = false; activeGuide = null; vista = 'guias'"
-                    class="absolute top-3.5 right-3.5 p-1.5 rounded-lg text-green-200 hover:text-white hover:bg-white/15 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
         </div>
 
         {{-- Saludo --}}
@@ -513,7 +510,7 @@
                 </div>
                 <div class="bg-white rounded-xl rounded-tl-sm px-3.5 py-2.5 text-sm shadow-sm" style="border: 1px solid #e2e8f0;">
                     <p class="text-gray-700 leading-relaxed">
-                        &iexcl;Hola, <strong class="text-green-800">{{ $userName }}</strong>! Soy <strong>Estiven</strong>, tu asistente. &iquest;En qu&eacute; te ayudo hoy?
+                        &iexcl;Hola, <strong class="text-green-800">{{ $userName }}</strong>! Soy <strong>Marsetiv bot</strong>, tu asistente. &iquest;En qu&eacute; te ayudo hoy?
                     </p>
                     <p class="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -690,31 +687,21 @@
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Agente Estiven &middot; Asistente de Gobernaci&oacute;n de Caldas
+            Marsetiv bot &middot; Asistente de Gobernaci&oacute;n de Caldas
         </div>
     </div>
 
     {{-- ── Botón flotante con nombre ── --}}
-    <div class="flex items-end justify-end gap-2">
-        {{-- Tooltip / label que aparece cuando está cerrado --}}
-        <div x-show="!open"
-             x-transition:enter="transition ease-out duration-300 delay-500"
-             x-transition:enter-start="opacity-0 translate-x-2"
-             x-transition:enter-end="opacity-100 translate-x-0"
-             class="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-2xl rounded-br-sm shadow-lg cursor-pointer select-none estiven-tooltip"
-             style="background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 8px 25px rgba(0,0,0,.1);"
-             @click="open = true">
-            <span class="text-sm font-semibold text-gray-800">Agente Estiven</span>
-            <span class="text-xs text-gray-400">| &iquest;Necesitas ayuda?</span>
-        </div>
+    <div class="relative flex items-end justify-end">
 
         {{-- Botón circular --}}
-        <button @click="open = !open; if(!open) { activeGuide = null; vista = 'guias'; }"
+        <button @click="toggleOpen()"
+            @mousedown="startDrag($event)"
                 class="estiven-fab relative flex items-center justify-center transition-all duration-300 focus:outline-none"
-                title="Agente Estiven">
+            title="Marsetiv bot">
 
             {{-- Estado cerrado: carita --}}
-            <div x-show="!open" x-transition class="w-14 h-14 rounded-full flex items-center justify-center shadow-xl estiven-fab-face"
+              <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-xl estiven-fab-face"
                  style="background: linear-gradient(145deg, #FBBF24 0%, #F59E0B 100%); box-shadow: 0 8px 25px rgba(245,158,11,.4);">
                 <svg class="w-9 h-9" viewBox="0 0 100 100" fill="none">
                     <!-- Cara base -->
@@ -743,14 +730,6 @@
                             <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
                         </radialGradient>
                     </defs>
-                </svg>
-            </div>
-
-            {{-- Estado abierto: X --}}
-            <div x-show="open" x-transition class="w-14 h-14 rounded-full flex items-center justify-center shadow-xl"
-                 style="background: linear-gradient(135deg, #15803d, #052e16); box-shadow: 0 8px 25px rgba(21,128,61,.4);">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </div>
 
@@ -842,6 +821,130 @@ function agenteEstiven() {
         helpEnviando: false,
         helpEnviado: false,
         helpError: '',
+        dragged: false,
+        posX: null,
+        posY: null,
+        openDown: false,
+        panelShiftX: 0,
+        panelMaxHeight: 530,
+
+        init() {
+            var self = this;
+            window.addEventListener('resize', function() {
+                if (self.open) {
+                    self.updatePanelLayout();
+                }
+            });
+        },
+
+        get posStyle() {
+            var base = this.posX !== null
+                ? 'left:' + this.posX + 'px; top:' + this.posY + 'px; bottom:auto; right:auto;'
+                : 'bottom:1.25rem; right:1.25rem;';
+            return base + ' user-select:none;';
+        },
+
+        get panelStyle() {
+            var safe = 8;
+            var width = Math.max(280, Math.min(380, window.innerWidth - (safe * 2)));
+            var verticalPos = this.openDown ? ' top:calc(100% + 12px);' : ' bottom:calc(100% + 12px);';
+            var shift = this.panelShiftX !== 0 ? ' transform:translateX(' + this.panelShiftX + 'px);' : '';
+            return 'width:' + width + 'px; max-height:' + this.panelMaxHeight + 'px; background:#fff; border:1px solid #e2e8f0; box-shadow:0 25px 60px -12px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.03);' + verticalPos + shift;
+        },
+
+        closePanel() {
+            this.open = false;
+            this.activeGuide = null;
+            this.vista = 'guias';
+        },
+
+        toggleOpen() {
+            if (this.dragged) {
+                this.dragged = false;
+                return;
+            }
+
+            if (this.open) {
+                this.closePanel();
+                return;
+            }
+
+            this.open = true;
+            var self = this;
+            this.$nextTick(function() {
+                self.updatePanelLayout();
+            });
+        },
+
+        updatePanelLayout() {
+            if (!this.open) return;
+            var safe = 8;
+            var gap = 12;
+            var btn = this.$el.querySelector('.estiven-fab');
+            if (!btn) return;
+
+            var btnRect = btn.getBoundingClientRect();
+            var panelWidth = Math.max(280, Math.min(380, window.innerWidth - (safe * 2)));
+
+            var spaceAbove = btnRect.top - safe;
+            var spaceBelow = window.innerHeight - btnRect.bottom - safe;
+
+            // Always open toward the side with more usable vertical space.
+            this.openDown = spaceBelow >= spaceAbove;
+            var available = this.openDown ? spaceBelow : spaceAbove;
+
+            // Never exceed visible space to avoid clipping.
+            this.panelMaxHeight = Math.max(120, Math.min(530, available - gap));
+            if (this.panelMaxHeight > (available - gap)) {
+                this.panelMaxHeight = Math.max(80, available - gap);
+            }
+
+            var desiredLeft = btnRect.right - panelWidth;
+            var minLeft = safe;
+            var maxLeft = Math.max(safe, window.innerWidth - panelWidth - safe);
+            var clampedLeft = Math.max(minLeft, Math.min(desiredLeft, maxLeft));
+            this.panelShiftX = clampedLeft - desiredLeft;
+        },
+
+
+        startDrag(e) {
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var rect = this.$el.getBoundingClientRect();
+            if (this.posX === null || this.posY === null) {
+                this.posX = rect.left;
+                this.posY = rect.top;
+            }
+            var offsetX = startX - rect.left;
+            var offsetY = startY - rect.top;
+            var elW = rect.width;
+            var elH = rect.height;
+            var self = this;
+            var threshold = 5;
+            var onMove = function(ev) {
+                var dx = ev.clientX - startX;
+                var dy = ev.clientY - startY;
+                if (!self.dragged && (Math.abs(dx) > threshold || Math.abs(dy) > threshold)) {
+                    self.dragged = true;
+                }
+                if (self.dragged) {
+                    self.posX = Math.max(0, Math.min(window.innerWidth - elW, ev.clientX - offsetX));
+                    self.posY = Math.max(0, Math.min(window.innerHeight - elH, ev.clientY - offsetY));
+                    if (self.open) {
+                        self.updatePanelLayout();
+                    }
+                }
+            };
+            var onUp = function() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                if (self.dragged) {
+                    setTimeout(function() { self.dragged = false; }, 0);
+                }
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        },
 
         get currentGuide() {
             return this.activeGuide !== null ? this.guides[this.activeGuide] : null;
