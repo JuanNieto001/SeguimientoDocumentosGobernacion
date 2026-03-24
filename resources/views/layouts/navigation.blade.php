@@ -22,7 +22,7 @@
 {!! sideLink(url('/admin/logs'),'Logs','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('admin/logs*')) !!}
 {!! sideLink(route('admin.auth-events'),'Log autenticaci&oacute;n','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>',$r->routeIs('admin.auth-events')) !!}
 {!! sideLink(route('motor-flujos'),'Motor de Flujos','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>',$r->routeIs('motor-flujos')) !!}
-{!! sideLink(route('admin.estiven-guides.index'),'Gu&iacute;as de Estiven','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',$r->is('admin/estiven-guides*')) !!}
+{!! sideLink(route('admin.estiven-guides.index'),'Gu&iacute;as de Marsetiv bot','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',$r->is('admin/estiven-guides*')) !!}
 
 {{-- ============================================================ --}}
 {{-- Sección colapsable: Secretarías (antes "Bandeja por Área")  --}}
@@ -82,7 +82,10 @@
                 {{-- Cabecera de secretaría --}}
                 <button @click="openSec = openSec === {{ $sec->id }} ? null : {{ $sec->id }}"
                         class="sidebar-link w-full justify-between pr-2 py-1.5 text-xs"
-                        :class="openSec === {{ $sec->id }} ? 'active' : ''">
+                        :class="openSec === {{ $sec->id }} ? 'active' : ''"
+                        x-data="{ tv: false, tx: 0, ty: 0 }"
+                        @mouseenter="tv = true; let r = $el.getBoundingClientRect(); tx = r.right + 8; ty = r.top + r.height / 2"
+                        @mouseleave="tv = false">
                     <span class="flex items-center gap-2 min-w-0">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -95,6 +98,19 @@
                          :class="openSec === {{ $sec->id }} ? 'rotate-180' : ''">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                     </svg>
+                    <template x-teleport="body">
+                        <div x-show="tv"
+                             x-cloak
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0"
+                             :style="'position:fixed; left:' + tx + 'px; top:' + ty + 'px; transform:translateY(-50%); z-index:9999; pointer-events:none; background:#1e293b; color:#f1f5f9; padding:6px 10px; border-radius:8px; font-size:12px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.2);'">
+                            {{ $sec->nombre }}
+                        </div>
+                    </template>
                 </button>
 
                 {{-- Submenu de unidades --}}
@@ -121,15 +137,32 @@
                     {{-- Unidades de la secretaría --}}
                     @foreach($sec->unidades as $unidad)
                         @php $unitActive = $currentUnidadId === $unidad->id; @endphp
-                        <a href="{{ route('procesos.index', ['unidad_id' => $unidad->id]) }}"
-                           class="sidebar-link py-1 text-[11px] {{ $unitActive ? 'active' : '' }}"
-                           style="padding-left:.75rem">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3 h-3 shrink-0">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            <span class="truncate">{{ $unidad->nombre }}</span>
-                        </a>
+                        <div x-data="{ tv: false, tx: 0, ty: 0 }">
+                            <a href="{{ route('procesos.index', ['unidad_id' => $unidad->id]) }}"
+                               class="sidebar-link py-1 text-[11px] {{ $unitActive ? 'active' : '' }}"
+                               style="padding-left:.75rem"
+                               @mouseenter="tv = true; let r = $el.getBoundingClientRect(); tx = r.right + 8; ty = r.top + r.height / 2"
+                               @mouseleave="tv = false">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3 h-3 shrink-0">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 0 016 0z"/>
+                                </svg>
+                                <span class="truncate">{{ $unidad->nombre }}</span>
+                            </a>
+                            <template x-teleport="body">
+                                <div x-show="tv"
+                                     x-cloak
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100"
+                                     x-transition:leave-end="opacity-0"
+                                     :style="'position:fixed; left:' + tx + 'px; top:' + ty + 'px; transform:translateY(-50%); z-index:9999; pointer-events:none; background:#1e293b; color:#f1f5f9; padding:6px 10px; border-radius:8px; font-size:12px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.2);'">
+                                    {{ $unidad->nombre }}
+                                </div>
+                            </template>
+                        </div>
                     @endforeach
 
                     @if($sec->unidades->isEmpty())
@@ -153,6 +186,7 @@
 <p class="sidebar-section">An&aacute;lisis</p>
 {!! sideLink(route('reportes.index'),'Reportes','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->routeIs('reportes.*')) !!}
 {!! sideLink(route('secop.consulta'),'Consulta SECOP II','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>',$r->is('secop-consulta*')) !!}
+{!! sideLink(route('contratos-app.index'),'Contratos de Aplicaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('contratos-app*')) !!}
 {!! sideLink(route('alertas.index'),'Notificaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>',$r->routeIs('alertas.*')) !!}
 @endrole
 
@@ -207,6 +241,23 @@
 {!! sideLink(route('procesos.index'),'Ver procesos','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',$r->routeIs('procesos.index')) !!}
 {!! sideLink(route('secop.consulta'),'Consulta SECOP II','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>',$r->is('secop-consulta*')) !!}
 {!! sideLink(route('reportes.index'),'Reportes','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->routeIs('reportes.*')) !!}
+{!! sideLink(route('contratos-app.index'),'Contratos de Aplicaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('contratos-app*')) !!}
+{!! sideLink(route('alertas.index'),'Notificaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>',$r->routeIs('alertas.*')) !!}
+@endrole
+
+@role('secretario')
+<p class="sidebar-section">Secretar&iacute;a</p>
+{!! sideLink(route('procesos.index'),'Ver procesos','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',$r->routeIs('procesos.index')) !!}
+{!! sideLink(route('reportes.index'),'Reportes','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->routeIs('reportes.*')) !!}
+{!! sideLink(route('contratos-app.index'),'Contratos de Aplicaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('contratos-app*')) !!}
+{!! sideLink(route('alertas.index'),'Notificaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>',$r->routeIs('alertas.*')) !!}
+@endrole
+
+@role('jefe_unidad')
+<p class="sidebar-section">Mi Unidad</p>
+{!! sideLink(route('procesos.create'),'Nueva solicitud','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',$r->routeIs('procesos.create')) !!}
+{!! sideLink(route('procesos.index'),'Ver procesos','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',$r->routeIs('procesos.index')) !!}
+{!! sideLink(route('contratos-app.index'),'Contratos de Aplicaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('contratos-app*')) !!}
 {!! sideLink(route('alertas.index'),'Notificaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>',$r->routeIs('alertas.*')) !!}
 @endrole
 

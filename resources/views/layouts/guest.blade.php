@@ -14,7 +14,7 @@
 <div class="min-h-screen flex">
 
     {{-- Panel izquierdo: Branding --}}
-    <div class="hidden lg:flex lg:w-[46%] relative overflow-hidden flex-col" style="background-image:url('/images/gobernacion.png');background-size:cover;background-position:center;">
+    <div class="hidden lg:flex lg:w-[46%] relative overflow-hidden flex-col" style="background-image:url('{{ asset('images/gobernacion.png') }}');background-size:cover;background-position:center;">
         {{-- Overlay oscuro verde para legibilidad --}}
         <div class="absolute inset-0" style="background:linear-gradient(155deg,rgba(5,46,22,0.93) 0%,rgba(20,83,45,0.89) 55%,rgba(22,101,52,0.91) 100%)"></div>
 
@@ -24,7 +24,7 @@
             {{-- Logo --}}
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 rounded-2xl overflow-hidden border border-white/25 flex items-center justify-center" style="background:rgba(255,255,255,0.95);backdrop-filter:blur(8px)">
-                    <img src="/images/gobernacion.png" alt="Escudo Gobernación de Caldas" class="w-12 h-12 object-contain">
+                    <img src="{{ asset('images/gobernacion.png') }}" alt="Escudo Gobernación de Caldas" class="w-12 h-12 object-contain">
                 </div>
                 <div>
                     <p class="text-white font-bold text-base leading-tight">Gobernación de Caldas</p>
@@ -50,7 +50,7 @@
         {{-- Header móvil --}}
         <div class="lg:hidden mb-10 text-center">
             <div class="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center mx-auto mb-3 border border-gray-200" style="background:#fff">
-                <img src="/images/gobernacion.png" alt="Gobernación de Caldas" class="w-14 h-14 object-contain">
+                <img src="{{ asset('images/gobernacion.png') }}" alt="Gobernación de Caldas" class="w-14 h-14 object-contain">
             </div>
             <p class="font-bold text-gray-900 text-xl">Gobernación de Caldas</p>
             <p class="text-gray-500 text-sm mt-1">Sistema de Seguimiento Contractual</p>
