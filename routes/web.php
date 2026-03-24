@@ -28,6 +28,9 @@ use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\SecopConsultaController;
 use App\Http\Controllers\Admin\EstivenGuideController;
 use App\Http\Controllers\EstivenHelpController;
+use App\Http\Controllers\DashboardMotorController;
+use App\Http\Controllers\RoleDashboardController;
+use App\Http\Controllers\ContratoAplicacionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,7 +72,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard.buscar');
     Route::post('/alertas/{alerta}/leer', [DashboardController::class, 'marcarAlertaLeida'])
         ->name('alertas.leer');
+
+    // Dashboard por rol
+    Route::get('/mi-dashboard', [RoleDashboardController::class, 'index'])
+        ->name('dashboards.mi');
+
+    // Motor de dashboards (asignación por rol)
+    Route::get('/dashboards/motor', [DashboardMotorController::class, 'index'])
+        ->name('dashboards.motor.index')
+        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.ver']);
+    Route::post('/dashboards/motor/asignaciones', [DashboardMotorController::class, 'guardarAsignaciones'])
+        ->name('dashboards.motor.assign')
+        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
+    Route::post('/dashboards/motor/asignaciones-usuario', [DashboardMotorController::class, 'guardarAsignacionUsuario'])
+        ->name('dashboards.motor.assign-user')
+        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
+    Route::post('/dashboards/motor/asignaciones-secretaria', [DashboardMotorController::class, 'guardarAsignacionSecretaria'])
+        ->name('dashboards.motor.assign-secretaria')
+        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
+    Route::post('/dashboards/motor/asignaciones-unidad', [DashboardMotorController::class, 'guardarAsignacionUnidad'])
+        ->name('dashboards.motor.assign-unidad')
+        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| CONTRATOS DE APLICACIONES
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin|admin_general|admin_secretaria|gobernador|secretario|jefe_unidad'])
+    ->resource('contratos-aplicaciones', ContratoAplicacionController::class);
 
 /*
 |--------------------------------------------------------------------------

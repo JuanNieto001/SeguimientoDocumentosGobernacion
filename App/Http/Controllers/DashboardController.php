@@ -22,6 +22,11 @@ class DashboardController extends Controller
         if ($user->hasRole('admin')) {
             return $this->dashboardAdmin();
         }
+
+        // Perfiles ejecutivos: dashboard asignado por rol
+        if ($user->hasAnyRole(['gobernador', 'secretario', 'jefe_unidad'])) {
+            return redirect()->route('dashboards.mi');
+        }
         
         // ── Roles de área específica (solicitudes paralelas Etapa 1) ──────────
         $rolesDocumentos = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];

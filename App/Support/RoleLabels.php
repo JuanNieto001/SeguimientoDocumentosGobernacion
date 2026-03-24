@@ -38,6 +38,8 @@ class RoleLabels
         'consulta'                  => 'Consulta',
         'unidad_solicitante'        => 'Unidad Solicitante',
         'gobernador'                => 'Gobernador',
+        'secretario'                => 'Secretario',
+        'jefe_unidad'               => 'Jefe de Unidad (No Jefe de Sistemas)',
         'planeacion'                => 'Planeación',
         'hacienda'                  => 'Hacienda',
         'juridica'                  => 'Jurídica',

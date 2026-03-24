@@ -10,7 +10,7 @@
                     {{ $guide ? 'Editar' : 'Nueva' }} Gu&iacute;a de Estiven
                 </h1>
                 <p class="text-xs text-gray-400 mt-1">
-                    {{ $guide ? 'Modifica la guía y sus pasos' : 'Crea una nueva guía de ayuda para el Agente Estiven' }}
+                    {{ $guide ? 'Modifica la guía y sus pasos' : 'Crea una nueva guía de ayuda para Marsetiv bot' }}
                 </p>
             </div>
         </div>

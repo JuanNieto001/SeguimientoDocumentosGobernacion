@@ -103,6 +103,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'dashboard.ver',
             'dashboard.admin',
             'dashboard.buscar',
+            'dashboard.motor.ver',
+            'dashboard.motor.gestionar',
+            'dashboard.rol.ver',
+
+            // ─── CONTRATOS DE APLICACIONES ─────────────────────────────────────────
+            'contratos_aplicaciones.ver',
+            'contratos_aplicaciones.crear',
+            'contratos_aplicaciones.editar',
+            'contratos_aplicaciones.eliminar',
 
             // ─── ASIGNAR ROLES ───────────────────────────────────────────────────────
             'asignar_roles',
@@ -150,6 +159,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'revisor_juridico'          => 'Revisor Jurídico – Aprueba/rechaza procesos',
             'consulta'                  => 'Consulta – Solo lectura',
             'gobernador'                => 'Gobernador – Despacho del Gobernador, consulta general y SECOP',
+            'secretario'                => 'Secretario – Seguimiento de su dependencia y contratos de aplicaciones',
+            'jefe_unidad'               => 'Jefe de Unidad (NO Jefe de Sistemas) – Seguimiento operativo y contractual',
         ];
 
         foreach ($nuevosRoles as $roleName => $description) {
@@ -264,6 +275,50 @@ class RolesAndPermissionsSeeder extends Seeder
                 'modificaciones.ver',
                 'modificaciones.descargar',
                 'dashboard.ver',
+            ]);
+        }
+
+        // ── gobernador → Vista ejecutiva y consulta de contratos/aplicaciones ───
+        $gobernador = Role::where('name', 'gobernador')->first();
+        if ($gobernador) {
+            $gobernador->syncPermissions([
+                'dashboard.ver',
+                'dashboard.rol.ver',
+                'dashboard.buscar',
+                'contratos_aplicaciones.ver',
+                'reportes.ver',
+                'procesos.ver',
+                'alertas.ver',
+                'alertas.leer',
+            ]);
+        }
+
+        // ── secretario → Seguimiento por rol y consulta de contratos ────────────
+        $secretario = Role::where('name', 'secretario')->first();
+        if ($secretario) {
+            $secretario->syncPermissions([
+                'dashboard.ver',
+                'dashboard.rol.ver',
+                'dashboard.buscar',
+                'contratos_aplicaciones.ver',
+                'procesos.ver',
+                'reportes.ver',
+                'alertas.ver',
+                'alertas.leer',
+            ]);
+        }
+
+        // ── jefe_unidad (no sistemas) → Seguimiento operativo y contractual ─────
+        $jefeUnidad = Role::where('name', 'jefe_unidad')->first();
+        if ($jefeUnidad) {
+            $jefeUnidad->syncPermissions([
+                'dashboard.ver',
+                'dashboard.rol.ver',
+                'contratos_aplicaciones.ver',
+                'procesos.ver',
+                'archivos.descargar',
+                'alertas.ver',
+                'alertas.leer',
             ]);
         }
 

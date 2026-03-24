@@ -1,5 +1,5 @@
 {{--
-    Agente Estiven – Asistente flotante de ayuda contextual.
+    Marsetiv bot – Asistente flotante de ayuda contextual.
     Se incluye dentro del layout principal (app.blade.php).
     Usa Alpine.js (ya disponible globalmente).
 --}}
@@ -438,12 +438,13 @@
 @endphp
 
 {{-- ═══════════════════════════════════════════════════
-     AGENTE ESTIVEN – Widget flotante
+    MARSETIV BOT – Widget flotante
      ═══════════════════════════════════════════════════ --}}
 <div x-data="agenteEstiven()"
      x-cloak
-     class="fixed z-50"
-     style="bottom: 1.25rem; right: 1.25rem;">
+    x-ref="widgetRoot"
+    class="fixed z-50"
+    x-bind:style="'left:' + posX + 'px; top:' + posY + 'px;'">
 
     {{-- ── Panel desplegable ── --}}
     <div x-show="open"
@@ -457,8 +458,9 @@
          style="width: 380px; max-height: 530px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 25px 60px -12px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.03);">
 
         {{-- Cabecera --}}
-        <div class="shrink-0 px-5 py-4 text-white relative"
-             style="background: linear-gradient(135deg, #052e16 0%, #166534 50%, #15803d 100%);">
+           <div class="shrink-0 px-5 py-4 text-white relative"
+               @pointerdown="startDrag($event)"
+               style="background: linear-gradient(135deg, #052e16 0%, #166534 50%, #15803d 100%); cursor: move; touch-action: none;">
             <div class="flex items-center gap-3.5">
                 <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0 estiven-avatar">
                     <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
@@ -485,7 +487,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="font-bold text-base leading-tight">Agente Estiven</p>
+                    <p class="font-bold text-base leading-tight">Marsetiv bot</p>
                     <p class="text-green-300 text-xs mt-0.5 flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
                         En l&iacute;nea &middot; Listo para ayudarte
@@ -493,6 +495,8 @@
                 </div>
             </div>
             <button @click="open = false; activeGuide = null; vista = 'guias'"
+                    @pointerdown.stop
+                    data-no-drag
                     class="absolute top-3.5 right-3.5 p-1.5 rounded-lg text-green-200 hover:text-white hover:bg-white/15 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
@@ -513,7 +517,7 @@
                 </div>
                 <div class="bg-white rounded-xl rounded-tl-sm px-3.5 py-2.5 text-sm shadow-sm" style="border: 1px solid #e2e8f0;">
                     <p class="text-gray-700 leading-relaxed">
-                        &iexcl;Hola, <strong class="text-green-800">{{ $userName }}</strong>! Soy <strong>Estiven</strong>, tu asistente. &iquest;En qu&eacute; te ayudo hoy?
+                        &iexcl;Hola, <strong class="text-green-800">{{ $userName }}</strong>! Soy <strong>Marsetiv bot</strong>, tu asistente. &iquest;En qu&eacute; te ayudo hoy?
                     </p>
                     <p class="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -690,28 +694,32 @@
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Agente Estiven &middot; Asistente de Gobernaci&oacute;n de Caldas
+            Marsetiv bot &middot; Asistente de Gobernaci&oacute;n de Caldas
         </div>
     </div>
 
     {{-- ── Botón flotante con nombre ── --}}
     <div class="flex items-end justify-end gap-2">
         {{-- Tooltip / label que aparece cuando está cerrado --}}
-        <div x-show="!open"
+        <div x-show="!open && hoverFab"
              x-transition:enter="transition ease-out duration-300 delay-500"
              x-transition:enter-start="opacity-0 translate-x-2"
              x-transition:enter-end="opacity-100 translate-x-0"
              class="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-2xl rounded-br-sm shadow-lg cursor-pointer select-none estiven-tooltip"
              style="background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 8px 25px rgba(0,0,0,.1);"
-             @click="open = true">
-            <span class="text-sm font-semibold text-gray-800">Agente Estiven</span>
+             @click="openPanel()"
+             @pointerdown="startDrag($event)">
+            <span class="text-sm font-semibold text-gray-800">Marsetiv bot</span>
             <span class="text-xs text-gray-400">| &iquest;Necesitas ayuda?</span>
         </div>
 
         {{-- Botón circular --}}
-        <button @click="open = !open; if(!open) { activeGuide = null; vista = 'guias'; }"
+        <button @click="toggleOpenFromFab()"
+                @pointerdown="startDrag($event)"
+            @mouseenter="hoverFab = true"
+            @mouseleave="hoverFab = false"
                 class="estiven-fab relative flex items-center justify-center transition-all duration-300 focus:outline-none"
-                title="Agente Estiven">
+                title="Marsetiv bot">
 
             {{-- Estado cerrado: carita --}}
             <div x-show="!open" x-transition class="w-14 h-14 rounded-full flex items-center justify-center shadow-xl estiven-fab-face"
@@ -834,14 +842,116 @@
 function agenteEstiven() {
     return {
         open: false,
+        hoverFab: false,
         activeGuide: null,
         vista: 'guias',
+        posX: 0,
+        posY: 0,
+        dragging: false,
+        dragMoved: false,
+        dragOffsetX: 0,
+        dragOffsetY: 0,
+        dragStartX: 0,
+        dragStartY: 0,
+        moveHandler: null,
+        upHandler: null,
         guides: @json($allGuides),
         helpAsunto: '',
         helpMensaje: '',
         helpEnviando: false,
         helpEnviado: false,
         helpError: '',
+
+        init() {
+            this.$nextTick(() => {
+                this.setInitialPosition();
+                window.addEventListener('resize', () => this.clampToViewport());
+            });
+        },
+
+        setInitialPosition() {
+            const margin = 20;
+            const rect = this.$refs.widgetRoot?.getBoundingClientRect();
+            if (!rect) return;
+            this.posX = Math.max(margin, window.innerWidth - rect.width - margin);
+            this.posY = Math.max(margin, window.innerHeight - rect.height - margin);
+        },
+
+        clampToViewport() {
+            const margin = 12;
+            const rect = this.$refs.widgetRoot?.getBoundingClientRect();
+            if (!rect) return;
+            const maxX = Math.max(margin, window.innerWidth - rect.width - margin);
+            const maxY = Math.max(margin, window.innerHeight - rect.height - margin);
+            this.posX = Math.min(Math.max(margin, this.posX), maxX);
+            this.posY = Math.min(Math.max(margin, this.posY), maxY);
+        },
+
+        startDrag(event) {
+            if (event.target.closest('input, textarea, select, a, [data-no-drag]')) return;
+            if (event.button !== undefined && event.button !== 0) return;
+
+            const point = { x: event.clientX, y: event.clientY };
+            this.dragging = true;
+            this.dragMoved = false;
+            this.dragStartX = point.x;
+            this.dragStartY = point.y;
+            this.dragOffsetX = point.x - this.posX;
+            this.dragOffsetY = point.y - this.posY;
+
+            this.moveHandler = (e) => this.onDragMove(e);
+            this.upHandler = () => this.stopDrag();
+
+            window.addEventListener('pointermove', this.moveHandler);
+            window.addEventListener('pointerup', this.upHandler, { once: true });
+            event.preventDefault();
+        },
+
+        onDragMove(event) {
+            if (!this.dragging) return;
+
+            const nextX = event.clientX - this.dragOffsetX;
+            const nextY = event.clientY - this.dragOffsetY;
+
+            if (Math.abs(event.clientX - this.dragStartX) > 4 || Math.abs(event.clientY - this.dragStartY) > 4) {
+                this.dragMoved = true;
+            }
+
+            this.posX = nextX;
+            this.posY = nextY;
+            this.clampToViewport();
+        },
+
+        stopDrag() {
+            this.dragging = false;
+            if (this.moveHandler) {
+                window.removeEventListener('pointermove', this.moveHandler);
+                this.moveHandler = null;
+            }
+            this.clampToViewport();
+        },
+
+        openPanel() {
+            if (this.dragMoved) {
+                this.dragMoved = false;
+                return;
+            }
+            this.open = true;
+            this.$nextTick(() => this.clampToViewport());
+        },
+
+        toggleOpenFromFab() {
+            if (this.dragMoved) {
+                this.dragMoved = false;
+                return;
+            }
+            this.open = !this.open;
+            if (!this.open) {
+                this.activeGuide = null;
+                this.vista = 'guias';
+            }
+            this.$nextTick(() => this.clampToViewport());
+        },
 
         get currentGuide() {
             return this.activeGuide !== null ? this.guides[this.activeGuide] : null;
