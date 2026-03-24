@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Gobernación de Manizales · Sistema de Contratación</title>
+    <title>Gobernacion de Caldas · Sistema de Contratacion</title>
+    <link rel="icon" type="image/png" href="/images/gobernacion.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -28,7 +29,7 @@
                 </div>
                 <div>
                     <p class="text-white font-bold text-base leading-tight">Gobernación de Caldas</p>
-                    <p class="text-green-300 text-xs font-light">Unidad de Sistemas &middot; Manizales, Colombia</p>
+                    <p class="text-green-300 text-xs font-light">Manizales, Colombia</p>
                 </div>
             </div>
 
