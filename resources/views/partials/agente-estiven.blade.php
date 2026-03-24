@@ -699,7 +699,9 @@
     </div>
 
     {{-- ── Botón flotante con nombre ── --}}
-    <div class="flex items-end justify-end gap-2">
+        <div class="flex items-end justify-end gap-2"
+            @mouseenter="hoverFab = true"
+            @mouseleave="hoverFab = false">
         {{-- Tooltip / label que aparece cuando está cerrado --}}
         <div x-show="!open && hoverFab"
              x-transition:enter="transition ease-out duration-300 delay-500"
@@ -716,8 +718,6 @@
         {{-- Botón circular --}}
         <button @click="toggleOpenFromFab()"
                 @pointerdown="startDrag($event)"
-            @mouseenter="hoverFab = true"
-            @mouseleave="hoverFab = false"
                 class="estiven-fab relative flex items-center justify-center transition-all duration-300 focus:outline-none"
                 title="Marsetiv bot">
 
@@ -790,7 +790,7 @@
     }
 
     .estiven-tooltip {
-        animation: estiven-float 3s ease-in-out infinite;
+        animation: none;
     }
     @keyframes estiven-float {
         0%, 100% { transform: translateY(0); }
@@ -861,12 +861,40 @@ function agenteEstiven() {
         helpEnviando: false,
         helpEnviado: false,
         helpError: '',
+        storageKey: 'marsetiv_widget_position_v1',
 
         init() {
             this.$nextTick(() => {
-                this.setInitialPosition();
+                this.restorePosition();
                 window.addEventListener('resize', () => this.clampToViewport());
             });
+        },
+
+        restorePosition() {
+            try {
+                const raw = localStorage.getItem(this.storageKey);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+                        this.posX = parsed.x;
+                        this.posY = parsed.y;
+                        this.$nextTick(() => this.clampToViewport());
+                        return;
+                    }
+                }
+            } catch (_) {
+                // Ignorar errores de lectura/parsing y usar posicion inicial.
+            }
+
+            this.setInitialPosition();
+        },
+
+        persistPosition() {
+            try {
+                localStorage.setItem(this.storageKey, JSON.stringify({ x: this.posX, y: this.posY }));
+            } catch (_) {
+                // Ignorar errores de almacenamiento.
+            }
         },
 
         setInitialPosition() {
@@ -929,6 +957,7 @@ function agenteEstiven() {
                 this.moveHandler = null;
             }
             this.clampToViewport();
+            this.persistPosition();
         },
 
         openPanel() {
@@ -937,7 +966,6 @@ function agenteEstiven() {
                 return;
             }
             this.open = true;
-            this.$nextTick(() => this.clampToViewport());
         },
 
         toggleOpenFromFab() {
@@ -950,7 +978,6 @@ function agenteEstiven() {
                 this.activeGuide = null;
                 this.vista = 'guias';
             }
-            this.$nextTick(() => this.clampToViewport());
         },
 
         get currentGuide() {

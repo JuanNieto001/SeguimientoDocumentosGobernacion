@@ -97,6 +97,8 @@ function DashboardMotorApp() {
     const [savingKey, setSavingKey] = useState('');
     const [toast, setToast] = useState(null);
     const [selectedTargetKey, setSelectedTargetKey] = useState(null);
+    const [selectedWidgetId, setSelectedWidgetId] = useState(null);
+    const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth || 1280);
 
     const [secretarias, setSecretarias] = useState(data.secretarias || []);
     const [unidades, setUnidades] = useState(data.unidades || []);
@@ -115,6 +117,8 @@ function DashboardMotorApp() {
             return text.includes(q);
         });
     }, [usuarios, query]);
+
+    const isMobile = viewportWidth < 960;
 
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });
@@ -156,16 +160,19 @@ function DashboardMotorApp() {
     };
 
     const addWidgetToTarget = (targetType, targetId, widgetDefinition) => {
+        const widgetId = `${widgetDefinition.metrica}_${Date.now()}_${Math.floor(Math.random() * 999)}`;
+
         updateTargetState(targetType, targetId, (obj) => {
             const current = Array.isArray(obj.customWidgets) ? obj.customWidgets : [];
             const nextOrder = current.length + 1;
-            const widgetId = `${widgetDefinition.metrica}_${Date.now()}_${Math.floor(Math.random() * 999)}`;
             const nextWidget = {
                 id: widgetId,
                 titulo: widgetDefinition.titulo,
                 tipo: widgetDefinition.tipo,
                 metrica: widgetDefinition.metrica,
                 orden: nextOrder,
+                ancho: widgetDefinition.tipo === 'kpi' ? 3 : 6,
+                alto: widgetDefinition.tipo === 'kpi' ? 1 : 2,
             };
             return {
                 ...obj,
@@ -173,6 +180,7 @@ function DashboardMotorApp() {
                 customWidgets: [...current, nextWidget],
             };
         });
+        setSelectedWidgetId(widgetId);
     };
 
     const removeWidgetFromTarget = (targetType, targetId, widgetId) => {
@@ -182,6 +190,10 @@ function DashboardMotorApp() {
             const normalized = without.map((w, idx) => ({ ...w, orden: idx + 1 }));
             return { ...obj, customWidgets: normalized };
         });
+
+        if (String(selectedWidgetId) === String(widgetId)) {
+            setSelectedWidgetId(null);
+        }
     };
 
     const moveWidget = (targetType, targetId, widgetId, direction) => {
@@ -211,12 +223,32 @@ function DashboardMotorApp() {
         });
     };
 
+    const updateWidgetLayout = (targetType, targetId, widgetId, field, value) => {
+        const parsed = Number.parseInt(String(value), 10);
+        if (Number.isNaN(parsed)) return;
+
+        const normalized = field === 'ancho'
+            ? Math.max(2, Math.min(12, parsed))
+            : Math.max(1, Math.min(4, parsed));
+
+        updateTargetState(targetType, targetId, (obj) => {
+            const current = Array.isArray(obj.customWidgets) ? obj.customWidgets : [];
+            return {
+                ...obj,
+                customWidgets: current.map((w) =>
+                    String(w.id) === String(widgetId) ? { ...w, [field]: normalized } : w
+                ),
+            };
+        });
+    };
+
     const saveTarget = async (targetType, target) => {
         const key = `${targetType}-${target.id || target.name}`;
         setSavingKey(key);
         try {
+            let response = null;
             if (targetType === 'secretaria') {
-                await apiPost(data.urls.assignSecretaria, {
+                response = await apiPost(data.urls.assignSecretaria, {
                     secretaria_id: target.id,
                     dashboard_plantilla_id: null,
                     chart_types_secretaria: target.chartTypes || {},
@@ -226,7 +258,7 @@ function DashboardMotorApp() {
             }
 
             if (targetType === 'rol') {
-                await apiPost(data.urls.assignRole, {
+                response = await apiPost(data.urls.assignRole, {
                     asignaciones: { [target.id]: null },
                     chart_types_role: { [target.id]: target.chartTypes || {} },
                     custom_widgets_role: { [target.id]: target.customWidgets || [] },
@@ -235,7 +267,7 @@ function DashboardMotorApp() {
             }
 
             if (targetType === 'unidad') {
-                await apiPost(data.urls.assignUnidad, {
+                response = await apiPost(data.urls.assignUnidad, {
                     unidad_id: target.id,
                     dashboard_plantilla_id: null,
                     chart_types_unidad: target.chartTypes || {},
@@ -245,7 +277,7 @@ function DashboardMotorApp() {
             }
 
             if (targetType === 'usuario') {
-                await apiPost(data.urls.assignUser, {
+                response = await apiPost(data.urls.assignUser, {
                     user_id: target.id,
                     dashboard_plantilla_id: null,
                     chart_types_usuario: target.chartTypes || {},
@@ -254,7 +286,7 @@ function DashboardMotorApp() {
                 });
             }
 
-            showToast('Dashboard guardado correctamente.');
+            showToast(response?.message || 'Dashboard guardado correctamente.');
         } catch (error) {
             showToast(error.message || 'Error al guardar.', 'error');
         } finally {
@@ -327,29 +359,65 @@ function DashboardMotorApp() {
         }
     }, [targetCards, selectedTargetKey]);
 
+    useEffect(() => {
+        setSelectedWidgetId(null);
+    }, [selectedTargetKey, scope]);
+
+    useEffect(() => {
+        const onResize = () => setViewportWidth(window.innerWidth || 1280);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
+
     const saveSelectedTarget = async () => {
         if (!selectedTarget) return;
+
+        const widgets = selectedTarget.customWidgets || [];
+        if (widgets.length === 0) {
+            showToast('Agrega al menos un widget antes de guardar el dashboard.', 'error');
+            return;
+        }
+
         await saveTarget(selectedTarget.type, selectedTarget);
     };
 
     return (
-        <div style={{ padding: 24 }}>
+        <div style={{ padding: isMobile ? 10 : 16, background: '#e9ecef', minHeight: '100vh' }}>
             {toast && (
                 <div style={{ position: 'fixed', top: 14, right: 16, zIndex: 3000, background: toast.type === 'error' ? '#dc2626' : '#059669', color: '#fff', padding: '10px 14px', borderRadius: 8, fontSize: 13, boxShadow: '0 8px 20px rgba(0,0,0,.18)' }}>
                     {toast.msg}
                 </div>
             )}
 
-            <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: 'linear-gradient(135deg,#1e3a8a,#4338ca)', color: '#fff' }}>
-                    <div style={{ fontSize: 14, fontWeight: 700 }}>Constructor visual de dashboards</div>
-                    <div style={{ fontSize: 12, opacity: .9, marginTop: 2 }}>Selecciona objetivo, arrastra widgets al lienzo y construye desde cero.</div>
+            <div style={{ background: '#fff', border: '1px solid #d4d4d8', borderRadius: 10, overflow: 'hidden', boxShadow: '0 10px 28px rgba(0,0,0,.08)' }}>
+                <div style={{ background: '#2f2f33', color: '#fff', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.02em' }}>Dashboard Studio - Gobernacion</div>
+                    <div style={{ fontSize: 11, opacity: .85 }}>Vista tipo Power BI</div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr 320px', minHeight: 640 }}>
-                    <aside style={{ borderRight: '1px solid #e5e7eb', background: '#fff' }}>
+                <div style={{ background: '#f3f4f6', borderBottom: '1px solid #d1d5db', padding: '8px 12px' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                        <button type="button" style={{ border: '1px solid #a3a3a3', borderRadius: 6, background: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 10px' }}>Inicio</button>
+                        <button type="button" style={{ border: '1px solid #d4d4d8', borderRadius: 6, background: '#fafafa', fontSize: 11, padding: '5px 10px' }}>Insertar</button>
+                        <button type="button" style={{ border: '1px solid #d4d4d8', borderRadius: 6, background: '#fafafa', fontSize: 11, padding: '5px 10px' }}>Modelado</button>
+                        <button type="button" style={{ border: '1px solid #d4d4d8', borderRadius: 6, background: '#fafafa', fontSize: 11, padding: '5px 10px' }}>Vista</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151' }}>Nuevo visual</div>
+                        <div style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151' }}>Transformar datos</div>
+                        <div style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151' }}>Publicar</div>
+                    </div>
+                </div>
+
+                <div style={{ padding: '10px 14px', borderBottom: '1px solid #e5e7eb', background: '#ffffff', color: '#111827' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>Constructor visual de dashboards</div>
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Selecciona objetivo, arrastra widgets al lienzo y construye desde cero.</div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '280px 1fr 320px', minHeight: 640 }}>
+                    <aside style={{ borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', background: '#fbfbfc', order: isMobile ? 2 : 0 }}>
                         <div style={{ padding: 12, borderBottom: '1px solid #e5e7eb' }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#1f2937' }}>Libreria de Widgets</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#1f2937' }}>Visualizaciones</div>
                             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>Arrastra al lienzo central</div>
                         </div>
 
@@ -388,7 +456,7 @@ function DashboardMotorApp() {
                         </div>
                     </aside>
 
-                    <section style={{ background: '#f8fafc' }}>
+                    <section style={{ background: '#eceff3', order: isMobile ? 1 : 0 }}>
                         <div style={{ padding: 12, borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                             <button onClick={() => setScope('secretaria')} style={{ border: '1px solid #cbd5e1', background: scope === 'secretaria' ? '#dbeafe' : '#fff', color: '#1e3a8a', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Por Secretaria</button>
                             <button onClick={() => setScope('unidad')} style={{ border: '1px solid #cbd5e1', background: scope === 'unidad' ? '#ede9fe' : '#fff', color: '#6d28d9', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Por Unidad</button>
@@ -406,7 +474,7 @@ function DashboardMotorApp() {
                             )}
                         </div>
 
-                        <div style={{ padding: 14, height: 560, overflow: 'auto' }}>
+                        <div style={{ padding: isMobile ? 10 : 14, height: 560, overflow: 'auto' }}>
                             {!selectedTarget && (
                                 <div style={{ border: '2px dashed #cbd5e1', borderRadius: 16, minHeight: 460, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
                                     <div style={{ textAlign: 'center', color: '#64748b', maxWidth: 360, padding: 24 }}>
@@ -420,9 +488,16 @@ function DashboardMotorApp() {
 
                             {selectedTarget && (() => {
                                 const saveKey = `${selectedTarget.type}-${selectedTarget.id}`;
-                                const widgets = [...(selectedTarget.customWidgets || [])].sort((a, b) => (a.orden || 0) - (b.orden || 0));
+                                const widgets = [...(selectedTarget.customWidgets || [])]
+                                    .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+                                    .map((w) => ({
+                                        ...w,
+                                        ancho: Number.isFinite(Number(w.ancho)) ? Number(w.ancho) : (w.tipo === 'kpi' ? 3 : 6),
+                                        alto: Number.isFinite(Number(w.alto)) ? Number(w.alto) : (w.tipo === 'kpi' ? 1 : 2),
+                                    }));
+                                const selectedWidget = widgets.find((w) => String(w.id) === String(selectedWidgetId)) || null;
                                 return (
-                                    <div style={{ background: '#fff', border: '1px solid #dbeafe', borderRadius: 16, padding: 16, boxShadow: '0 8px 20px rgba(0,0,0,.08)' }}>
+                                    <div style={{ background: '#fff', border: '1px solid #d1d5db', borderRadius: 10, padding: 16, boxShadow: '0 6px 18px rgba(0,0,0,.06)' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                                             <div>
                                                 <div style={{ fontSize: 18, fontWeight: 800, color: '#1e3a8a' }}>{selectedTarget.title}</div>
@@ -444,7 +519,7 @@ function DashboardMotorApp() {
                                                     showToast('No se pudo agregar el widget.', 'error');
                                                 }
                                             }}
-                                            style={{ marginTop: 14, border: '2px dashed #93c5fd', background: '#eff6ff', borderRadius: 12, padding: '12px 14px', fontSize: 12, color: '#1d4ed8', fontWeight: 700 }}>
+                                            style={{ marginTop: 14, border: '2px dashed #9ca3af', background: '#f9fafb', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: '#374151', fontWeight: 700 }}>
                                             Arrastre y suelte aqui los widgets
                                         </div>
 
@@ -455,53 +530,42 @@ function DashboardMotorApp() {
                                         )}
 
                                         {widgets.length > 0 && (
-                                            <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-                                                {widgets.map((widget, index) => (
-                                                    <div key={widget.id} style={{ border: '1px solid #d1d5db', borderRadius: 12, padding: 10, background: '#f8fafc' }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                                <Badge text={`#${index + 1}`} />
-                                                                <Badge
-                                                                    text={widget.tipo === 'kpi' ? 'KPI' : 'CHART'}
-                                                                    bg={widget.tipo === 'kpi' ? '#dcfce7' : '#dbeafe'}
-                                                                    color={widget.tipo === 'kpi' ? '#166534' : '#1e40af'}
-                                                                    border={widget.tipo === 'kpi' ? '#86efac' : '#93c5fd'}
-                                                                />
+                                            <div style={{ marginTop: 14, border: '1px solid #d1d5db', borderRadius: 10, padding: 12, background: '#f3f4f6' }}>
+                                                <div style={{ fontSize: 11, color: '#475569', marginBottom: 10, fontWeight: 700, textTransform: 'uppercase' }}>Lienzo</div>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 8, gridAutoRows: 64 }}>
+                                                    {widgets.map((widget, index) => {
+                                                        const active = String(selectedWidgetId) === String(widget.id);
+                                                        return (
+                                                            <div
+                                                                key={widget.id}
+                                                                onClick={() => setSelectedWidgetId(widget.id)}
+                                                                style={{
+                                                                    gridColumn: `span ${Math.max(2, Math.min(12, widget.ancho || (widget.tipo === 'kpi' ? 3 : 6)))}`,
+                                                                    gridRow: `span ${Math.max(1, Math.min(4, widget.alto || (widget.tipo === 'kpi' ? 1 : 2)))}`,
+                                                                    border: `2px solid ${active ? '#2563eb' : '#cbd5e1'}`,
+                                                                    borderRadius: 10,
+                                                                    background: '#fff',
+                                                                    padding: 10,
+                                                                    cursor: 'pointer',
+                                                                    boxShadow: active ? '0 0 0 2px rgba(37,99,235,.15)' : 'none',
+                                                                }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                                                                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{widget.titulo || widget.metrica}</div>
+                                                                    <Badge text={`#${index + 1}`} />
+                                                                </div>
+                                                                <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                                    <Badge
+                                                                        text={widget.tipo === 'kpi' ? 'KPI' : 'CHART'}
+                                                                        bg={widget.tipo === 'kpi' ? '#dcfce7' : '#dbeafe'}
+                                                                        color={widget.tipo === 'kpi' ? '#166534' : '#1e40af'}
+                                                                        border={widget.tipo === 'kpi' ? '#86efac' : '#93c5fd'}
+                                                                    />
+                                                                    <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>{widget.metrica.replaceAll('_', ' ')}</span>
+                                                                </div>
                                                             </div>
-                                                            <div style={{ display: 'flex', gap: 6 }}>
-                                                                <button type="button" onClick={() => moveWidget(selectedTarget.type, selectedTarget.id, widget.id, 'up')} style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: 8, fontSize: 11, padding: '4px 8px', cursor: 'pointer' }}>Subir</button>
-                                                                <button type="button" onClick={() => moveWidget(selectedTarget.type, selectedTarget.id, widget.id, 'down')} style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: 8, fontSize: 11, padding: '4px 8px', cursor: 'pointer' }}>Bajar</button>
-                                                                <button type="button" onClick={() => removeWidgetFromTarget(selectedTarget.type, selectedTarget.id, widget.id)} style={{ border: '1px solid #fecaca', background: '#fff1f2', color: '#be123c', borderRadius: 8, fontSize: 11, padding: '4px 8px', cursor: 'pointer' }}>Quitar</button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 200px', gap: 8 }}>
-                                                            <input
-                                                                type="text"
-                                                                value={widget.titulo || ''}
-                                                                onChange={(e) => updateWidgetTitle(selectedTarget.type, selectedTarget.id, widget.id, e.target.value)}
-                                                                placeholder="Titulo del widget"
-                                                                style={{ width: '100%', padding: '7px 8px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 12 }}
-                                                            />
-                                                            <div style={{ fontSize: 11, color: '#475569', display: 'flex', alignItems: 'center', textTransform: 'uppercase' }}>
-                                                                {widget.metrica.replaceAll('_', ' ')}
-                                                            </div>
-                                                        </div>
-
-                                                        {widget.tipo === 'chart' && (
-                                                            <div style={{ marginTop: 8 }}>
-                                                                <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', fontWeight: 700 }}>Tipo de grafica</div>
-                                                                <select
-                                                                    value={(selectedTarget.chartTypes || {})[widget.metrica] || ''}
-                                                                    onChange={(e) => updateChartType(selectedTarget.type, selectedTarget.id, widget.metrica, e.target.value)}
-                                                                    style={{ width: '100%', maxWidth: 240, padding: '7px 8px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 11 }}>
-                                                                    <option value="">Default</option>
-                                                                    {(chartOptions[widget.metrica] || []).map((opt) => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
-                                                                </select>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         )}
 
@@ -537,15 +601,77 @@ function DashboardMotorApp() {
                                                 {savingKey === saveKey ? 'Guardando...' : 'Guardar configuracion'}
                                             </button>
                                         </div>
+
+                                        {selectedWidget && (
+                                            <div style={{ marginTop: 14, border: '1px solid #cbd5e1', borderRadius: 12, background: '#ffffff', padding: 12 }}>
+                                                <div style={{ fontSize: 11, fontWeight: 800, color: '#1f2937', textTransform: 'uppercase', marginBottom: 8 }}>Propiedades del visual</div>
+
+                                                <div style={{ display: 'grid', gap: 8 }}>
+                                                    <div>
+                                                        <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', fontWeight: 700 }}>Titulo</div>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedWidget.titulo || ''}
+                                                            onChange={(e) => updateWidgetTitle(selectedTarget.type, selectedTarget.id, selectedWidget.id, e.target.value)}
+                                                            style={{ width: '100%', padding: '7px 8px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 12 }}
+                                                        />
+                                                    </div>
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                                        <div>
+                                                            <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', fontWeight: 700 }}>Ancho (2-12)</div>
+                                                            <input
+                                                                type="number"
+                                                                min="2"
+                                                                max="12"
+                                                                value={selectedWidget.ancho || (selectedWidget.tipo === 'kpi' ? 3 : 6)}
+                                                                onChange={(e) => updateWidgetLayout(selectedTarget.type, selectedTarget.id, selectedWidget.id, 'ancho', e.target.value)}
+                                                                style={{ width: '100%', padding: '7px 8px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 12 }}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', fontWeight: 700 }}>Alto (1-4)</div>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max="4"
+                                                                value={selectedWidget.alto || (selectedWidget.tipo === 'kpi' ? 1 : 2)}
+                                                                onChange={(e) => updateWidgetLayout(selectedTarget.type, selectedTarget.id, selectedWidget.id, 'alto', e.target.value)}
+                                                                style={{ width: '100%', padding: '7px 8px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 12 }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {selectedWidget.tipo === 'chart' && (
+                                                        <div>
+                                                            <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', fontWeight: 700 }}>Tipo de grafica</div>
+                                                            <select
+                                                                value={(selectedTarget.chartTypes || {})[selectedWidget.metrica] || ''}
+                                                                onChange={(e) => updateChartType(selectedTarget.type, selectedTarget.id, selectedWidget.metrica, e.target.value)}
+                                                                style={{ width: '100%', padding: '7px 8px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 11 }}>
+                                                                <option value="">Default</option>
+                                                                {(chartOptions[selectedWidget.metrica] || []).map((opt) => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
+                                                            </select>
+                                                        </div>
+                                                    )}
+
+                                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                        <button type="button" onClick={() => moveWidget(selectedTarget.type, selectedTarget.id, selectedWidget.id, 'up')} style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: 8, fontSize: 11, padding: '5px 8px', cursor: 'pointer' }}>Mover arriba</button>
+                                                        <button type="button" onClick={() => moveWidget(selectedTarget.type, selectedTarget.id, selectedWidget.id, 'down')} style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: 8, fontSize: 11, padding: '5px 8px', cursor: 'pointer' }}>Mover abajo</button>
+                                                        <button type="button" onClick={() => removeWidgetFromTarget(selectedTarget.type, selectedTarget.id, selectedWidget.id)} style={{ border: '1px solid #fecaca', background: '#fff1f2', color: '#be123c', borderRadius: 8, fontSize: 11, padding: '5px 8px', cursor: 'pointer' }}>Eliminar</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })()}
                         </div>
                     </section>
 
-                    <aside style={{ borderLeft: '1px solid #e5e7eb', background: '#fff' }}>
+                    <aside style={{ borderLeft: isMobile ? 'none' : '1px solid #e5e7eb', borderTop: isMobile ? '1px solid #e5e7eb' : 'none', background: '#ffffff', order: isMobile ? 3 : 0 }}>
                         <div style={{ padding: 12, borderBottom: '1px solid #e5e7eb' }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#1f2937' }}>Objetivos</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#1f2937' }}>Filtros y Objetivos</div>
                             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>Seleccione donde construir</div>
                         </div>
 
@@ -607,7 +733,7 @@ function DashboardMotorApp() {
                 </div>
             </div>
 
-            <div style={{ marginTop: 16, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12 }}>
+            <div style={{ marginTop: 12, background: '#fff', border: '1px solid #d4d4d8', borderRadius: 10 }}>
                 <div style={{ padding: '10px 14px', borderBottom: '1px solid #e5e7eb', fontSize: 13, fontWeight: 700, color: '#1f2937' }}>Historial de asignaciones</div>
                 <div style={{ maxHeight: 220, overflowY: 'auto' }}>
                     {(data.historial || []).length === 0 && <div style={{ padding: 16, fontSize: 12, color: '#94a3b8' }}>Sin cambios registrados.</div>}

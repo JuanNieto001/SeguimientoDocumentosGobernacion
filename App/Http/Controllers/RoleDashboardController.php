@@ -11,6 +11,7 @@ use App\Models\DashboardUsuarioAsignacion;
 use App\Models\Proceso;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class RoleDashboardController extends Controller
@@ -35,7 +36,7 @@ class RoleDashboardController extends Controller
             $dataScope = $this->sanitizeDataScopeForUser((string) ($asignacionUsuario->config_json['data_scope'] ?? 'usuario'), $user, $roles);
         } else {
             $asignacionUnidad = null;
-            if (!empty($user->unidad_id)) {
+            if (Schema::hasTable('dashboard_unidad_asignaciones') && !empty($user->unidad_id)) {
                 $asignacionUnidad = DashboardUnidadAsignacion::query()
                     ->with(['plantilla.widgets' => fn ($q) => $q->where('activo', true)->orderBy('orden')])
                     ->where('unidad_id', (int) $user->unidad_id)
@@ -148,6 +149,8 @@ class RoleDashboardController extends Controller
                     'metrica' => $metrica,
                     'titulo' => (string) ($item['titulo'] ?? ucfirst(str_replace('_', ' ', $metrica))),
                     'orden' => (int) ($item['orden'] ?? ($index + 1)),
+                    'ancho' => (int) ($item['ancho'] ?? ($tipo === 'kpi' ? 3 : 6)),
+                    'alto' => (int) ($item['alto'] ?? ($tipo === 'kpi' ? 1 : 2)),
                 ];
             })
             ->filter()

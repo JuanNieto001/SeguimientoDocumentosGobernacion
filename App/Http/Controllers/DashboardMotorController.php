@@ -15,6 +15,7 @@ use App\Support\RoleLabels;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
@@ -79,10 +80,12 @@ class DashboardMotorController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        $asignacionesUnidad = DashboardUnidadAsignacion::query()
-            ->with(['plantilla:id,nombre'])
-            ->get()
-            ->keyBy('unidad_id');
+        $asignacionesUnidad = Schema::hasTable('dashboard_unidad_asignaciones')
+            ? DashboardUnidadAsignacion::query()
+                ->with(['plantilla:id,nombre'])
+                ->get()
+                ->keyBy('unidad_id')
+            : collect();
 
         $chartTypeOptions = self::CHART_TYPE_OPTIONS;
         $widgetLibrary = self::WIDGET_LIBRARY;
@@ -482,6 +485,21 @@ class DashboardMotorController extends Controller
 
     public function guardarAsignacionUnidad(Request $request): RedirectResponse|JsonResponse
     {
+        if (!Schema::hasTable('dashboard_unidad_asignaciones')) {
+            $message = 'La tabla dashboard_unidad_asignaciones no existe. Ejecuta php artisan migrate para habilitar asignaciones por unidad.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return back()->withErrors([
+                'unidad_id' => $message,
+            ]);
+        }
+
         $validated = $request->validate([
             'unidad_id' => ['required', 'integer', 'exists:unidades,id'],
             'dashboard_plantilla_id' => ['nullable', 'integer', 'exists:dashboard_plantillas,id'],
@@ -604,16 +622,14 @@ class DashboardMotorController extends Controller
 
     private function normalizeCustomWidgets(array $customWidgets): array
     {
-        $allowedMetrics = collect(self::WIDGET_LIBRARY)->pluck('metrica')->all();
-
         return collect($customWidgets)
             ->filter(fn ($item) => is_array($item))
-            ->map(function ($item, $index) use ($allowedMetrics) {
+            ->map(function ($item, $index) {
                 $metrica = (string) ($item['metrica'] ?? '');
                 $tipo = (string) ($item['tipo'] ?? '');
                 $titulo = trim((string) ($item['titulo'] ?? ''));
 
-                if (!in_array($metrica, $allowedMetrics, true)) {
+                if ($metrica === '') {
                     return null;
                 }
 
@@ -627,6 +643,8 @@ class DashboardMotorController extends Controller
                     'tipo' => $tipo,
                     'metrica' => $metrica,
                     'orden' => (int) ($item['orden'] ?? ($index + 1)),
+                    'ancho' => max(2, min(12, (int) ($item['ancho'] ?? ($tipo === 'kpi' ? 3 : 6)))),
+                    'alto' => max(1, min(4, (int) ($item['alto'] ?? ($tipo === 'kpi' ? 1 : 2)))),
                 ];
             })
             ->filter()
