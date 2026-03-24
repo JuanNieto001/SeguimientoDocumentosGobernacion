@@ -22,7 +22,22 @@ class DashboardController extends Controller
         if ($user->hasRole('admin')) {
             return $this->dashboardAdmin();
         }
-        
+
+        // Gobernador: dashboard ejecutivo con visión global
+        if ($user->hasRole('gobernador')) {
+            return $this->dashboardGobernador();
+        }
+
+        // Secretario: dashboard de su secretaría
+        if ($user->hasRole('secretario')) {
+            return $this->dashboardSecretario($user);
+        }
+
+        // Jefe de Unidad: dashboard de su unidad
+        if ($user->hasRole('jefe_unidad')) {
+            return $this->dashboardJefeUnidad($user);
+        }
+
         // ── Roles de área específica (solicitudes paralelas Etapa 1) ──────────
         $rolesDocumentos = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
         $userRolesDoc = collect($rolesDocumentos)->filter(fn($r) => $user->hasRole($r));
@@ -79,6 +94,146 @@ class DashboardController extends Controller
         $metricas = $this->computeMetricas($user, $userRolesDoc);
 
         return view('dashboard', compact('enCurso', 'finalizados', 'solicitudesPendientes', 'metricas'));
+    }
+
+    /**
+     * Dashboard ejecutivo para el Gobernador – visión global del sistema
+     */
+    private function dashboardGobernador()
+    {
+        $totalProcesos    = DB::table('procesos')->count();
+        $procesosActivos  = DB::table('procesos')->where('estado', 'EN_CURSO')->count();
+        $procesosFinalizados = DB::table('procesos')->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])->count();
+        $procesosRechazados  = DB::table('procesos')->where('estado', 'RECHAZADO')->count();
+
+        $inicioMes = now()->startOfMonth();
+        $finMes    = now()->endOfMonth();
+        $procesosMes = DB::table('procesos')->whereBetween('created_at', [$inicioMes, $finMes])->count();
+
+        // Distribución por área
+        $distribucionArea = DB::table('procesos')
+            ->select('area_actual_role', DB::raw('count(*) as total'))
+            ->where('estado', 'EN_CURSO')
+            ->groupBy('area_actual_role')
+            ->get();
+
+        // Contratos de aplicaciones próximos a vencer
+        $contratosProxVencer = \App\Models\ContratoAplicacion::proximosAVencer(60)
+            ->with('secretaria')
+            ->orderBy('fecha_fin')
+            ->get();
+
+        // Últimas alertas sin leer
+        $alertas = Alerta::where('leida', false)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        // Tendencia últimos 6 meses
+        $tendencia = $this->obtenerTendenciaUltimosSeisMeses();
+
+        return view('dashboard.gobernador', compact(
+            'totalProcesos', 'procesosActivos', 'procesosFinalizados', 'procesosRechazados',
+            'procesosMes', 'distribucionArea', 'contratosProxVencer', 'alertas', 'tendencia'
+        ));
+    }
+
+    /**
+     * Dashboard para el Secretario – visión de su secretaría
+     */
+    private function dashboardSecretario($user)
+    {
+        $secretariaId = $user->secretaria_id;
+
+        $totalProcesos   = DB::table('procesos')->where('secretaria_origen_id', $secretariaId)->count();
+        $procesosActivos = DB::table('procesos')
+            ->where('secretaria_origen_id', $secretariaId)
+            ->where('estado', 'EN_CURSO')
+            ->count();
+        $procesosFinalizados = DB::table('procesos')
+            ->where('secretaria_origen_id', $secretariaId)
+            ->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])
+            ->count();
+
+        $inicioMes = now()->startOfMonth();
+        $finMes    = now()->endOfMonth();
+        $procesosMes = DB::table('procesos')
+            ->where('secretaria_origen_id', $secretariaId)
+            ->whereBetween('created_at', [$inicioMes, $finMes])
+            ->count();
+
+        // Procesos en curso de la secretaría
+        $procesosEnCurso = DB::table('procesos as p')
+            ->leftJoin('etapas as e', 'e.id', '=', 'p.etapa_actual_id')
+            ->where('p.secretaria_origen_id', $secretariaId)
+            ->where('p.estado', 'EN_CURSO')
+            ->select('p.id', 'p.codigo', 'p.objeto', 'p.area_actual_role', 'p.updated_at', 'e.nombre as etapa')
+            ->orderByDesc('p.updated_at')
+            ->limit(10)
+            ->get();
+
+        // Contratos de aplicaciones de la secretaría
+        $contratos = \App\Models\ContratoAplicacion::where('secretaria_id', $secretariaId)
+            ->orderByRaw("CASE estado WHEN 'activo' THEN 0 ELSE 1 END")
+            ->orderBy('fecha_fin')
+            ->limit(5)
+            ->get();
+
+        $secretaria = $user->secretaria;
+
+        return view('dashboard.secretario', compact(
+            'totalProcesos', 'procesosActivos', 'procesosFinalizados', 'procesosMes',
+            'procesosEnCurso', 'contratos', 'secretaria'
+        ));
+    }
+
+    /**
+     * Dashboard para el Jefe de Unidad – visión de su unidad
+     */
+    private function dashboardJefeUnidad($user)
+    {
+        $unidadId = $user->unidad_id;
+
+        $totalProcesos   = DB::table('procesos')->where('unidad_origen_id', $unidadId)->count();
+        $procesosActivos = DB::table('procesos')
+            ->where('unidad_origen_id', $unidadId)
+            ->where('estado', 'EN_CURSO')
+            ->count();
+        $procesosFinalizados = DB::table('procesos')
+            ->where('unidad_origen_id', $unidadId)
+            ->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])
+            ->count();
+
+        $inicioMes = now()->startOfMonth();
+        $finMes    = now()->endOfMonth();
+        $procesosMes = DB::table('procesos')
+            ->where('unidad_origen_id', $unidadId)
+            ->whereBetween('created_at', [$inicioMes, $finMes])
+            ->count();
+
+        // Procesos en curso de la unidad
+        $procesosEnCurso = DB::table('procesos as p')
+            ->leftJoin('etapas as e', 'e.id', '=', 'p.etapa_actual_id')
+            ->where('p.unidad_origen_id', $unidadId)
+            ->where('p.estado', 'EN_CURSO')
+            ->select('p.id', 'p.codigo', 'p.objeto', 'p.area_actual_role', 'p.updated_at', 'e.nombre as etapa')
+            ->orderByDesc('p.updated_at')
+            ->limit(10)
+            ->get();
+
+        // Alertas del usuario
+        $alertas = Alerta::where('leida', false)
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        $unidad = $user->unidad;
+
+        return view('dashboard.jefe-unidad', compact(
+            'totalProcesos', 'procesosActivos', 'procesosFinalizados', 'procesosMes',
+            'procesosEnCurso', 'alertas', 'unidad'
+        ));
     }
 
     /**

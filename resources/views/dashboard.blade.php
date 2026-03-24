@@ -20,6 +20,9 @@
                             'hacienda'            => 'Secretaría de Hacienda',
                             'juridica'            => 'Secretaría Jurídica',
                             'secop'               => 'Grupo SECOP',
+                            'gobernador'          => 'Despacho del Gobernador',
+                            'secretario'          => 'Secretario de Despacho',
+                            'jefe_unidad'         => 'Jefe de Unidad',
                         ];
                         $userRoleLabel = collect($roleLabels)->first(fn($label, $role) => auth()->user()->hasRole($role)) ?? 'Usuario';
                     @endphp

@@ -378,6 +378,35 @@ Route::middleware(['auth'])->prefix('procesos')->name('modificaciones.')->group(
 use App\Http\Controllers\ContractProcessController;
 use App\Http\Controllers\ProcessDocumentController;
 use App\Http\Controllers\ProcesoContratacionDirectaController;
+use App\Http\Controllers\ContratoAplicacionController;
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: Contratos de Aplicaciones
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'permission:contratos_app.ver'])
+    ->prefix('contratos-app')
+    ->name('contratos-app.')
+    ->group(function () {
+        Route::get('/', [ContratoAplicacionController::class, 'index'])->name('index');
+        Route::get('/crear', [ContratoAplicacionController::class, 'create'])
+            ->middleware('permission:contratos_app.crear')
+            ->name('create');
+        Route::post('/', [ContratoAplicacionController::class, 'store'])
+            ->middleware('permission:contratos_app.crear')
+            ->name('store');
+        Route::get('/{contratosApp}', [ContratoAplicacionController::class, 'show'])->name('show');
+        Route::get('/{contratosApp}/editar', [ContratoAplicacionController::class, 'edit'])
+            ->middleware('permission:contratos_app.editar')
+            ->name('edit');
+        Route::put('/{contratosApp}', [ContratoAplicacionController::class, 'update'])
+            ->middleware('permission:contratos_app.editar')
+            ->name('update');
+        Route::delete('/{contratosApp}', [ContratoAplicacionController::class, 'destroy'])
+            ->middleware('permission:contratos_app.eliminar')
+            ->name('destroy');
+    });
 
 /*
 |--------------------------------------------------------------------------

@@ -104,6 +104,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'dashboard.admin',
             'dashboard.buscar',
 
+            // ─── CONTRATOS DE APLICACIONES ───────────────────────────────────────────
+            'contratos_app.ver',
+            'contratos_app.crear',
+            'contratos_app.editar',
+            'contratos_app.eliminar',
+
             // ─── ASIGNAR ROLES ───────────────────────────────────────────────────────
             'asignar_roles',
         ];
@@ -150,6 +156,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'revisor_juridico'          => 'Revisor Jurídico – Aprueba/rechaza procesos',
             'consulta'                  => 'Consulta – Solo lectura',
             'gobernador'                => 'Gobernador – Despacho del Gobernador, consulta general y SECOP',
+            'secretario'                => 'Secretario – Secretario de Despacho, gestiona su secretaría',
+            'jefe_unidad'               => 'Jefe de Unidad – Jefe de unidad administrativa (no jefe de sistemas)',
         ];
 
         foreach ($nuevosRoles as $roleName => $description) {
@@ -374,6 +382,71 @@ class RolesAndPermissionsSeeder extends Seeder
                 'alertas.ver',
                 'alertas.leer',
                 'dashboard.ver',
+            ]);
+        }
+
+        // ── gobernador → Consulta general, SECOP y contratos de aplicaciones ────
+        $gobernadorRole = Role::where('name', 'gobernador')->first();
+        if ($gobernadorRole) {
+            $gobernadorRole->syncPermissions([
+                'procesos.ver',
+                'archivos.descargar',
+                'paa.ver',
+                'alertas.ver',
+                'alertas.leer',
+                'reportes.ver',
+                'reportes.estado_general',
+                'reportes.por_dependencia',
+                'reportes.eficiencia',
+                'dashboard.ver',
+                'contratos_app.ver',
+            ]);
+        }
+
+        // ── secretario → Gestiona su secretaría, ve procesos y contratos ────────
+        $secretarioRole = Role::where('name', 'secretario')->first();
+        if ($secretarioRole) {
+            $secretarioRole->syncPermissions([
+                'secretarias.ver',
+                'unidades.ver',
+                'procesos.ver',
+                'procesos.crear',
+                'archivos.subir',
+                'archivos.descargar',
+                'paa.ver',
+                'alertas.ver',
+                'alertas.leer',
+                'alertas.leer.todas',
+                'reportes.ver',
+                'reportes.estado_general',
+                'reportes.por_dependencia',
+                'dashboard.ver',
+                'dashboard.buscar',
+                'contratos_app.ver',
+                'contratos_app.crear',
+                'contratos_app.editar',
+            ]);
+        }
+
+        // ── jefe_unidad → Gestiona su unidad, crea procesos y ve contratos ──────
+        $jefeUnidadRole = Role::where('name', 'jefe_unidad')->first();
+        if ($jefeUnidadRole) {
+            $jefeUnidadRole->syncPermissions([
+                'unidades.ver',
+                'procesos.ver',
+                'procesos.crear',
+                'procesos.editar',
+                'procesos.enviar',
+                'archivos.subir',
+                'archivos.descargar',
+                'archivos.reemplazar',
+                'paa.ver',
+                'alertas.ver',
+                'alertas.leer',
+                'reportes.ver',
+                'reportes.estado_general',
+                'dashboard.ver',
+                'contratos_app.ver',
             ]);
         }
 
