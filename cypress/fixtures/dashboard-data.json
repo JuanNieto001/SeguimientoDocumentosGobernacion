@@ -1,0 +1,406 @@
+{
+  "widget_configs": {
+    "admin": {
+      "widgets": [
+        {
+          "id": "procesos-globales",
+          "name": "Procesos Globales",
+          "type": "chart",
+          "position": 0,
+          "size": "large",
+          "permissions": ["super_admin"]
+        },
+        {
+          "id": "presupuesto-total",
+          "name": "Presupuesto Total",
+          "type": "metric",
+          "position": 1,
+          "size": "medium",
+          "permissions": ["super_admin", "gobernador"]
+        },
+        {
+          "id": "usuarios-activos",
+          "name": "Usuarios Activos",
+          "type": "counter",
+          "position": 2,
+          "size": "small",
+          "permissions": ["super_admin"]
+        },
+        {
+          "id": "secretarias-overview",
+          "name": "Resumen Secretarías",
+          "type": "table",
+          "position": 3,
+          "size": "large",
+          "permissions": ["super_admin", "gobernador"]
+        },
+        {
+          "id": "rendimiento-sistema",
+          "name": "Rendimiento del Sistema",
+          "type": "gauge",
+          "position": 4,
+          "size": "medium",
+          "permissions": ["super_admin"]
+        },
+        {
+          "id": "alertas-sistema",
+          "name": "Alertas del Sistema",
+          "type": "list",
+          "position": 5,
+          "size": "medium",
+          "permissions": ["super_admin"]
+        }
+      ]
+    },
+    "ejecutivo": {
+      "widgets": [
+        {
+          "id": "resumen-ejecutivo",
+          "name": "Resumen Ejecutivo",
+          "type": "summary",
+          "position": 0,
+          "size": "large",
+          "permissions": ["gobernador"]
+        },
+        {
+          "id": "procesos-criticos",
+          "name": "Procesos Críticos",
+          "type": "alert_list",
+          "position": 1,
+          "size": "medium",
+          "permissions": ["gobernador"]
+        },
+        {
+          "id": "presupuesto-global",
+          "name": "Presupuesto Global",
+          "type": "donut_chart",
+          "position": 2,
+          "size": "large",
+          "permissions": ["gobernador"]
+        },
+        {
+          "id": "indicadores-clave",
+          "name": "Indicadores Clave",
+          "type": "kpi_grid",
+          "position": 3,
+          "size": "large",
+          "permissions": ["gobernador"]
+        },
+        {
+          "id": "alertas-ejecutivas",
+          "name": "Alertas Ejecutivas",
+          "type": "priority_list",
+          "position": 4,
+          "size": "medium",
+          "permissions": ["gobernador"]
+        }
+      ]
+    },
+    "secretarial": {
+      "widgets": [
+        {
+          "id": "procesos-secretaria",
+          "name": "Procesos de la Secretaría",
+          "type": "bar_chart",
+          "position": 0,
+          "size": "large",
+          "permissions": ["secretario"]
+        },
+        {
+          "id": "presupuesto-secretaria",
+          "name": "Presupuesto de la Secretaría",
+          "type": "progress_bar",
+          "position": 1,
+          "size": "medium",
+          "permissions": ["secretario"]
+        },
+        {
+          "id": "equipo-trabajo",
+          "name": "Equipo de Trabajo",
+          "type": "team_grid",
+          "position": 2,
+          "size": "medium",
+          "permissions": ["secretario"]
+        },
+        {
+          "id": "metas-secretaria",
+          "name": "Metas de la Secretaría",
+          "type": "goal_progress",
+          "position": 3,
+          "size": "large",
+          "permissions": ["secretario"]
+        }
+      ]
+    },
+    "operacional": {
+      "widgets": [
+        {
+          "id": "carga-trabajo",
+          "name": "Carga de Trabajo",
+          "type": "workload_meter",
+          "position": 0,
+          "size": "medium",
+          "permissions": ["coord_contratacion", "profesional_contratacion"]
+        },
+        {
+          "id": "procesos-asignados",
+          "name": "Procesos Asignados",
+          "type": "task_list",
+          "position": 1,
+          "size": "large",
+          "permissions": ["coord_contratacion", "profesional_contratacion"]
+        },
+        {
+          "id": "documentos-pendientes",
+          "name": "Documentos Pendientes",
+          "type": "document_queue",
+          "position": 2,
+          "size": "medium",
+          "permissions": ["coord_contratacion", "profesional_contratacion"]
+        },
+        {
+          "id": "etapas-criticas",
+          "name": "Etapas Críticas",
+          "type": "stage_timeline",
+          "position": 3,
+          "size": "large",
+          "permissions": ["coord_contratacion"]
+        }
+      ]
+    }
+  },
+  "sample_data": {
+    "procesos_globales": {
+      "total": 156,
+      "en_proceso": 89,
+      "finalizados": 67,
+      "criticos": 12,
+      "por_etapa": {
+        "etapa_0": 15,
+        "etapa_1": 23,
+        "etapa_2": 18,
+        "etapa_3": 12,
+        "etapa_4": 8,
+        "etapa_5": 7,
+        "etapa_6": 4,
+        "etapa_7": 1,
+        "etapa_8": 1,
+        "etapa_9": 0
+      },
+      "tendencia_mensual": [
+        {"mes": "Enero", "creados": 25, "finalizados": 20},
+        {"mes": "Febrero", "creados": 30, "finalizados": 22},
+        {"mes": "Marzo", "creados": 28, "finalizados": 25}
+      ]
+    },
+    "presupuesto_total": {
+      "total": 25500000000,
+      "ejecutado": 15300000000,
+      "comprometido": 8200000000,
+      "disponible": 2000000000,
+      "porcentaje_ejecucion": 60,
+      "por_secretaria": {
+        "planeacion": {"asignado": 5500000000, "ejecutado": 3300000000},
+        "hacienda": {"asignado": 8000000000, "ejecutado": 4800000000},
+        "gobierno": {"asignado": 3200000000, "ejecutado": 1920000000},
+        "infraestructura": {"asignado": 6800000000, "ejecutado": 4080000000},
+        "educacion": {"asignado": 2000000000, "ejecutado": 1200000000}
+      }
+    },
+    "usuarios_activos": {
+      "total": 245,
+      "conectados_hoy": 89,
+      "sesiones_activas": 45,
+      "por_rol": {
+        "super_admin": 2,
+        "secretario": 8,
+        "coordinador": 12,
+        "profesional": 56,
+        "revisor": 15,
+        "operador": 8,
+        "consulta": 144
+      }
+    },
+    "secretarias_overview": {
+      "secretarias": [
+        {
+          "id": 1,
+          "nombre": "Planeación",
+          "procesos_activos": 23,
+          "presupuesto_ejecutado": 60,
+          "personal_activo": 45,
+          "alertas": 2
+        },
+        {
+          "id": 2,
+          "nombre": "Hacienda",
+          "procesos_activos": 31,
+          "presupuesto_ejecutado": 60,
+          "personal_activo": 38,
+          "alertas": 1
+        },
+        {
+          "id": 3,
+          "nombre": "Gobierno",
+          "procesos_activos": 15,
+          "presupuesto_ejecutado": 60,
+          "personal_activo": 28,
+          "alertas": 0
+        },
+        {
+          "id": 4,
+          "nombre": "Infraestructura",
+          "procesos_activos": 18,
+          "presupuesto_ejecutado": 60,
+          "personal_activo": 52,
+          "alertas": 3
+        },
+        {
+          "id": 5,
+          "nombre": "Educación",
+          "procesos_activos": 12,
+          "presupuesto_ejecutado": 60,
+          "personal_activo": 34,
+          "alertas": 1
+        }
+      ]
+    },
+    "rendimiento_sistema": {
+      "cpu_usage": 45,
+      "memory_usage": 62,
+      "disk_usage": 38,
+      "response_time": 245,
+      "uptime": 99.8,
+      "active_connections": 127
+    },
+    "alertas_sistema": {
+      "criticas": [
+        {
+          "id": 1,
+          "tipo": "presupuesto",
+          "mensaje": "Presupuesto de Secretaría de Infraestructura próximo al límite",
+          "timestamp": "2026-03-24T08:30:00Z",
+          "severity": "critica"
+        },
+        {
+          "id": 2,
+          "tipo": "proceso",
+          "mensaje": "Proceso CD-PN-096-2026 excede tiempo límite en Etapa 3",
+          "timestamp": "2026-03-24T07:45:00Z",
+          "severity": "critica"
+        }
+      ],
+      "warnings": [
+        {
+          "id": 3,
+          "tipo": "documento",
+          "mensaje": "15 documentos pendientes de revisión jurídica",
+          "timestamp": "2026-03-24T06:20:00Z",
+          "severity": "warning"
+        },
+        {
+          "id": 4,
+          "tipo": "usuario",
+          "mensaje": "Usuario revisor.juridico@caldas.gov.co inactivo por 7 días",
+          "timestamp": "2026-03-23T14:15:00Z",
+          "severity": "warning"
+        }
+      ]
+    },
+    "carga_trabajo": {
+      "procesos_asignados": 12,
+      "documentos_pendientes": 28,
+      "conceptos_emitir": 5,
+      "revisiones_pendientes": 8,
+      "porcentaje_capacidad": 75,
+      "tiempo_promedio_etapa": 3.2
+    },
+    "procesos_asignados": [
+      {
+        "codigo": "CD-PN-089-2026",
+        "objeto": "Contratación consultor sistemas de información",
+        "etapa_actual": 2,
+        "etapa_nombre": "Validación del Contratista",
+        "dias_en_etapa": 3,
+        "prioridad": "alta",
+        "vencimiento": "2026-03-28"
+      },
+      {
+        "codigo": "CD-PN-092-2026",
+        "objeto": "Mantenimiento equipos de cómputo",
+        "etapa_actual": 4,
+        "etapa_nombre": "Consolidación Expediente",
+        "dias_en_etapa": 1,
+        "prioridad": "media",
+        "vencimiento": "2026-03-30"
+      },
+      {
+        "codigo": "CD-PN-095-2026",
+        "objeto": "Consultoría técnica especializada",
+        "etapa_actual": 1,
+        "etapa_nombre": "Elaboración de Estudios Previos",
+        "dias_en_etapa": 2,
+        "prioridad": "baja",
+        "vencimiento": "2026-04-02"
+      }
+    ]
+  },
+  "filter_options": {
+    "date_ranges": [
+      {"value": "today", "label": "Hoy"},
+      {"value": "this-week", "label": "Esta semana"},
+      {"value": "this-month", "label": "Este mes"},
+      {"value": "this-quarter", "label": "Este trimestre"},
+      {"value": "this-year", "label": "Este año"},
+      {"value": "last-7-days", "label": "Últimos 7 días"},
+      {"value": "last-30-days", "label": "Últimos 30 días"},
+      {"value": "last-90-days", "label": "Últimos 90 días"},
+      {"value": "custom", "label": "Período personalizado"}
+    ],
+    "secretarias": [
+      {"id": 1, "nombre": "Planeación", "codigo": "PLAN"},
+      {"id": 2, "nombre": "Hacienda", "codigo": "HAC"},
+      {"id": 3, "nombre": "Gobierno", "codigo": "GOB"},
+      {"id": 4, "nombre": "Infraestructura", "codigo": "INF"},
+      {"id": 5, "nombre": "Educación", "codigo": "EDU"},
+      {"id": 6, "nombre": "Salud", "codigo": "SAL"},
+      {"id": 7, "nombre": "Agricultura", "codigo": "AGR"}
+    ],
+    "unidades": [
+      {"id": 1, "nombre": "Sistemas de Información", "secretaria_id": 1},
+      {"id": 2, "nombre": "Contratación", "secretaria_id": 1},
+      {"id": 3, "nombre": "Presupuesto", "secretaria_id": 2},
+      {"id": 4, "nombre": "Tesorería", "secretaria_id": 2},
+      {"id": 5, "nombre": "Jurídica", "secretaria_id": 3},
+      {"id": 6, "nombre": "Comunicaciones", "secretaria_id": 3}
+    ],
+    "estados_proceso": [
+      {"value": "todas", "label": "Todas las etapas"},
+      {"value": "etapa_0", "label": "Identificación de Necesidad"},
+      {"value": "etapa_1", "label": "Estudios Previos"},
+      {"value": "etapa_2", "label": "Validación Contratista"},
+      {"value": "etapa_3", "label": "Revisión Presupuestal"},
+      {"value": "etapa_4", "label": "Consolidación Expediente"},
+      {"value": "etapa_5", "label": "Revisión Jurídica"},
+      {"value": "etapa_6", "label": "Publicación SECOP II"},
+      {"value": "etapa_7", "label": "Solicitud RPC"},
+      {"value": "etapa_8", "label": "Suscripción Contrato"},
+      {"value": "etapa_9", "label": "Inicio Ejecución"}
+    ]
+  },
+  "performance_metrics": {
+    "load_times": {
+      "dashboard_initial": 2500,
+      "widget_procesos": 800,
+      "widget_presupuesto": 1200,
+      "widget_usuarios": 400,
+      "filter_application": 1500
+    },
+    "api_response_times": {
+      "dashboard_config": 200,
+      "dashboard_data": 800,
+      "widget_data": 600,
+      "filter_data": 400
+    }
+  }
+}

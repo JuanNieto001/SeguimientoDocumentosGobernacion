@@ -1,0 +1,40 @@
+{
+  "reporterEnabled": "cypress-multi-reporters",
+  "cypressMultiReportersReporterOptions": {
+    "reporterEnabled": "spec, mochawesome, junit",
+    "mochawesomeReporterOptions": {
+      "reportDir": "cypress/reports/mochawesome",
+      "reportFilename": "[status]_[datetime]_report",
+      "overwrite": true,
+      "html": true,
+      "json": true,
+      "timestamp": "yyyy-mm-dd_HH-MM-ss",
+      "charts": true,
+      "reportPageTitle": "Sistema Seguimiento Contractual - Test Report",
+      "embeddedScreenshots": true,
+      "inlineAssets": true,
+      "saveAllAttempts": false,
+      "quiet": false
+    },
+    "junitReporterOptions": {
+      "mochaFile": "cypress/reports/junit/results-[hash].xml",
+      "toConsole": true,
+      "attachments": true,
+      "testCaseSwitchClassnameAndName": false,
+      "suiteTitleSeparatedBy": " > ",
+      "useFullSuiteTitle": true,
+      "jenkinsMode": true
+    },
+    "specReporterOptions": {
+      "displaySuccessfulSpec": true,
+      "displayFailedSpec": true,
+      "displayPendingSpec": false,
+      "displayDuration": true,
+      "colors": {
+        "success": "green",
+        "failure": "red",
+        "pending": "cyan"
+      }
+    }
+  }
+}
