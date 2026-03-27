@@ -10,7 +10,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/motor-flujos.jsx',
                 'resources/js/dashboard-motor.jsx',
-                'resources/js/dashboard-builder.jsx',
+                'resources/js/dashboard-builder/app.jsx',
             ],
             refresh: true,
         }),
@@ -21,7 +21,7 @@ export default defineConfig({
         port: 5173,
         strictPort: false,
         hmr: {
-            host: '192.168.231.13',
+            host: 'localhost',
         },
     },
 });

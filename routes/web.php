@@ -94,6 +94,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/dashboards/motor/asignaciones-unidad', [DashboardMotorController::class, 'guardarAsignacionUnidad'])
         ->name('dashboards.motor.assign-unidad')
         ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
+
+    // Dashboard Builder - Motor Visual Dinámico
+    Route::get('/dashboards/builder', [App\Http\Controllers\DashboardBuilderController::class, 'index'])
+        ->name('dashboards.builder')
+        ->middleware(['role:admin|admin_general|secretario|jefe_unidad']);
 });
 
 /*

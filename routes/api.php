@@ -165,29 +165,47 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
     /*
     |----------------------------------------------------------------------
-    | DASHBOARD BUILDER API - SOLO ADMIN
+    | DASHBOARD BUILDER API - SOLO ADMIN (compatibilidad endpoints actuales)
     |----------------------------------------------------------------------
     */
     Route::middleware('permission:dashboard.builder.access')->prefix('dashboard-builder')->group(function () {
         // Entidades disponibles
-        Route::get('/entities',                [App\Http\Controllers\Dashboard\EntityMenuController::class, 'index'])->name('api.dashboard.entities');
+        Route::get('/entities',                 [App\Http\Controllers\Dashboard\EntityMenuController::class, 'index'])->name('api.dashboard.entities');
         Route::get('/entities/{entity}/fields', [App\Http\Controllers\Dashboard\EntityMenuController::class, 'fields'])->name('api.dashboard.entity.fields');
-        
+
         // Queries de widgets
-        Route::post('/widget/query',           [App\Http\Controllers\Dashboard\WidgetQueryController::class, 'execute'])->name('api.dashboard.widget.query');
-        Route::get('/entity/{entity}/stats',   [App\Http\Controllers\Dashboard\WidgetQueryController::class, 'stats'])->name('api.dashboard.entity.stats');
+        Route::post('/widget/query',            [App\Http\Controllers\Dashboard\WidgetQueryController::class, 'execute'])->name('api.dashboard.widget.query');
+        Route::get('/entity/{entity}/stats',    [App\Http\Controllers\Dashboard\WidgetQueryController::class, 'stats'])->name('api.dashboard.entity.stats');
     });
 
     /*
     |----------------------------------------------------------------------
-    | DASHBOARD VIEWER API - USUARIOS CON DASHBOARDS ASIGNADOS  
+    | DASHBOARD VIEWER API - USUARIOS CON DASHBOARDS ASIGNADOS
     |----------------------------------------------------------------------
     */
     Route::middleware('permission:dashboard.view.assigned')->prefix('dashboard-viewer')->group(function () {
-        Route::get('/list',                    [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'apiList'])->name('api.dashboard.viewer.list');
-        Route::get('/{id}',                    [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'apiShow'])->name('api.dashboard.viewer.show');
-        
+        Route::get('/list',                     [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'apiList'])->name('api.dashboard.viewer.list');
+        Route::get('/{id}',                     [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'apiShow'])->name('api.dashboard.viewer.show');
+
         // Queries de widgets (solo para dashboards asignados)
-        Route::post('/widget/query',           [App\Http\Controllers\Dashboard\WidgetQueryController::class, 'execute'])->name('api.dashboard.viewer.widget.query');
+        Route::post('/widget/query',            [App\Http\Controllers\Dashboard\WidgetQueryController::class, 'execute'])->name('api.dashboard.viewer.widget.query');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | DASHBOARD BUILDER - Motor Visual Dinámico (nueva API)
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('dashboard-builder')->group(function () {
+        $ctrl = \App\Http\Controllers\Api\DashboardBuilderController::class;
+
+        Route::get('/catalog', [$ctrl, 'catalog'])->name('api.dashboard-builder.catalog');
+        Route::get('/user-scope', [$ctrl, 'userScope'])->name('api.dashboard-builder.user-scope');
+        Route::post('/execute-widget', [$ctrl, 'executeWidget'])->name('api.dashboard-builder.execute-widget');
+        Route::post('/execute-dashboard', [$ctrl, 'executeDashboard'])->name('api.dashboard-builder.execute-dashboard');
+        Route::post('/preview-widget', [$ctrl, 'previewWidget'])->name('api.dashboard-builder.preview-widget');
+        Route::post('/save', [$ctrl, 'saveDashboard'])->name('api.dashboard-builder.save');
+        Route::get('/load', [$ctrl, 'loadDashboard'])->name('api.dashboard-builder.load');
+        Route::get('/field-values', [$ctrl, 'fieldValues'])->name('api.dashboard-builder.field-values');
     });
 });

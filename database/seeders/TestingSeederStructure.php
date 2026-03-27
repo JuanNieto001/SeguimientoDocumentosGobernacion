@@ -528,7 +528,18 @@ class TestingSeederStructure extends Seeder
                 'is_active' => true
             ]);
 
-            $user->assignRole($userData['role']);
+            if ($userData['role'] === 'super_admin') {
+                $roles = collect(['super_admin', 'admin_general', 'admin'])
+                    ->filter(fn ($roleName) => \Spatie\Permission\Models\Role::where('name', $roleName)->exists())
+                    ->values()
+                    ->all();
+
+                if (!empty($roles)) {
+                    $user->syncRoles($roles);
+                }
+            } else {
+                $user->assignRole($userData['role']);
+            }
         }
     }
 

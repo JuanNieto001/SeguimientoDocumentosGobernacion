@@ -1,0 +1,63 @@
+{
+    "admin": {
+        "email": "admin@test.com",
+        "password": "Test1234!",
+        "nombre": "Administrador General",
+        "rol": "admin"
+    },
+    "unidad_solicitante": {
+        "email": "unidad@test.com",
+        "password": "Test1234!",
+        "nombre": "Usuario Unidad Solicitante",
+        "rol": "unidad_solicitante",
+        "secretaria_id": 1,
+        "unidad_id": 1
+    },
+    "planeacion": {
+        "email": "planeacion@test.com",
+        "password": "Test1234!",
+        "nombre": "Usuario Planeacion",
+        "rol": "planeacion"
+    },
+    "hacienda": {
+        "email": "hacienda@test.com",
+        "password": "Test1234!",
+        "nombre": "Usuario Hacienda",
+        "rol": "hacienda"
+    },
+    "juridica": {
+        "email": "juridica@test.com",
+        "password": "Test1234!",
+        "nombre": "Usuario Juridica",
+        "rol": "juridica"
+    },
+    "secop": {
+        "email": "secop@test.com",
+        "password": "Test1234!",
+        "nombre": "Usuario SECOP",
+        "rol": "secop"
+    },
+    "gobernador": {
+        "email": "gobernador@test.com",
+        "password": "Test1234!",
+        "nombre": "Gobernador",
+        "rol": "gobernador"
+    },
+    "consulta": {
+        "email": "consulta@test.com",
+        "password": "Test1234!",
+        "nombre": "Usuario Consulta",
+        "rol": "consulta"
+    },
+    "usuario_inactivo": {
+        "email": "inactivo@test.com",
+        "password": "Test1234!",
+        "nombre": "Usuario Inactivo",
+        "rol": "unidad_solicitante",
+        "activo": false
+    },
+    "usuario_inexistente": {
+        "email": "noexiste@test.com",
+        "password": "cualquier123"
+    }
+}
