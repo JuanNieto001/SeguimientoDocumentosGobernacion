@@ -96,8 +96,12 @@ function DashboardMotorApp() {
     const [query, setQuery] = useState('');
     const [savingKey, setSavingKey] = useState('');
     const [toast, setToast] = useState(null);
+    const [activeRibbonTab, setActiveRibbonTab] = useState('inicio');
+    const [workspaceView, setWorkspaceView] = useState('boceto');
     const [selectedTargetKey, setSelectedTargetKey] = useState(null);
     const [selectedWidgetId, setSelectedWidgetId] = useState(null);
+    const [dragWidgetId, setDragWidgetId] = useState(null);
+    const [dragOverWidgetId, setDragOverWidgetId] = useState(null);
     const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth || 1280);
 
     const [secretarias, setSecretarias] = useState(data.secretarias || []);
@@ -196,6 +200,22 @@ function DashboardMotorApp() {
         }
     };
 
+    const quickAddByType = (tipo) => {
+        if (!selectedTarget) {
+            showToast('Primero selecciona un objetivo para agregar visuales.', 'error');
+            return;
+        }
+
+        const candidate = widgetLibrary.find((w) => w.tipo === tipo);
+        if (!candidate) {
+            showToast(`No hay widgets de tipo ${tipo} en la libreria.`, 'error');
+            return;
+        }
+
+        addWidgetToTarget(selectedTarget.type, selectedTarget.id, candidate);
+        showToast(`${candidate.titulo} agregado.`);
+    };
+
     const moveWidget = (targetType, targetId, widgetId, direction) => {
         updateTargetState(targetType, targetId, (obj) => {
             const current = Array.isArray(obj.customWidgets) ? [...obj.customWidgets] : [];
@@ -238,6 +258,25 @@ function DashboardMotorApp() {
                 customWidgets: current.map((w) =>
                     String(w.id) === String(widgetId) ? { ...w, [field]: normalized } : w
                 ),
+            };
+        });
+    };
+
+    const reorderWidget = (targetType, targetId, fromWidgetId, toWidgetId) => {
+        if (!fromWidgetId || !toWidgetId || String(fromWidgetId) === String(toWidgetId)) return;
+
+        updateTargetState(targetType, targetId, (obj) => {
+            const current = Array.isArray(obj.customWidgets) ? [...obj.customWidgets] : [];
+            const fromIndex = current.findIndex((w) => String(w.id) === String(fromWidgetId));
+            const toIndex = current.findIndex((w) => String(w.id) === String(toWidgetId));
+            if (fromIndex < 0 || toIndex < 0) return obj;
+
+            const [moved] = current.splice(fromIndex, 1);
+            current.splice(toIndex, 0, moved);
+
+            return {
+                ...obj,
+                customWidgets: current.map((w, idx) => ({ ...w, orden: idx + 1 })),
             };
         });
     };
@@ -347,6 +386,48 @@ function DashboardMotorApp() {
         return targetCards.find((t) => t.key === selectedTargetKey) || null;
     }, [targetCards, selectedTargetKey]);
 
+    const getUserRolesLabel = (user) => {
+        const list = Array.isArray(user.roles) ? user.roles : [];
+        return list.length ? list.join(', ') : 'Sin rol';
+    };
+
+    const getUserSecretariaLabel = (user) => {
+        return user.secretaria_nombre || user.secretariaName || user.secretaria || 'Sin secretaria';
+    };
+
+    const getAudienceForTarget = (target) => {
+        if (!target) return [];
+
+        if (target.type === 'usuario') {
+            return usuarios.filter((u) => Number(u.id) === Number(target.id));
+        }
+
+        if (target.type === 'rol') {
+            return usuarios.filter((u) => {
+                const rolesUser = Array.isArray(u.roles) ? u.roles : [];
+                return rolesUser.includes(target.id);
+            });
+        }
+
+        if (target.type === 'secretaria') {
+            return usuarios.filter((u) => {
+                const byId = Number(u.secretaria_id) === Number(target.id);
+                const byName = String(u.secretaria_nombre || u.secretaria || '').toLowerCase() === String(target.title || '').toLowerCase();
+                return byId || byName;
+            });
+        }
+
+        if (target.type === 'unidad') {
+            return usuarios.filter((u) => {
+                const byId = Number(u.unidad_id) === Number(target.id);
+                const byName = String(u.unidad_nombre || u.unidad || '').toLowerCase() === String(target.title || '').toLowerCase();
+                return byId || byName;
+            });
+        }
+
+        return [];
+    };
+
     useEffect(() => {
         setSelectedTargetKey(null);
     }, [scope]);
@@ -397,15 +478,101 @@ function DashboardMotorApp() {
 
                 <div style={{ background: '#f3f4f6', borderBottom: '1px solid #d1d5db', padding: '8px 12px' }}>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                        <button type="button" style={{ border: '1px solid #a3a3a3', borderRadius: 6, background: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 10px' }}>Inicio</button>
-                        <button type="button" style={{ border: '1px solid #d4d4d8', borderRadius: 6, background: '#fafafa', fontSize: 11, padding: '5px 10px' }}>Insertar</button>
-                        <button type="button" style={{ border: '1px solid #d4d4d8', borderRadius: 6, background: '#fafafa', fontSize: 11, padding: '5px 10px' }}>Modelado</button>
-                        <button type="button" style={{ border: '1px solid #d4d4d8', borderRadius: 6, background: '#fafafa', fontSize: 11, padding: '5px 10px' }}>Vista</button>
+                        {[
+                            { key: 'inicio', label: 'Inicio' },
+                            { key: 'insertar', label: 'Insertar' },
+                            { key: 'modelado', label: 'Modelado' },
+                            { key: 'vista', label: 'Vista' },
+                        ].map((tab) => (
+                            <button
+                                key={tab.key}
+                                type="button"
+                                onClick={() => setActiveRibbonTab(tab.key)}
+                                style={{
+                                    border: `1px solid ${activeRibbonTab === tab.key ? '#a3a3a3' : '#d4d4d8'}`,
+                                    borderRadius: 6,
+                                    background: activeRibbonTab === tab.key ? '#fff' : '#fafafa',
+                                    fontSize: 11,
+                                    fontWeight: activeRibbonTab === tab.key ? 700 : 500,
+                                    padding: '5px 10px',
+                                    cursor: 'pointer',
+                                }}>
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <div style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151' }}>Nuevo visual</div>
-                        <div style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151' }}>Transformar datos</div>
-                        <div style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151' }}>Publicar</div>
+                        {activeRibbonTab === 'inicio' && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => quickAddByType('kpi')}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151', cursor: 'pointer' }}>
+                                    Nuevo visual KPI
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={saveSelectedTarget}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151', cursor: 'pointer' }}>
+                                    Guardar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => selectedTarget && updateTargetState(selectedTarget.type, selectedTarget.id, (obj) => ({ ...obj, customWidgets: [], chartTypes: {} }))}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151', cursor: 'pointer' }}>
+                                    Limpiar lienzo
+                                </button>
+                            </>
+                        )}
+
+                        {activeRibbonTab === 'insertar' && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => quickAddByType('kpi')}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151', cursor: 'pointer' }}>
+                                    Insertar KPI
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => quickAddByType('chart')}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151', cursor: 'pointer' }}>
+                                    Insertar grafica
+                                </button>
+                            </>
+                        )}
+
+                        {activeRibbonTab === 'modelado' && (
+                            <>
+                                <div style={{ fontSize: 11, color: '#475569', fontWeight: 700 }}>Scope</div>
+                                <select
+                                    disabled={!selectedTarget}
+                                    value={selectedTarget?.dataScope || 'usuario'}
+                                    onChange={(e) => selectedTarget && updateDataScope(selectedTarget.type, selectedTarget.id, e.target.value)}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: '#fff', padding: '6px 8px', fontSize: 11, color: '#374151' }}>
+                                    {dataScopeOptions.map((scopeValue) => (
+                                        <option key={scopeValue} value={scopeValue}>{scopeValue.toUpperCase()}</option>
+                                    ))}
+                                </select>
+                            </>
+                        )}
+
+                        {activeRibbonTab === 'vista' && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setWorkspaceView('boceto')}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: workspaceView === 'boceto' ? '#e2e8f0' : '#fff', padding: '6px 8px', fontSize: 11, color: '#374151', cursor: 'pointer' }}>
+                                    Vista boceto
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setWorkspaceView('studio')}
+                                    style={{ border: '1px solid #d1d5db', borderRadius: 8, background: workspaceView === 'studio' ? '#e2e8f0' : '#fff', padding: '6px 8px', fontSize: 11, color: '#374151', cursor: 'pointer' }}>
+                                    Vista studio
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -414,8 +581,16 @@ function DashboardMotorApp() {
                     <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Selecciona objetivo, arrastra widgets al lienzo y construye desde cero.</div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '280px 1fr 320px', minHeight: 640 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : (workspaceView === 'boceto' ? '120px 1fr' : '280px 1fr 320px'), minHeight: 640 }}>
                     <aside style={{ borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', background: '#fbfbfc', order: isMobile ? 2 : 0 }}>
+                        {workspaceView === 'boceto' ? (
+                            <div style={{ padding: 10 }}>
+                                <div style={{ fontSize: 11, color: '#374151', marginBottom: 6 }}>Item One</div>
+                                <div style={{ fontSize: 11, color: '#374151', marginBottom: 6 }}>Item Two</div>
+                                <div style={{ fontSize: 11, color: '#374151', marginBottom: 6 }}>Item Three</div>
+                            </div>
+                        ) : (
+                        <>
                         <div style={{ padding: 12, borderBottom: '1px solid #e5e7eb' }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#1f2937' }}>Visualizaciones</div>
                             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>Arrastra al lienzo central</div>
@@ -454,6 +629,8 @@ function DashboardMotorApp() {
                                 </div>
                             )}
                         </div>
+                        </>
+                        )}
                     </aside>
 
                     <section style={{ background: '#eceff3', order: isMobile ? 1 : 0 }}>
@@ -495,6 +672,24 @@ function DashboardMotorApp() {
                                         ancho: Number.isFinite(Number(w.ancho)) ? Number(w.ancho) : (w.tipo === 'kpi' ? 3 : 6),
                                         alto: Number.isFinite(Number(w.alto)) ? Number(w.alto) : (w.tipo === 'kpi' ? 1 : 2),
                                     }));
+                                const audience = getAudienceForTarget(selectedTarget);
+                                const audienceByRole = audience.reduce((acc, user) => {
+                                    const rolesUser = Array.isArray(user.roles) ? user.roles : [];
+                                    rolesUser.forEach((role) => {
+                                        acc[role] = (acc[role] || 0) + 1;
+                                    });
+                                    return acc;
+                                }, {});
+                                const audienceBySecretaria = audience.reduce((acc, user) => {
+                                    const key = getUserSecretariaLabel(user);
+                                    acc[key] = (acc[key] || 0) + 1;
+                                    return acc;
+                                }, {});
+                                const audienceByUnidad = audience.reduce((acc, user) => {
+                                    const key = user.unidad_nombre || user.unidad || 'Sin unidad';
+                                    acc[key] = (acc[key] || 0) + 1;
+                                    return acc;
+                                }, {});
                                 const selectedWidget = widgets.find((w) => String(w.id) === String(selectedWidgetId)) || null;
                                 return (
                                     <div style={{ background: '#fff', border: '1px solid #d1d5db', borderRadius: 10, padding: 16, boxShadow: '0 6px 18px rgba(0,0,0,.06)' }}>
@@ -531,23 +726,56 @@ function DashboardMotorApp() {
 
                                         {widgets.length > 0 && (
                                             <div style={{ marginTop: 14, border: '1px solid #d1d5db', borderRadius: 10, padding: 12, background: '#f3f4f6' }}>
-                                                <div style={{ fontSize: 11, color: '#475569', marginBottom: 10, fontWeight: 700, textTransform: 'uppercase' }}>Lienzo</div>
+                                                <div style={{ fontSize: 11, color: '#475569', marginBottom: 10, fontWeight: 700, textTransform: 'uppercase' }}>Lienzo (arrastra para reordenar)</div>
                                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 8, gridAutoRows: 64 }}>
                                                     {widgets.map((widget, index) => {
                                                         const active = String(selectedWidgetId) === String(widget.id);
+                                                        const dragOver = String(dragOverWidgetId) === String(widget.id) && String(dragWidgetId) !== String(widget.id);
                                                         return (
                                                             <div
                                                                 key={widget.id}
+                                                                draggable
+                                                                onDragStart={(e) => {
+                                                                    setDragWidgetId(widget.id);
+                                                                    setDragOverWidgetId(null);
+                                                                    e.dataTransfer.effectAllowed = 'move';
+                                                                    e.dataTransfer.setData('text/dashboard-widget-order', String(widget.id));
+                                                                }}
+                                                                onDragOver={(e) => {
+                                                                    e.preventDefault();
+                                                                    if (String(dragWidgetId) !== String(widget.id)) {
+                                                                        setDragOverWidgetId(widget.id);
+                                                                    }
+                                                                }}
+                                                                onDragLeave={() => {
+                                                                    if (String(dragOverWidgetId) === String(widget.id)) {
+                                                                        setDragOverWidgetId(null);
+                                                                    }
+                                                                }}
+                                                                onDrop={(e) => {
+                                                                    e.preventDefault();
+                                                                    const fromId = e.dataTransfer.getData('text/dashboard-widget-order') || dragWidgetId;
+                                                                    reorderWidget(selectedTarget.type, selectedTarget.id, fromId, widget.id);
+                                                                    setDragWidgetId(null);
+                                                                    setDragOverWidgetId(null);
+                                                                }}
+                                                                onDragEnd={() => {
+                                                                    setDragWidgetId(null);
+                                                                    setDragOverWidgetId(null);
+                                                                }}
                                                                 onClick={() => setSelectedWidgetId(widget.id)}
                                                                 style={{
                                                                     gridColumn: `span ${Math.max(2, Math.min(12, widget.ancho || (widget.tipo === 'kpi' ? 3 : 6)))}`,
                                                                     gridRow: `span ${Math.max(1, Math.min(4, widget.alto || (widget.tipo === 'kpi' ? 1 : 2)))}`,
-                                                                    border: `2px solid ${active ? '#2563eb' : '#cbd5e1'}`,
+                                                                    border: `2px solid ${dragOver ? '#0ea5e9' : (active ? '#2563eb' : '#cbd5e1')}`,
                                                                     borderRadius: 10,
                                                                     background: '#fff',
                                                                     padding: 10,
-                                                                    cursor: 'pointer',
-                                                                    boxShadow: active ? '0 0 0 2px rgba(37,99,235,.15)' : 'none',
+                                                                    cursor: 'grab',
+                                                                    boxShadow: dragOver
+                                                                        ? '0 0 0 2px rgba(14,165,233,.2)'
+                                                                        : (active ? '0 0 0 2px rgba(37,99,235,.15)' : 'none'),
+                                                                    opacity: String(dragWidgetId) === String(widget.id) ? 0.65 : 1,
                                                                 }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
                                                                     <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{widget.titulo || widget.metrica}</div>
@@ -600,6 +828,58 @@ function DashboardMotorApp() {
                                                 style={{ background: '#15803d', color: '#fff', border: 'none', borderRadius: 9, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: savingKey === saveKey ? 0.6 : 1 }}>
                                                 {savingKey === saveKey ? 'Guardando...' : 'Guardar configuracion'}
                                             </button>
+                                        </div>
+
+                                        <div style={{ marginTop: 12, border: '1px solid #cbd5e1', borderRadius: 12, background: '#f8fafc', padding: 12 }}>
+                                            <div style={{ fontSize: 11, fontWeight: 800, color: '#1f2937', textTransform: 'uppercase', marginBottom: 6 }}>
+                                                Este dashboard lo visualizan ({audience.length})
+                                            </div>
+                                            <div style={{ fontSize: 11, color: '#475569', marginBottom: 8 }}>
+                                                {selectedTarget.type === 'usuario' && 'Aplicado solo al usuario seleccionado.'}
+                                                {selectedTarget.type === 'rol' && `Aplicado a usuarios con el rol ${selectedTarget.id}.`}
+                                                {selectedTarget.type === 'secretaria' && `Aplicado a usuarios de la secretaria ${selectedTarget.title}.`}
+                                                {selectedTarget.type === 'unidad' && `Aplicado a usuarios de la unidad ${selectedTarget.title}.`}
+                                            </div>
+
+                                            {audience.length > 0 && (
+                                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                                                    {Object.entries(audienceByRole).slice(0, 4).map(([role, count]) => (
+                                                        <Badge key={`aud-role-${role}`} text={`${role}: ${count}`} bg="#eef2ff" color="#312e81" border="#c7d2fe" />
+                                                    ))}
+                                                    {selectedTarget.type !== 'secretaria' && Object.entries(audienceBySecretaria).slice(0, 2).map(([sec, count]) => (
+                                                        <Badge key={`aud-sec-${sec}`} text={`${sec}: ${count}`} bg="#ecfeff" color="#155e75" border="#a5f3fc" />
+                                                    ))}
+                                                    {selectedTarget.type !== 'unidad' && Object.entries(audienceByUnidad).slice(0, 2).map(([unidad, count]) => (
+                                                        <Badge key={`aud-und-${unidad}`} text={`${unidad}: ${count}`} bg="#f5f3ff" color="#5b21b6" border="#ddd6fe" />
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {audience.length === 0 && (
+                                                <div style={{ fontSize: 12, color: '#64748b' }}>
+                                                    No se encontraron usuarios para este objetivo.
+                                                </div>
+                                            )}
+
+                                            {audience.length > 0 && (
+                                                <div style={{ display: 'grid', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                                                    {audience.slice(0, 12).map((u) => (
+                                                        <div key={`aud-${u.id}`} style={{ border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', padding: '6px 8px' }}>
+                                                            <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{u.name}</div>
+                                                            <div style={{ fontSize: 11, color: '#64748b' }}>{u.email}</div>
+                                                            <div style={{ marginTop: 3, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                                <Badge text={`Rol: ${getUserRolesLabel(u)}`} bg="#eef2ff" color="#312e81" border="#c7d2fe" />
+                                                                <Badge text={`Sec: ${getUserSecretariaLabel(u)}`} bg="#ecfeff" color="#155e75" border="#a5f3fc" />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {audience.length > 12 && (
+                                                        <div style={{ fontSize: 11, color: '#64748b' }}>
+                                                            Mostrando 12 de {audience.length} usuarios.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
 
                                         {selectedWidget && (
@@ -669,6 +949,7 @@ function DashboardMotorApp() {
                         </div>
                     </section>
 
+                    {workspaceView !== 'boceto' && (
                     <aside style={{ borderLeft: isMobile ? 'none' : '1px solid #e5e7eb', borderTop: isMobile ? '1px solid #e5e7eb' : 'none', background: '#ffffff', order: isMobile ? 3 : 0 }}>
                         <div style={{ padding: 12, borderBottom: '1px solid #e5e7eb' }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#1f2937' }}>Filtros y Objetivos</div>
@@ -730,6 +1011,7 @@ function DashboardMotorApp() {
                             )}
                         </div>
                     </aside>
+                    )}
                 </div>
             </div>
 

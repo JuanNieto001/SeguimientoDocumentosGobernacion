@@ -22,3 +22,205 @@ html, body { font-family: 'Inter', sans-serif; }
 }
 .sidebar-nav::-webkit-scrollbar { width: 0; background: transparent; }
 .sidebar-nav { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* RESPONSIVE MOBILE FIRST - Media Queries */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* Base mobile - 320px+ */
+@media (max-width: 639px) {
+    html, body {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .container {
+        padding: 12px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        width: 80%;
+        height: 100vh;
+        transition: left 0.3s ease;
+        z-index: 40;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .main-content {
+        width: 100%;
+        padding: 8px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    button, .btn {
+        min-height: 44px !important;
+        font-size: 14px;
+        width: 100%;
+    }
+
+    input, select, textarea {
+        font-size: 16px !important;
+        min-height: 44px;
+        width: 100%;
+    }
+
+    .card {
+        padding: 12px !important;
+        margin: 8px 0 !important;
+    }
+
+    .dashboard-widget {
+        min-height: 200px;
+        margin-bottom: 12px;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 8px 4px !important;
+    }
+}
+
+/* Tablet - 640px a 1023px */
+@media (min-width: 640px) and (max-width: 1023px) {
+    .container {
+        padding: 16px;
+    }
+
+    .sidebar {
+        width: 200px;
+    }
+
+    .grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    button, .btn {
+        min-height: 40px;
+    }
+
+    input, select, textarea {
+        font-size: 15px;
+        min-height: 40px;
+    }
+}
+
+/* Desktop - 1024px+ */
+@media (min-width: 1024px) {
+    .container {
+        padding: 20px;
+    }
+
+    .sidebar {
+        width: 250px;
+    }
+
+    .grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    button, .btn {
+        min-height: 38px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Componentes Responsivos Globales */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* Touch targets - mínimo 44x44px */
+a, button, input[type="checkbox"], input[type="radio"], label {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Prevent iOS zoom en inputs */
+input, textarea, select {
+    font-size: 16px;
+}
+
+/* Safe area support */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+        padding-top: max(12px, env(safe-area-inset-top));
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Responsive images */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Responsive tables */
+table {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive forms */
+.form-group {
+    margin-bottom: 16px;
+}
+
+@media (max-width: 639px) {
+    .form-inline {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+    }
+}
+
+/* Responsive modals */
+@media (max-width: 639px) {
+    .modal {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+}
+
+/* Responsive flex */
+.flex-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+@media (min-width: 768px) {
+    .flex-responsive {
+        flex-direction: row;
+        gap: 16px;
+    }
+}

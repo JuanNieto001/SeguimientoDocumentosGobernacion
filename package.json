@@ -6,17 +6,23 @@
         "build": "vite build",
         "dev": "vite",
         "test": "cypress open",
+        "cypress:open": "cypress open",
+        "cypress:run": "cypress run",
         "test:headless": "cypress run",
         "test:ci": "cypress run --browser chrome --headless --record false --parallel false",
         "test:mobile": "cypress run --config viewportWidth=375,viewportHeight=667",
         "test:desktop": "cypress run --config viewportWidth=1920,viewportHeight=1080",
-        "test:auth": "cypress run --spec 'cypress/e2e/01-authentication/**'",
-        "test:dashboard": "cypress run --spec 'cypress/e2e/02-dashboard/**'",
-        "test:cdpn": "cypress run --spec 'cypress/e2e/03-flujo-cdpn/**'",
-        "test:smoke": "cypress run --spec 'cypress/e2e/01-authentication/login.cy.js,cypress/e2e/02-dashboard/dashboard-interactivo.cy.js'",
+        "test:auth": "cypress run --spec 'cypress/e2e/01-authentication/auth-completo.cy.js'",
+        "test:dashboard": "cypress run --spec 'cypress/e2e/02-dashboard/dashboard-completo.cy.js'",
+        "test:procesos": "cypress run --spec 'cypress/e2e/03-procesos/procesos-completo.cy.js'",
+        "test:cdpn": "cypress run --spec 'cypress/e2e/04-contratacion-directa/cdpn-completo.cy.js'",
+        "test:builder": "cypress run --spec 'cypress/e2e/05-dashboard-builder/dashboard-builder.cy.js'",
+        "test:security": "cypress run --spec 'cypress/e2e/06-seguridad-rendimiento/seguridad-rendimiento.cy.js'",
+        "test:smoke": "cypress run --spec 'cypress/e2e/01-authentication/auth-completo.cy.js,cypress/e2e/02-dashboard/dashboard-completo.cy.js'",
+        "test:all": "cypress run --spec 'cypress/e2e/**/*-completo.cy.js'",
         "test:reports": "cypress run --reporter cypress-multi-reporters",
         "test:setup": "php artisan migrate:refresh && php artisan db:seed --class=TestingSeederStructure",
-        "test:full": "npm run test:setup && npm run test:headless"
+        "test:full": "npm run test:setup && npm run cypress:run"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
@@ -45,6 +51,10 @@
         "@vitejs/plugin-react": "^5.1.4",
         "@xyflow/react": "^12.10.1",
         "react": "^19.2.4",
-        "react-dom": "^19.2.4"
+        "react-dom": "^19.2.4",
+        "react-dnd": "^16.0.1",
+        "react-dnd-html5-backend": "^16.0.1",
+        "react-grid-layout": "^1.4.4",
+        "recharts": "^2.12.7"
     }
 }

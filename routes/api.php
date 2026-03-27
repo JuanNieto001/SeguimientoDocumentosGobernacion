@@ -162,4 +162,41 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::post('/instancias/{instanciaId}/avanzar', [$ctrl, 'avanzarInstancia'])->name('api.motor-flujos.instancias.avanzar');
         Route::post('/instancias/{instanciaId}/devolver',[$ctrl, 'devolverInstancia'])->name('api.motor-flujos.instancias.devolver');
     });
+
+    /*
+    |----------------------------------------------------------------------
+    | DASHBOARD BUILDER - Motor Visual Dinámico
+    |----------------------------------------------------------------------
+    | Sistema de construcción de dashboards drag-and-drop con:
+    | - Catálogo de entidades y campos
+    | - Queries dinámicas en runtime
+    | - Filtros automáticos por rol/secretaría/unidad
+    | - Renderizado dinámico de widgets
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('dashboard-builder')->group(function () {
+        $ctrl = \App\Http\Controllers\Api\DashboardBuilderController::class;
+
+        // Catálogo de entidades y campos disponibles
+        Route::get('/catalog', [$ctrl, 'catalog'])->name('api.dashboard-builder.catalog');
+
+        // Información de scope del usuario actual
+        Route::get('/user-scope', [$ctrl, 'userScope'])->name('api.dashboard-builder.user-scope');
+
+        // Ejecutar query de un widget
+        Route::post('/execute-widget', [$ctrl, 'executeWidget'])->name('api.dashboard-builder.execute-widget');
+
+        // Ejecutar todos los widgets de un dashboard
+        Route::post('/execute-dashboard', [$ctrl, 'executeDashboard'])->name('api.dashboard-builder.execute-dashboard');
+
+        // Preview de widget antes de guardar
+        Route::post('/preview-widget', [$ctrl, 'previewWidget'])->name('api.dashboard-builder.preview-widget');
+
+        // Guardar y cargar dashboard
+        Route::post('/save', [$ctrl, 'saveDashboard'])->name('api.dashboard-builder.save');
+        Route::get('/load', [$ctrl, 'loadDashboard'])->name('api.dashboard-builder.load');
+
+        // Valores de campo para filtros
+        Route::get('/field-values', [$ctrl, 'fieldValues'])->name('api.dashboard-builder.field-values');
+    });
 });

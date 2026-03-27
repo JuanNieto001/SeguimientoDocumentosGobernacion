@@ -521,12 +521,19 @@ class DashboardController extends Controller
 
         $promedioGeneral = $count > 0 ? round($tiempoPromedioTotal / $count, 2) : 0;
 
+        // Tiempo promedio por modalidad. SQLite no soporta TIMESTAMPDIFF,
+        // por eso usamos julianday cuando el driver es sqlite.
+        $driver = DB::connection()->getDriverName();
+        $avgDaysExpr = $driver === 'sqlite'
+            ? 'AVG(julianday(procesos.updated_at) - julianday(procesos.created_at))'
+            : 'AVG(TIMESTAMPDIFF(DAY, procesos.created_at, procesos.updated_at))';
+
         // Tiempo promedio por modalidad
         $tiempoPorModalidad = DB::table('procesos')
             ->join('workflows', 'procesos.workflow_id', '=', 'workflows.id')
             ->select(
                 'workflows.nombre',
-                DB::raw('AVG(TIMESTAMPDIFF(DAY, procesos.created_at, procesos.updated_at)) as promedio_dias')
+                DB::raw($avgDaysExpr . ' as promedio_dias')
             )
             ->whereIn('procesos.estado', ['completado', 'cerrado'])
             ->where('procesos.updated_at', '>', $tresMonthsAgo)

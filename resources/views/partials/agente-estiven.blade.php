@@ -448,14 +448,15 @@
 
     {{-- ── Panel desplegable ── --}}
     <div x-show="open"
+            x-ref="panel"
          x-transition:enter="transition ease-out duration-250"
          x-transition:enter-start="opacity-0 translate-y-4 scale-95"
          x-transition:enter-end="opacity-100 translate-y-0 scale-100"
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-4 scale-95"
-         class="mb-3 rounded-2xl overflow-hidden flex flex-col estiven-panel"
-         style="width: 380px; max-height: 530px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 25px 60px -12px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.03);">
+            class="absolute rounded-2xl overflow-hidden flex flex-col estiven-panel"
+            x-bind:style="panelStyle">
 
         {{-- Cabecera --}}
            <div class="shrink-0 px-5 py-4 text-white relative"
@@ -698,25 +699,9 @@
         </div>
     </div>
 
-    {{-- ── Botón flotante con nombre ── --}}
-        <div class="flex items-end justify-end gap-2"
-            @mouseenter="hoverFab = true"
-            @mouseleave="hoverFab = false">
-        {{-- Tooltip / label que aparece cuando está cerrado --}}
-        <div x-show="!open && hoverFab"
-             x-transition:enter="transition ease-out duration-300 delay-500"
-             x-transition:enter-start="opacity-0 translate-x-2"
-             x-transition:enter-end="opacity-100 translate-x-0"
-             class="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-2xl rounded-br-sm shadow-lg cursor-pointer select-none estiven-tooltip"
-             style="background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 8px 25px rgba(0,0,0,.1);"
-             @click="openPanel()"
-             @pointerdown="startDrag($event)">
-            <span class="text-sm font-semibold text-gray-800">Marsetiv bot</span>
-            <span class="text-xs text-gray-400">| &iquest;Necesitas ayuda?</span>
-        </div>
-
-        {{-- Botón circular --}}
+    {{-- ── Botón flotante (sin tooltip para evitar saltos) ── --}}
         <button @click="toggleOpenFromFab()"
+                x-ref="fab"
                 @pointerdown="startDrag($event)"
                 class="estiven-fab relative flex items-center justify-center transition-all duration-300 focus:outline-none"
                 title="Marsetiv bot">
@@ -768,7 +753,6 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
             </span>
         </button>
-    </div>
 </div>
 
 <style>
@@ -778,7 +762,7 @@
         transition: transform .3s cubic-bezier(.34,1.56,.64,1);
     }
     .estiven-fab-face:hover {
-        transform: scale(1.1) rotate(-5deg);
+        transform: scale(1.03);
     }
 
     .estiven-pulse {
@@ -842,11 +826,12 @@
 function agenteEstiven() {
     return {
         open: false,
-        hoverFab: false,
         activeGuide: null,
         vista: 'guias',
         posX: 0,
         posY: 0,
+        panelLeft: -324,
+        panelTop: -540,
         dragging: false,
         dragMoved: false,
         dragOffsetX: 0,
@@ -855,6 +840,8 @@ function agenteEstiven() {
         dragStartY: 0,
         moveHandler: null,
         upHandler: null,
+        resizeObserver: null,
+        resizeHandler: null,
         guides: @json($allGuides),
         helpAsunto: '',
         helpMensaje: '',
@@ -862,12 +849,47 @@ function agenteEstiven() {
         helpEnviado: false,
         helpError: '',
         storageKey: 'marsetiv_widget_position_v1',
+        get panelStyle() {
+            return `width: 380px; max-height: 530px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 25px 60px -12px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.03); left: ${this.panelLeft}px; top: ${this.panelTop}px;`;
+        },
 
         init() {
             this.$nextTick(() => {
                 this.restorePosition();
-                window.addEventListener('resize', () => this.clampToViewport());
+                this.resizeHandler = () => {
+                    this.clampToViewport();
+                    this.updatePanelPlacement();
+                };
+                window.addEventListener('resize', this.resizeHandler);
+                this.$watch('open', (isOpen) => {
+                    if (isOpen) {
+                        this.$nextTick(() => {
+                            this.observePanelSize();
+                            this.updatePanelPlacement();
+                        });
+                    } else {
+                        this.disconnectPanelObserver();
+                    }
+                });
             });
+        },
+
+        observePanelSize() {
+            const panel = this.$refs.panel;
+            if (!panel || typeof ResizeObserver === 'undefined') return;
+
+            this.disconnectPanelObserver();
+            this.resizeObserver = new ResizeObserver(() => {
+                this.updatePanelPlacement();
+            });
+            this.resizeObserver.observe(panel);
+        },
+
+        disconnectPanelObserver() {
+            if (this.resizeObserver) {
+                this.resizeObserver.disconnect();
+                this.resizeObserver = null;
+            }
         },
 
         restorePosition() {
@@ -899,20 +921,55 @@ function agenteEstiven() {
 
         setInitialPosition() {
             const margin = 20;
-            const rect = this.$refs.widgetRoot?.getBoundingClientRect();
-            if (!rect) return;
-            this.posX = Math.max(margin, window.innerWidth - rect.width - margin);
-            this.posY = Math.max(margin, window.innerHeight - rect.height - margin);
+            const fab = this.$refs.fab;
+            const fabW = fab?.offsetWidth || 56;
+            const fabH = fab?.offsetHeight || 56;
+            this.posX = Math.max(margin, window.innerWidth - fabW - margin);
+            this.posY = Math.max(margin, window.innerHeight - fabH - margin);
+            this.updatePanelPlacement();
         },
 
         clampToViewport() {
             const margin = 12;
-            const rect = this.$refs.widgetRoot?.getBoundingClientRect();
-            if (!rect) return;
-            const maxX = Math.max(margin, window.innerWidth - rect.width - margin);
-            const maxY = Math.max(margin, window.innerHeight - rect.height - margin);
+            const fab = this.$refs.fab;
+            const fabW = fab?.offsetWidth || 56;
+            const fabH = fab?.offsetHeight || 56;
+            const maxX = Math.max(margin, window.innerWidth - fabW - margin);
+            const maxY = Math.max(margin, window.innerHeight - fabH - margin);
             this.posX = Math.min(Math.max(margin, this.posX), maxX);
             this.posY = Math.min(Math.max(margin, this.posY), maxY);
+        },
+
+        updatePanelPlacement() {
+            const margin = 12;
+            const gap = 10;
+            const panelWidth = 380;
+            const panelHeight = Math.min(this.$refs.panel?.offsetHeight || 530, 530);
+            const fabW = this.$refs.fab?.offsetWidth || 56;
+            const fabH = this.$refs.fab?.offsetHeight || 56;
+
+            let absoluteLeft = this.posX - (panelWidth - fabW);
+            absoluteLeft = Math.min(
+                Math.max(margin, absoluteLeft),
+                Math.max(margin, window.innerWidth - margin - panelWidth)
+            );
+
+            const belowTop = this.posY + fabH + gap;
+            const aboveTop = this.posY - panelHeight - gap;
+            const canOpenBelow = belowTop + panelHeight <= window.innerHeight - margin;
+            const canOpenAbove = aboveTop >= margin;
+
+            let absoluteTop;
+            if (!canOpenBelow && canOpenAbove) {
+                absoluteTop = aboveTop;
+            } else {
+                absoluteTop = canOpenBelow
+                    ? belowTop
+                    : Math.max(margin, window.innerHeight - margin - panelHeight);
+            }
+
+            this.panelLeft = absoluteLeft - this.posX;
+            this.panelTop = absoluteTop - this.posY;
         },
 
         startDrag(event) {
@@ -948,6 +1005,7 @@ function agenteEstiven() {
             this.posX = nextX;
             this.posY = nextY;
             this.clampToViewport();
+            if (this.open) this.updatePanelPlacement();
         },
 
         stopDrag() {
@@ -956,7 +1014,12 @@ function agenteEstiven() {
                 window.removeEventListener('pointermove', this.moveHandler);
                 this.moveHandler = null;
             }
+            if (this.upHandler) {
+                window.removeEventListener('pointerup', this.upHandler);
+                this.upHandler = null;
+            }
             this.clampToViewport();
+            if (this.open) this.updatePanelPlacement();
             this.persistPosition();
         },
 
@@ -966,6 +1029,7 @@ function agenteEstiven() {
                 return;
             }
             this.open = true;
+            this.$nextTick(() => this.updatePanelPlacement());
         },
 
         toggleOpenFromFab() {
@@ -974,9 +1038,13 @@ function agenteEstiven() {
                 return;
             }
             this.open = !this.open;
+            if (this.open) {
+                this.$nextTick(() => this.updatePanelPlacement());
+            }
             if (!this.open) {
                 this.activeGuide = null;
                 this.vista = 'guias';
+                this.disconnectPanelObserver();
             }
         },
 

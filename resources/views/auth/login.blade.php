@@ -62,6 +62,6 @@
     </form>
 
     <p class="mt-8 text-center text-xs text-gray-400">
-        Gobernación de Manizales &mdash; Acceso restringido a usuarios autorizados
+        Gobernación de Caldas &mdash; Acceso restringido a usuarios autorizados
     </p>
 </x-guest-layout>
