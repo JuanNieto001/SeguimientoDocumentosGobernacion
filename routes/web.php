@@ -13,6 +13,7 @@ use App\Http\Controllers\Area\JuridicaController;
 use App\Http\Controllers\Area\SecopController;
 use App\Http\Controllers\Area\SolicitudDocumentosController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Dashboard\DashboardBuilderController;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\WorkflowController;
 use App\Http\Controllers\WorkflowFilesController;
@@ -133,6 +134,43 @@ Route::middleware(['auth'])->prefix('alertas')->name('alertas.')->group(function
     Route::delete('/{alerta}', [AlertaController::class, 'destroy'])->name('destroy');
     Route::get('/widget', [AlertaController::class, 'widget'])->name('widget');
 });
+
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD BUILDER - SOLO ADMIN
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'permission:dashboard.builder.access'])
+    ->prefix('dashboard/builder')
+    ->name('dashboard.builder.')
+    ->group(function () {
+        // Builder principal
+        Route::get('/', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'store'])->name('store');
+        Route::get('/list', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'list'])->name('list');
+        Route::get('/{id}', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'show'])->name('show');
+        
+        // Asignaciones
+        Route::post('/{id}/assign/users', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignToUsers'])->name('assign.users');
+        Route::post('/{id}/assign/roles', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignToRoles'])->name('assign.roles');
+        Route::post('/{id}/assign/secretarias', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignToSecretarias'])->name('assign.secretarias');
+        
+        // Datos para asignación
+        Route::get('/data/assignments', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignmentData'])->name('assignment.data');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD VIEWER - USUARIOS CON DASHBOARDS ASIGNADOS
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'permission:dashboard.view.assigned'])
+    ->prefix('dashboard')
+    ->name('dashboard.viewer.')
+    ->group(function () {
+        Route::get('/', [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'index'])->name('index');
+        Route::get('/{id}/view', [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'show'])->name('show');
+    });
 
 /*
 |--------------------------------------------------------------------------
