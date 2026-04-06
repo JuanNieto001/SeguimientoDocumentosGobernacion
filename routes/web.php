@@ -56,7 +56,7 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])
+    Route::get('/panel-principal', [DashboardController::class, 'index'])
         ->name('dashboard');
 
     // Motor de Flujos Dinámico (admin)

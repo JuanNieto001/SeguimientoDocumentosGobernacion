@@ -15,10 +15,10 @@ class SecopDatosAbiertoService
 
     public function __construct()
     {
-        $this->apiUrl = config('services.secop.api_url');
-        $this->keyId = config('services.secop.key_id');
-        $this->keySecret = config('services.secop.key_secret');
-        $this->entidadNit = config('services.secop.entidad_nit');
+        $this->apiUrl = (string) config('services.secop.api_url', '');
+        $this->keyId = (string) config('services.secop.key_id', '');
+        $this->keySecret = (string) config('services.secop.key_secret', '');
+        $this->entidadNit = (string) config('services.secop.entidad_nit', '');
     }
 
     /**
@@ -192,10 +192,19 @@ class SecopDatosAbiertoService
     private function query(array $params): array
     {
         try {
-            $response = Http::timeout(30)
-                ->withOptions(['verify' => false])
-                ->withBasicAuth($this->keyId, $this->keySecret)
-                ->get($this->apiUrl, $params);
+            if ($this->apiUrl === '') {
+                Log::warning('SECOP API no configurada: falta services.secop.api_url');
+                return [];
+            }
+
+            $request = Http::timeout(30)
+                ->withOptions(['verify' => false]);
+
+            if ($this->keyId !== '' && $this->keySecret !== '') {
+                $request = $request->withBasicAuth($this->keyId, $this->keySecret);
+            }
+
+            $response = $request->get($this->apiUrl, $params);
 
             if ($response->successful()) {
                 return $response->json() ?? [];

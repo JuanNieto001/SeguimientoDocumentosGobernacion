@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // Confiar en proxy inverso (ngrok) para detectar correctamente HTTPS y host público.
+        $middleware->trustProxies(at: '*');
 
         // 🌐 Compartir sesión web con rutas API (para SPA React)
         $middleware->api(prepend: [
@@ -35,6 +39,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (UnauthorizedException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'No tienes permisos para acceder a este recurso.',
+                ], 403);
+            }
+
+            return redirect()
+                ->route('dashboards.mi')
+                ->with('error', 'No tienes permisos para acceder a esa sección.');
+        });
     })
     ->create();
