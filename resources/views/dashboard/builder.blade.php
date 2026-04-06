@@ -100,5 +100,5 @@
 
 @push('scripts')
 <!-- Dashboard Builder React App -->
-@vite(['resources/js/dashboard-builder.jsx'])
+@vite(['resources/js/dashboard-builder/app.jsx'])
 @endpush

@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class DashboardAssignment extends Model
+class DashboardSecretariaAssignment extends Model
 {
+    protected $table = 'dashboard_secretaria_assignments';
+
     protected $fillable = [
         'dashboard_id',
-        'user_id',
+        'secretaria_id',
         'assigned_by',
         'assigned_at',
         'active'
@@ -25,9 +27,9 @@ class DashboardAssignment extends Model
         return $this->belongsTo(Dashboard::class);
     }
 
-    public function user(): BelongsTo
+    public function secretaria(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Secretaria::class);
     }
 
     public function assignedBy(): BelongsTo

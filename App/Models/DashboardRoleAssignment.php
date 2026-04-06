@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class DashboardAssignment extends Model
+class DashboardRoleAssignment extends Model
 {
+    protected $table = 'dashboard_role_assignments';
+
     protected $fillable = [
         'dashboard_id',
-        'user_id',
+        'role_name',
         'assigned_by',
         'assigned_at',
         'active'
@@ -23,11 +25,6 @@ class DashboardAssignment extends Model
     public function dashboard(): BelongsTo
     {
         return $this->belongsTo(Dashboard::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
     }
 
     public function assignedBy(): BelongsTo
