@@ -44,8 +44,8 @@ return new class extends Migration
                 ->on('dashboard_plantillas')
                 ->nullOnDelete();
 
-            $table->index(['tipo_objetivo', 'role_name']);
-            $table->index(['tipo_objetivo', 'target_user_id']);
+            $table->index(['tipo_objetivo', 'role_name'], 'idx_dash_aud_tipo_role');
+            $table->index(['tipo_objetivo', 'target_user_id'], 'idx_dash_aud_tipo_target');
             $table->index('created_at');
         });
     }

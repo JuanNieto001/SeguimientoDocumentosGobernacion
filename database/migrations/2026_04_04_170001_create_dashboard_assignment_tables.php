@@ -52,7 +52,7 @@ return new class extends Migration
             $table->timestamp('assigned_at');
             $table->boolean('active')->default(true);
             
-            $table->unique(['dashboard_id', 'secretaria_id']);
+            $table->unique(['dashboard_id', 'secretaria_id'], 'uniq_dash_secret');
         });
     }
 
