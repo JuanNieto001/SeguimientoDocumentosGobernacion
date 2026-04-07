@@ -51,7 +51,9 @@
         </div>
 
         {{-- Navegación --}}
-        <nav class="sidebar-nav flex-1 overflow-y-auto px-3 py-3">
+        <nav class="sidebar-nav flex-1 overflow-y-auto px-3 py-3 scroll-smooth" 
+             style="scrollbar-width: thin; 
+                    scrollbar-color: rgba(255,255,255,0.3) transparent;">
             @include('layouts.navigation')
         </nav>
 

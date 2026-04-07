@@ -71,7 +71,7 @@
     <div x-show="showSecretarias"
          x-cloak
          class="ml-2 pl-2 mt-0.5 space-y-0.5"
-         style="border-left:1px solid rgba(134,239,172,.18)">>
+         style="border-left:1px solid rgba(134,239,172,.18)">
 
         @foreach($secretariasNav as $sec)
             @php

@@ -23,6 +23,56 @@
         margin: 0 !important;
         padding: 0 !important;
     }
+    
+    /* Scroll personalizado para sidebar */
+    .sidebar-nav::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .sidebar-nav::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+    
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background: rgba(134, 239, 172, 0.4);
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar-nav::-webkit-scrollbar-thumb:hover {
+        background: rgba(134, 239, 172, 0.6);
+    }
+    
+    /* Prevenir flasheo de página y panel principal */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    body {
+        overflow-x: hidden;
+    }
+    
+    /* Prevenir flasheo en navegación */
+    .sidebar-link {
+        transition: all 0.15s ease-in-out !important;
+        text-decoration: none !important;
+    }
+    
+    .sidebar-link:hover {
+        text-decoration: none !important;
+    }
+    
+    /* Estabilizar panel principal */
+    main {
+        opacity: 1 !important;
+        transition: opacity 0.1s ease-in-out;
+    }
+    
+    /* Alpine.js cloak fix */
+    [x-cloak] { 
+        display: none !important; 
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
