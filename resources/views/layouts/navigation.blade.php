@@ -60,7 +60,7 @@
             <span class="text-[10px] font-medium rounded-full px-1.5 py-0.5 leading-none"
                   style="background:rgba(134,239,172,.15); color:#86efac">{{ $secretariasNav->count() }}</span>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                 class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 opacity-60"
+                 class="w-3.5 h-3.5 shrink-0 opacity-60"
                  :class="showSecretarias ? 'rotate-180' : ''">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
             </svg>
@@ -69,15 +69,9 @@
 
     {{-- Panel desplegable con todas las secretarías --}}
     <div x-show="showSecretarias"
-         x-transition:enter="transition ease-out duration-150"
-         x-transition:enter-start="opacity-0 max-h-0"
-         x-transition:enter-end="opacity-100 max-h-[1500px]"
-         x-transition:leave="transition ease-in duration-100"
-         x-transition:leave-start="opacity-100 max-h-[1500px]"
-         x-transition:leave-end="opacity-0 max-h-0"
          x-cloak
-         class="ml-2 pl-2 mt-0.5 space-y-0.5 overflow-hidden"
-         style="border-left:1px solid rgba(134,239,172,.18)">
+         class="ml-2 pl-2 mt-0.5 space-y-0.5"
+         style="border-left:1px solid rgba(134,239,172,.18)">>
 
         @foreach($secretariasNav as $sec)
             @php
