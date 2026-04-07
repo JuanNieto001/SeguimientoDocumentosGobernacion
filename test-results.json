@@ -1,0 +1,523 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\playwright.config.js",
+    "rootDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 4,
+    "webServer": {
+      "command": "php artisan serve",
+      "url": "http://localhost:8000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "auth\\auth.spec.js",
+      "file": "auth/auth.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Módulo Autenticación",
+          "file": "auth/auth.spec.js",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "AUTH-001: Login exitoso con credenciales válidas",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 13530,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:8000/login\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:8000/login\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:8000/login\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:8000/login\"\u001b[22m\n\n    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js:25:24",
+                        "location": {
+                          "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js",
+                          "column": 24,
+                          "line": 25
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 23 |\u001b[39m     \n \u001b[90m 24 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'✅ Paso 4: Verificar redirección a dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 25 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*dashboard/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 26 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m\n \u001b[90m 28 |\u001b[39m   test(\u001b[32m'AUTH-002: Login fallido con email incorrecto'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js",
+                            "column": 24,
+                            "line": 25
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:8000/login\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:8000/login\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 23 |\u001b[39m     \n \u001b[90m 24 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'✅ Paso 4: Verificar redirección a dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 25 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*dashboard/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 26 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m\n \u001b[90m 28 |\u001b[39m   test(\u001b[32m'AUTH-002: Login fallido con email incorrecto'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js:25:24\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "✅ Paso 1: Ir a login\n"
+                        },
+                        {
+                          "text": "✅ Paso 2: Ingresar credenciales\n"
+                        },
+                        {
+                          "text": "✅ Paso 3: Hacer clic en Iniciar Sesión\n"
+                        },
+                        {
+                          "text": "✅ Paso 4: Verificar redirección a dashboard\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-07T20:38:28.360Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-a0a60-so-con-credenciales-válidas-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-a0a60-so-con-credenciales-válidas-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-a0a60-so-con-credenciales-válidas-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-a0a60-so-con-credenciales-válidas-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js",
+                        "column": 24,
+                        "line": 25
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7e29b9cfb8a7ab14bcf7-b30a4491c636099c1bb8",
+              "file": "auth/auth.spec.js",
+              "line": 11,
+              "column": 3
+            },
+            {
+              "title": "AUTH-002: Login fallido con email incorrecto",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5570,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-07T20:38:45.639Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-b763f-allido-con-email-incorrecto-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-b763f-allido-con-email-incorrecto-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-b763f-allido-con-email-incorrecto-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7e29b9cfb8a7ab14bcf7-ba48195a857c2b87834a",
+              "file": "auth/auth.spec.js",
+              "line": 28,
+              "column": 3
+            },
+            {
+              "title": "AUTH-003: Login fallido con contraseña incorrecta",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5030,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-07T20:38:51.936Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-cd8fb-o-con-contraseña-incorrecta-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-cd8fb-o-con-contraseña-incorrecta-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-cd8fb-o-con-contraseña-incorrecta-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7e29b9cfb8a7ab14bcf7-1c8834ae302080428e8b",
+              "file": "auth/auth.spec.js",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "AUTH-004: Login con campos vacíos",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3214,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-07T20:38:57.384Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-97f31-004-Login-con-campos-vacíos-chromium\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-97f31-004-Login-con-campos-vacíos-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-97f31-004-Login-con-campos-vacíos-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7e29b9cfb8a7ab14bcf7-e9fe37c430066148d072",
+              "file": "auth/auth.spec.js",
+              "line": 49,
+              "column": 3
+            },
+            {
+              "title": "AUTH-005: Logout exitoso",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 31954,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js",
+                            "column": 21,
+                            "line": 12
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/dashboard**\" until \"load\"\n============================================================\n\n\u001b[90m   at \u001b[39mhelpers\\login.helper.js:12\n\n\u001b[0m \u001b[90m 10 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mfill(\u001b[32m'input[name=\"password\"]'\u001b[39m\u001b[33m,\u001b[39m password)\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mclick(\u001b[32m'button[type=\"submit\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 12 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mwaitForURL(\u001b[32m'**/dashboard**'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 13 |\u001b[39m   }\n \u001b[90m 14 |\u001b[39m\n \u001b[90m 15 |\u001b[39m   \u001b[36masync\u001b[39m loginAsAdmin() {\u001b[0m\n\u001b[2m    at LoginHelper.loginAs (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js:12:21)\u001b[22m\n\u001b[2m    at LoginHelper.loginAsAdmin (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js:16:5)\u001b[22m\n\u001b[2m    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js:61:5\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-07T20:39:00.881Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autenticación-AUTH-005-Logout-exitoso-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autenticación-AUTH-005-Logout-exitoso-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autenticación-AUTH-005-Logout-exitoso-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autenticación-AUTH-005-Logout-exitoso-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7e29b9cfb8a7ab14bcf7-b954db12158683445254",
+              "file": "auth/auth.spec.js",
+              "line": 57,
+              "column": 3
+            },
+            {
+              "title": "AUTH-006: Acceso sin autenticación",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 9198,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*login/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:8000/dashboard\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    8 × unexpected value \"http://localhost:8000/dashboard\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*login/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:8000/dashboard\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    8 × unexpected value \"http://localhost:8000/dashboard\"\u001b[22m\n\n    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js:74:24",
+                        "location": {
+                          "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js",
+                          "column": 24,
+                          "line": 74
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 72 |\u001b[39m     \n \u001b[90m 73 |\u001b[39m     \u001b[90m// Debe redirigir a login\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 74 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*login/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 75 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 76 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 77 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js",
+                            "column": 24,
+                            "line": 74
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*login/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:8000/dashboard\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    8 × unexpected value \"http://localhost:8000/dashboard\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 72 |\u001b[39m     \n \u001b[90m 73 |\u001b[39m     \u001b[90m// Debe redirigir a login\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 74 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*login/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 75 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 76 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 77 |\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js:74:24\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-07T20:39:36.635Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-055fa-06-Acceso-sin-autenticación-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-055fa-06-Acceso-sin-autenticación-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-055fa-06-Acceso-sin-autenticación-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\auth-auth-Módulo-Autentica-055fa-06-Acceso-sin-autenticación-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\auth\\auth.spec.js",
+                        "column": 24,
+                        "line": 74
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7e29b9cfb8a7ab14bcf7-94ae77932ef3fbdaf88c",
+              "file": "auth/auth.spec.js",
+              "line": 70,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-07T20:38:23.073Z",
+    "duration": 83501.34400000001,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

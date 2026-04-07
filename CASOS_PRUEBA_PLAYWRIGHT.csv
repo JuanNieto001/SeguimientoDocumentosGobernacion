@@ -1,0 +1,131 @@
+ID,Módulo,Caso de Prueba,Tipo,Prioridad,Archivo,Estado,Descripción,Precondiciones,Pasos,Resultado Esperado
+AUTH-001,Autenticación,Login exitoso con credenciales válidas,Positivo,Alta,tests/auth/auth.spec.js,✅,"Verificar que un usuario puede iniciar sesión con credenciales correctas","Usuario existe en BD, Servidor corriendo","1. Ir a /login
+2. Ingresar email válido
+3. Ingresar password válido
+4. Click en Iniciar Sesión",Redirige a /dashboard
+AUTH-002,Autenticación,Login fallido con email incorrecto,Negativo,Alta,tests/auth/auth.spec.js,✅,Verificar que no se permite login con email inexistente,Servidor corriendo,"1. Ir a /login
+2. Ingresar email inexistente
+3. Ingresar cualquier password
+4. Click en Iniciar Sesión",Muestra mensaje de error y permanece en /login
+AUTH-003,Autenticación,Login fallido con contraseña incorrecta,Negativo,Alta,tests/auth/auth.spec.js,✅,Verificar que no se permite login con password incorrecta,"Usuario existe en BD, Servidor corriendo","1. Ir a /login
+2. Ingresar email válido
+3. Ingresar password incorrecta
+4. Click en Iniciar Sesión",Muestra mensaje de error
+AUTH-004,Autenticación,Login con campos vacíos,Negativo,Media,tests/auth/auth.spec.js,✅,Verificar validación de campos obligatorios,Servidor corriendo,"1. Ir a /login
+2. Dejar campos vacíos
+3. Click en Iniciar Sesión",Muestra validación de campos requeridos
+AUTH-005,Autenticación,Logout exitoso,Positivo,Alta,tests/auth/auth.spec.js,✅,Verificar que un usuario puede cerrar sesión,Usuario autenticado,"1. Estar autenticado
+2. Click en menú de usuario
+3. Click en Cerrar Sesión",Redirige a /login y limpia sesión
+AUTH-006,Autenticación,Acceso sin autenticación,Negativo,Alta,tests/auth/auth.spec.js,✅,Verificar que rutas protegidas requieren autenticación,Sesión no iniciada,"1. Ir directamente a /dashboard sin login",Redirige a /login
+USERS-001,Usuarios,Crear usuario exitosamente,Positivo,Alta,tests/users/users.spec.js,✅,Validar creación de nuevo usuario,Admin autenticado,"1. Ir a /usuarios
+2. Click en Crear
+3. Llenar formulario completo
+4. Click en Guardar",Usuario creado exitosamente
+USERS-002,Usuarios,Editar usuario existente,Positivo,Alta,tests/users/users.spec.js,✅,Validar edición de usuario existente,"Admin autenticado, Usuario existe","1. Ir a /usuarios
+2. Click en Editar en un usuario
+3. Modificar datos
+4. Guardar",Usuario actualizado
+USERS-003,Usuarios,Eliminar usuario,Positivo,Media,tests/users/users.spec.js,✅,Validar eliminación de usuario,"Admin autenticado, Usuario existe","1. Ir a /usuarios
+2. Click en Eliminar
+3. Confirmar",Usuario eliminado
+USERS-004,Usuarios,Crear usuario - Email duplicado,Negativo,Alta,tests/users/users.spec.js,✅,Validar que no se permiten emails duplicados,"Admin autenticado, Email ya existe","1. Ir a /usuarios
+2. Crear con email existente
+3. Intentar guardar",Muestra error de email duplicado
+USERS-005,Usuarios,Crear usuario - Campos obligatorios,Negativo,Media,tests/users/users.spec.js,✅,Validar campos obligatorios del formulario,Admin autenticado,"1. Ir a crear usuario
+2. Dejar campos vacíos
+3. Intentar guardar",Muestra validación de campos
+USERS-006,Usuarios,Asignar rol a usuario,Positivo,Alta,tests/users/users.spec.js,✅,Validar asignación de roles,"Admin autenticado, Roles existen","1. Editar usuario
+2. Cambiar rol
+3. Guardar",Rol asignado correctamente
+USERS-007,Usuarios,Acceso sin permisos,Permisos,Alta,tests/users/users.spec.js,✅,Validar que usuarios sin permiso no acceden a gestión,Usuario sin permisos autenticado,"1. Login como usuario sin permisos
+2. Intentar acceder a /usuarios",Redirige o muestra error
+USERS-008,Usuarios,Gestión filtrada por secretaría,Permisos,Alta,tests/users/users.spec.js,✅,Validar filtrado por secretaría,Admin autenticado,"1. Ir a /usuarios
+2. Aplicar filtro de secretaría",Muestra solo usuarios filtrados
+CDPN-001,Workflow CD-PN,Crear nuevo proceso CD-PN,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar creación de proceso de contratación,Unidad Solicitante autenticada,"1. Ir a /procesos/crear
+2. Llenar formulario
+3. Seleccionar tipo CD-PN
+4. Guardar",Proceso creado en Etapa 0
+CDPN-002,Workflow CD-PN,Etapa 0 - Subir Estudios Previos,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar carga de estudios previos,"Proceso creado, Unidad autenticada","1. Entrar a proceso
+2. Subir PDF de estudios previos
+3. Guardar",Documento cargado exitosamente
+CDPN-003,Workflow CD-PN,Etapa 1 - CDP y Compatibilidad,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar solicitud de CDP,Planeación autenticada,"1. Ver proceso en Etapa 1
+2. Cargar CDP
+3. Aprobar",Etapa completada
+CDPN-004,Workflow CD-PN,Etapa 2 - Validación Contratista,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar datos del contratista,Unidad autenticada,"1. Ingresar datos de contratista
+2. Validar documentos
+3. Guardar",Contratista validado
+CDPN-005,Workflow CD-PN,Etapa 3 - Documentos Contractuales,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar elaboración de minuta,Unidad autenticada,"1. Subir minuta
+2. Subir anexos
+3. Guardar",Documentos contractuales cargados
+CDPN-006,Workflow CD-PN,Etapa 4 - Consolidar Expediente,Positivo,Media,tests/workflow/cdpn-workflow.spec.js,✅,Validar consolidación del expediente,Unidad autenticada,"1. Revisar documentos
+2. Consolidar expediente
+3. Confirmar",Expediente consolidado
+CDPN-007,Workflow CD-PN,Etapa 5 - Radicación Jurídica,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar radicación en área jurídica,Jurídica autenticada,"1. Recibir expediente
+2. Asignar número de radicado
+3. Guardar",Radicado asignado
+CDPN-008,Workflow CD-PN,Etapa 6 - Publicación SECOP II,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar publicación en SECOP,SECOP autenticado,"1. Publicar en SECOP II
+2. Ingresar número SECOP
+3. Confirmar",Publicado en SECOP
+CDPN-009,Workflow CD-PN,Etapa 7 - Solicitar RPC,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar solicitud de Registro Presupuestal,Unidad autenticada,"1. Solicitar RPC
+2. Esperar aprobación",RPC solicitado
+CDPN-010,Workflow CD-PN,Etapa 8 - Número de Contrato,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar asignación de número de contrato,Unidad autenticada,"1. Asignar número de contrato
+2. Guardar",Número asignado
+CDPN-011,Workflow CD-PN,Etapa 9 - Inicio Ejecución,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar inicio de ejecución contractual,Unidad autenticada,"1. Confirmar inicio
+2. Registrar fecha",Contrato en ejecución
+CDPN-012,Workflow CD-PN,Restricción creación - Permisos,Permisos,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar que solo Unidades pueden crear procesos,Usuario sin permisos,"1. Login como usuario sin permisos
+2. Intentar crear proceso",Acceso denegado
+CDPN-013,Workflow CD-PN,Validación documentos requeridos,Negativo,Media,tests/workflow/cdpn-workflow.spec.js,✅,Validar documentos obligatorios por etapa,Proceso en cualquier etapa,"1. Intentar avanzar sin documentos
+2. Verificar validación",Muestra documentos faltantes
+CDPN-014,Workflow CD-PN,Navegación entre etapas,Positivo,Media,tests/workflow/cdpn-workflow.spec.js,✅,Validar navegación entre las 9 etapas,Proceso creado,"1. Navegar entre tabs de etapas
+2. Verificar contenido",Navegación correcta
+CDPN-015,Workflow CD-PN,Flujo completo end-to-end,Positivo,Alta,tests/workflow/cdpn-workflow.spec.js,✅,Validar flujo completo de principio a fin,Todos los usuarios configurados,"1. Crear proceso
+2. Completar las 9 etapas
+3. Finalizar",Proceso completo exitosamente
+MOTOR-001,Motor Flujos,Crear nuevo flujo personalizado,Positivo,Alta,tests/motor-flujos/motor-flujos.spec.js,✅,Validar creación de flujo custom,Admin autenticado,"1. Ir a /flujos
+2. Crear nuevo flujo
+3. Configurar etapas
+4. Guardar",Flujo creado
+MOTOR-002,Motor Flujos,Publicar versión de flujo,Positivo,Alta,tests/motor-flujos/motor-flujos.spec.js,✅,Validar publicación de versión,Flujo creado,"1. Editar flujo
+2. Publicar versión
+3. Confirmar",Versión publicada
+MOTOR-003,Motor Flujos,Versionado de flujos,Positivo,Media,tests/motor-flujos/motor-flujos.spec.js,✅,Validar gestión de versiones,Flujo con versiones,"1. Ver historial de versiones
+2. Cambiar entre versiones",Versionado funcional
+DOCS-001,Documentos,Subir documento válido,Positivo,Alta,tests/documents/documents.spec.js,✅,Validar carga de documento PDF,Proceso creado,"1. Ir a proceso
+2. Seleccionar archivo PDF
+3. Subir",Documento cargado
+DOCS-002,Documentos,Archivo muy grande,Negativo,Media,tests/documents/documents.spec.js,✅,Validar límite de tamaño de archivo,Proceso creado,"1. Intentar subir archivo >20MB
+2. Ver error",Muestra error de tamaño
+DOCS-003,Documentos,Tipo archivo incorrecto,Negativo,Media,tests/documents/documents.spec.js,✅,Validar tipo de archivo permitido,Proceso creado,"1. Intentar subir .txt en lugar de PDF
+2. Ver error",Muestra error de tipo
+DASH-001,Dashboard,Dashboard Admin General,Positivo,Alta,tests/dashboard/dashboard.spec.js,✅,Validar carga de dashboard principal,Admin autenticado,"1. Login como admin
+2. Ver dashboard
+3. Verificar widgets",Dashboard cargado correctamente
+DASH-002,Dashboard,Dashboard responsive móvil,Positivo,Alta,tests/dashboard/dashboard.spec.js,✅,Validar dashboard en móvil,Usuario autenticado,"1. Configurar viewport móvil
+2. Ver dashboard
+3. Verificar elementos",Dashboard adaptado a móvil
+DASH-003,Dashboard,Filtros del dashboard,Positivo,Media,tests/dashboard/dashboard.spec.js,✅,Validar filtros de dashboard,Admin autenticado,"1. Aplicar filtros
+2. Verificar datos filtrados",Filtros funcionan correctamente
+API-001,API,Endpoint autenticación,Positivo,Media,tests/api/api.spec.js,✅,Validar endpoint /api/login,Servidor corriendo,"1. POST a /api/login con credenciales
+2. Verificar respuesta",Retorna token JWT
+API-002,API,Endpoint sin autenticación,Negativo,Media,tests/api/api.spec.js,✅,Validar protección de endpoints,Servidor corriendo,"1. GET a /api/usuarios sin token
+2. Verificar respuesta",Retorna 401 Unauthorized
+API-003,API,Endpoint con token válido,Positivo,Media,tests/api/api.spec.js,✅,Validar acceso con token,Token válido,"1. GET a /api/usuarios con token
+2. Verificar respuesta",Retorna datos correctamente
+RESP-001,Responsive,Login en móvil,Positivo,Media,tests/responsive/responsive.spec.js,✅,Validar login en dispositivo móvil,Servidor corriendo,"1. Configurar viewport móvil
+2. Hacer login
+3. Verificar",Login funcional en móvil
+RESP-002,Responsive,Dashboard responsive,Positivo,Media,tests/responsive/responsive.spec.js,✅,Validar dashboard en diferentes resoluciones,Usuario autenticado,"1. Probar en móvil/tablet/desktop
+2. Verificar adaptación",Dashboard responsive
+RESP-003,Responsive,Menú hamburguesa móvil,Positivo,Media,tests/responsive/responsive.spec.js,✅,Validar menú móvil,Usuario autenticado en móvil,"1. Click en menú hamburguesa
+2. Verificar desplegable",Menú funcional
+RESP-004,Responsive,Tabla responsive con scroll,Positivo,Media,tests/responsive/responsive.spec.js,✅,Validar tablas en móvil,Usuario autenticado en móvil,"1. Ver tabla en móvil
+2. Verificar scroll horizontal",Tabla scrolleable
+PROC-001,Procesos,Listar procesos,Positivo,Alta,tests/procesos/procesos.spec.js,✅,Validar listado de procesos,Unidad autenticada,"1. Ir a /procesos
+2. Ver listado",Muestra procesos correctamente
+PROC-002,Procesos,Filtrar por estado,Positivo,Media,tests/procesos/procesos.spec.js,✅,Validar filtro por estado,Procesos existen,"1. Aplicar filtro de estado
+2. Verificar resultados",Filtro funcional
+PROC-003,Procesos,Buscar por nombre,Positivo,Media,tests/procesos/procesos.spec.js,✅,Validar búsqueda de procesos,Procesos existen,"1. Usar campo de búsqueda
+2. Ver resultados",Búsqueda funcional
+PROC-004,Procesos,Ver detalle proceso,Positivo,Alta,tests/procesos/procesos.spec.js,✅,Validar vista detalle de proceso,Proceso existe,"1. Click en proceso
+2. Ver detalle completo",Detalle cargado correctamente
