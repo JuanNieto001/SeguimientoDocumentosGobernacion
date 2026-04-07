@@ -39,8 +39,9 @@
     if (!$openSecId && $currentUnidadId) {
         $openSecId = $secretariasNav->first(fn($s) => $s->unidades->contains('id', $currentUnidadId))?->id ?? 0;
     }
-    // Si hay alguna secretaría o unidad activa, abrir el panel principal
-    $secretariaPanelOpen = $openSecId ? 'true' : 'false';
+    // Solo abrir si estamos en una ruta que realmente use secretaría/unidad
+    $isSecretariaRoute = request()->has('secretaria_id') || request()->has('unidad_id');
+    $secretariaPanelOpen = ($openSecId && $isSecretariaRoute) ? 'true' : 'false';
 @endphp
 
 <div x-data="{ showSecretarias: {{ $secretariaPanelOpen }}, openSec: {{ $openSecId ?: 'null' }} }" class="mt-1">

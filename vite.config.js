@@ -10,7 +10,6 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/motor-flujos.jsx',
                 'resources/js/dashboard-motor.jsx',
-                'resources/js/dashboard-builder/app.jsx',
             ],
             refresh: true,
         }),

@@ -1157,7 +1157,7 @@ function FlujosList({ flujos, loading, onView, onEdit, onNew, onDelete, toast })
                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                 }}>
                                     <span style={{ fontSize: 11, color: '#9ca3af' }}>
-                                        {f.version_activa?.pasos?.length ?? '?'} pasos
+                                        {f.version_activa?.pasos_count ?? f.version_activa?.pasos?.length ?? 0} pasos
                                     </span>
                                     <div style={{ display: 'flex', gap: 8 }} onClick={e => e.stopPropagation()}>
                                         <button onClick={() => onView(f)} style={{ ...S.btnSm('transparent', '#2563eb'), padding: '4px 8px' }}>👁 Ver</button>
