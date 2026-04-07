@@ -31,6 +31,21 @@
                         @endif
                     </div>
 
+                    {{-- Alcance de datos en Dashboard --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Alcance de datos en Dashboard</label>
+                        <p class="text-xs text-gray-500 mb-2">Define qué procesos puede ver el usuario con este rol en el Panel Principal.</p>
+                        <select name="dashboard_scope"
+                            class="w-full rounded-xl px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                            style="border:1px solid #e2e8f0">
+                            <option value="global" @selected(old('dashboard_scope', $role->dashboard_scope) === 'global')>🌍 Global – Ve todos los procesos del sistema</option>
+                            <option value="secretaria" @selected(old('dashboard_scope', $role->dashboard_scope) === 'secretaria')>🏛️ Secretaría – Ve solo procesos de su secretaría</option>
+                            <option value="unidad" @selected(old('dashboard_scope', $role->dashboard_scope) === 'unidad')>📁 Unidad – Ve solo procesos de su unidad</option>
+                            <option value="propios" @selected(old('dashboard_scope', $role->dashboard_scope) === 'propios')>👤 Propios – Ve solo sus propios procesos</option>
+                        </select>
+                        @error('dashboard_scope') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+
                     {{-- Permisos --}}
                     <div>
                         <div class="flex items-center justify-between mb-3">

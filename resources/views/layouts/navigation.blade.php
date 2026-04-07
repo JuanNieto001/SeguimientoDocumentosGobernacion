@@ -15,9 +15,6 @@
 {{-- Dashboard siempre visible --}}
 {!! sideLink(route('dashboard'),'Panel principal','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',$r->routeIs('dashboard')) !!}
 
-@hasanyrole('gobernador|secretario|jefe_unidad|admin|admin_general')
-{!! sideLink(route('dashboards.mi'),'Mi dashboard por rol','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h7v7H3V3zm11 0h7v4h-7V3zM14 10h7v11h-7V10zM3 14h7v7H3v-7z"/>',$r->routeIs('dashboards.mi')) !!}
-@endhasanyrole
 
 @hasanyrole('admin|admin_general|admin_secretaria|gobernador|secretario|jefe_unidad')
 {!! sideLink(route('contratos-aplicaciones.index'),'Contratos de aplicaciones','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 3h5.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/>',$r->routeIs('contratos-aplicaciones.*')) !!}
@@ -30,7 +27,6 @@
 {!! sideLink(url('/admin/logs'),'Logs','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',$r->is('admin/logs*')) !!}
 {!! sideLink(route('admin.auth-events'),'Log autenticaci&oacute;n','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>',$r->routeIs('admin.auth-events')) !!}
 {!! sideLink(route('motor-flujos'),'Motor de Flujos','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>',$r->routeIs('motor-flujos')) !!}
-{!! sideLink(route('dashboards.motor.index'),'Motor de Dashboards','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3h10v6H11V3zM3 3h6v10H3V3zm8 8h10v10H11V11zM3 15h6v6H3v-6z"/>',$r->routeIs('dashboards.motor.*')) !!}
 {!! sideLink(route('admin.estiven-guides.index'),'Gu&iacute;as de Marsetiv','<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',$r->is('admin/estiven-guides*')) !!}
 
 {{-- ============================================================ --}}

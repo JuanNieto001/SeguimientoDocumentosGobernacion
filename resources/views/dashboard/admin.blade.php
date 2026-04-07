@@ -1,16 +1,30 @@
-﻿<x-app-layout>
-    {{-- Chart.js CDN --}}
-    @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    @endpush
+<x-app-layout>
 
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between flex-wrap gap-3">
             <div>
-                <h1 class="text-lg font-bold text-gray-900 leading-none">Panel Administrativo</h1>
-                <p class="text-xs text-gray-400 mt-1">Gobernación de Caldas &mdash; Sistema de Contratación Pública</p>
+                <div class="flex items-center gap-2 mb-0.5">
+                    @if($scope === 'global')
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:#dcfce7;color:#15803d">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
+                            VISTA GLOBAL
+                        </span>
+                    @elseif($scope === 'secretaria')
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:#dbeafe;color:#1d4ed8">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
+                            SECRETARÍA
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:#fef3c7;color:#92400e">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></span>
+                            UNIDAD
+                        </span>
+                    @endif
+                </div>
+                <h1 class="text-lg font-black text-gray-900 leading-none">Panel de Control</h1>
+                <p class="text-xs text-gray-400 mt-0.5">{{ $scopeNombre }} &mdash; {{ now()->translatedFormat('F Y') }}</p>
             </div>
-            <div class="flex items-center gap-3 ml-8">
+            <div class="flex items-center gap-2">
                 <a href="{{ route('procesos.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:opacity-95"
                    style="background:linear-gradient(135deg,#15803d,#14532d)">
@@ -18,7 +32,7 @@
                     Nueva solicitud
                 </a>
                 <a href="{{ route('procesos.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 text-sm font-medium bg-white border hover:bg-gray-50 transition-all"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 text-sm font-medium bg-white border hover:bg-gray-50"
                    style="border-color:#e2e8f0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                     Ver todos
@@ -28,312 +42,359 @@
     </x-slot>
 
     @php
-    $areaLabels = ['unidad_solicitante'=>'Unidad Solicitante','planeacion'=>'Planeación','hacienda'=>'Hacienda','juridica'=>'Jurídica','secop'=>'SECOP'];
-    $areaColors = ['unidad_solicitante'=>'#3b82f6','planeacion'=>'#16a34a','hacienda'=>'#ca8a04','juridica'=>'#ea580c','secop'=>'#9333ea'];
-    $areaBg     = ['unidad_solicitante'=>'#eff6ff','planeacion'=>'#f0fdf4','hacienda'=>'#fefce8','juridica'=>'#fff7ed','secop'=>'#fdf4ff'];
-    $areaConfig = [
-        'unidad_solicitante'=>['color'=>'#3b82f6','bg'=>'#eff6ff','step'=>'1'],
-        'planeacion'        =>['color'=>'#16a34a','bg'=>'#f0fdf4','step'=>'2'],
-        'hacienda'          =>['color'=>'#ca8a04','bg'=>'#fefce8','step'=>'3'],
-        'juridica'          =>['color'=>'#ea580c','bg'=>'#fff7ed','step'=>'4'],
-        'secop'             =>['color'=>'#9333ea','bg'=>'#fdf4ff','step'=>'5'],
+    $estadoConfig = [
+        'EN_CURSO'   => ['label'=>'En curso',    'color'=>'#2563eb','bg'=>'#eff6ff'],
+        'FINALIZADO' => ['label'=>'Finalizado',  'color'=>'#15803d','bg'=>'#f0fdf4'],
+        'completado' => ['label'=>'Completado',  'color'=>'#15803d','bg'=>'#f0fdf4'],
+        'cerrado'    => ['label'=>'Cerrado',     'color'=>'#0891b2','bg'=>'#ecfeff'],
+        'RECHAZADO'  => ['label'=>'Rechazado',   'color'=>'#dc2626','bg'=>'#fef2f2'],
     ];
-    $maxProcesos = max(1, collect($estadisticasArea??[])->max('total'));
-
-    // Datos para gráfica de donut (áreas)
-    $donutLabels = [];
-    $donutData   = [];
-    $donutColors = [];
-    foreach(($estadisticasArea??[]) as $area => $datos) {
-        $donutLabels[] = $areaLabels[$area] ?? ucfirst(str_replace('_',' ',$area));
-        $donutData[]   = $datos['total'] ?? 0;
-        $donutColors[] = $areaColors[$area] ?? '#94a3b8';
-    }
-    // Si no hay datos reales, mostrar placeholders
-    if(array_sum($donutData) === 0) {
-        $donutData = [1,1,1,1,1];
-    }
-    $donutColorsSafe = !empty($donutColors) ? array_values($donutColors) : ['#3b82f6','#16a34a','#ca8a04','#ea580c','#9333ea'];
-    $donutLabelsSafe = !empty($donutLabels) ? $donutLabels : ['Unidad','Planeación','Hacienda','Jurídica','SECOP'];
-    $barTotals = collect($estadisticasArea??[])->pluck('total')->values()->toArray();
-    $barPendientes = collect($estadisticasArea??[])->pluck('documentos_pendientes')->values()->toArray();
+    $areaRoutes = [
+        'unidad_solicitante' => '/unidad',
+        'planeacion'         => '/planeacion',
+        'hacienda'           => '/hacienda',
+        'juridica'           => '/juridica',
+        'secop'              => '/secop',
+    ];
     @endphp
 
-    <div class="p-6 space-y-5">
+    <div class="p-5 space-y-4" style="background:#f8fafc;min-height:calc(100vh - 80px)">
 
-        {{-- ═══ KPI ROW ═══ --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {{-- ═══ KPI CARDS ═══ --}}
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             @php
             $kpis = [
-                ['label'=>'Total procesos',  'value'=>$indicadores['total_procesos']??0,         'sub'=>'Registrados','color'=>'#2563eb','bg'=>'#eff6ff','border'=>'#bfdbfe',
-                 'trend'=>'+0%','trendUp'=>true,
-                 'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
-                ['label'=>'En curso',         'value'=>$indicadores['procesos_activos']??0,       'sub'=>'Activos ahora','color'=>'#0891b2','bg'=>'#ecfeff','border'=>'#a5f3fc',
-                 'trend'=>'Activo','trendUp'=>true,
-                 'icon'=>'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                ['label'=>'Finalizados',      'value'=>$indicadores['procesos_finalizados']??0,   'sub'=>'Completados','color'=>'#15803d','bg'=>'#f0fdf4','border'=>'#bbf7d0',
-                 'trend'=>'Éxito','trendUp'=>true,
-                 'icon'=>'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                ['label'=>'Alertas activas',  'value'=>$indicadores['alertas_alta_prioridad']??0, 'sub'=>'Alta prioridad','color'=>'#dc2626','bg'=>'#fef2f2','border'=>'#fecaca',
-                 'trend'=>'Revisar','trendUp'=>false,
-                 'icon'=>'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'],
+                ['v'=>$totalProcesos,   'l'=>'Total procesos',   's'=>'Registrados',      'c'=>'#2563eb','bg'=>'#eff6ff','b'=>'#bfdbfe',
+                 'ic'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                ['v'=>$enCurso,         'l'=>'En curso',         's'=>'Procesos activos', 'c'=>'#0891b2','bg'=>'#ecfeff','b'=>'#a5f3fc',
+                 'ic'=>'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['v'=>$finalizados,     'l'=>'Finalizados',      's'=>'Completados',      'c'=>'#15803d','bg'=>'#f0fdf4','b'=>'#bbf7d0',
+                 'ic'=>'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['v'=>$rechazados,      'l'=>'Rechazados',       's'=>'Total histórico',  'c'=>'#dc2626','bg'=>'#fef2f2','b'=>'#fecaca',
+                 'ic'=>'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['v'=>$creadosMes,      'l'=>'Creados hoy',      's'=>ucfirst(now()->translatedFormat('F')), 'c'=>'#7c3aed','bg'=>'#faf5ff','b'=>'#e9d5ff',
+                 'ic'=>'M12 4v16m8-8H4'],
+                ['v'=>$alertasAltas,    'l'=>'Alertas críticas', 's'=>'Alta prioridad',   'c'=>'#d97706','bg'=>'#fffbeb','b'=>'#fde68a',
+                 'ic'=>'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'],
             ];
             @endphp
             @foreach($kpis as $k)
-            <div class="bg-white rounded-2xl p-5 border relative overflow-hidden hover:shadow-lg transition-all duration-300 cursor-default group" style="border-color:{{ $k['border'] }}">
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full opacity-[0.06] group-hover:opacity-[0.1] transition-opacity" style="background:{{ $k['color'] }}"></div>
-                <div class="absolute -right-2 -top-2 w-12 h-12 rounded-full opacity-[0.04]" style="background:{{ $k['color'] }}"></div>
-                <div class="relative flex items-start justify-between mb-4">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:{{ $k['bg'] }}">
-                        <svg class="w-5 h-5" fill="none" stroke="{{ $k['color'] }}" stroke-width="1.75" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="{{ $k['icon'] }}"/>
-                        </svg>
-                    </div>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style="background:{{ $k['bg'] }};color:{{ $k['color'] }}">{{ $k['trend'] }}</span>
+            <div class="bg-white rounded-2xl p-4 border relative overflow-hidden hover:shadow-md transition-all duration-200 group" style="border-color:{{ $k['b'] }}">
+                <div class="absolute -right-4 -bottom-4 w-16 h-16 rounded-full opacity-[0.07] group-hover:opacity-[0.12] transition-opacity" style="background:{{ $k['c'] }}"></div>
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style="background:{{ $k['bg'] }}">
+                    <svg class="w-4 h-4" fill="none" stroke="{{ $k['c'] }}" stroke-width="1.75" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $k['ic'] }}"/>
+                    </svg>
                 </div>
-                <p class="text-[2.4rem] font-black leading-none tracking-tight" style="color:{{ $k['color'] }}">{{ $k['value'] }}</p>
-                <p class="text-xs font-bold text-gray-700 mt-2">{{ $k['label'] }}</p>
-                <p class="text-[11px] text-gray-400 mt-0.5">{{ $k['sub'] }}</p>
+                <p class="text-2xl font-black leading-none tracking-tight" style="color:{{ $k['c'] }}">{{ number_format($k['v']) }}</p>
+                <p class="text-xs font-bold text-gray-700 mt-1.5 leading-tight">{{ $k['l'] }}</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">{{ $k['s'] }}</p>
             </div>
             @endforeach
         </div>
 
-        {{-- ═══ FILA GRÁFICAS ═══ --}}
-        <div class="grid lg:grid-cols-5 gap-4">
+        {{-- ═══ FILA PRINCIPAL: Lista lateral + Gráfica principal + Filtros/resumen ═══ --}}
+        <div class="grid xl:grid-cols-12 gap-4">
 
-            {{-- Gráfica de Donut: Distribución por área --}}
-            <div class="lg:col-span-2 bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-                <div class="px-6 py-4 border-b" style="border-color:#f1f5f9">
-                    <h2 class="text-sm font-bold text-gray-800">Distribución por área</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Concentración de procesos activos</p>
+            {{-- PANEL IZQUIERDO: Secretarías o Unidades --}}
+            <div class="xl:col-span-3 bg-white rounded-2xl border overflow-hidden flex flex-col" style="border-color:#e2e8f0">
+                <div class="px-4 py-3 border-b flex items-center justify-between" style="border-color:#f1f5f9;background:#fafafa">
+                    <div>
+                        <p class="text-xs font-black text-gray-700 uppercase tracking-wider">
+                            {{ $listaLateralTipo === 'secretarias' ? 'Secretarías' : ($listaLateralTipo === 'unidades' ? 'Unidades' : 'Alcance') }}
+                        </p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">Procesos activos por dependencia</p>
+                    </div>
+                    @if($listaLateralTipo === 'secretarias')
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:#f0fdf4;color:#15803d">{{ $listaLateral->count() }}</span>
+                    @endif
                 </div>
-                <div class="p-5">
-                    <div class="relative flex items-center justify-center" style="height:180px">
-                        <canvas id="donutChart"></canvas>
-                        <div class="absolute text-center pointer-events-none">
-                            <p class="text-2xl font-black text-gray-800">{{ collect($estadisticasArea??[])->sum('total') }}</p>
-                            <p class="text-[10px] text-gray-400 font-medium">procesos</p>
+                <div class="flex-1 overflow-y-auto divide-y" style="divide-color:#f8fafc;max-height:340px">
+                    @forelse($listaLateral as $item)
+                    @php
+                        $pct = $item->total > 0 ? min(100, round($item->en_curso / max($listaLateral->max('total'), 1) * 100)) : 0;
+                        $barW = $listaLateral->max('total') > 0 ? round($item->total / $listaLateral->max('total') * 100) : 0;
+                    @endphp
+                    <div class="px-4 py-3 hover:bg-slate-50 transition-colors cursor-default">
+                        <div class="flex items-start justify-between mb-1.5">
+                            <p class="text-xs font-semibold text-gray-700 leading-tight flex-1 pr-2">{{ $item->nombre }}</p>
+                            <div class="text-right shrink-0">
+                                <span class="text-sm font-black text-gray-800">{{ $item->total }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background:#f1f5f9">
+                                <div class="h-1.5 rounded-full transition-all" style="width:{{ $barW }}%;background:linear-gradient(90deg,#86efac,#15803d)"></div>
+                            </div>
+                            <span class="text-[10px] text-green-600 font-bold shrink-0">{{ $item->en_curso }} activos</span>
                         </div>
                     </div>
-                    <div class="mt-4 space-y-2">
-                        @foreach($estadisticasArea??[] as $area=>$datos)
-                        @php $cfg = $areaConfig[$area]??['color'=>'#6b7280','bg'=>'#f8fafc','step'=>'?']; $lbl = $areaLabels[$area]??$area; @endphp
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $cfg['color'] }}"></span>
-                                <span class="text-xs text-gray-600">{{ $lbl }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                @if(($datos['documentos_pendientes']??0)>0)
-                                <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold" style="background:#fefce8;color:#a16207">{{ $datos['documentos_pendientes'] }} pend.</span>
-                                @endif
-                                <span class="text-xs font-bold" style="color:{{ $cfg['color'] }}">{{ $datos['total']??0 }}</span>
-                            </div>
-                        </div>
-                        @endforeach
+                    @empty
+                    <div class="flex flex-col items-center justify-center py-10 px-4 text-center">
+                        <svg class="w-8 h-8 text-gray-200 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16"/></svg>
+                        <p class="text-xs text-gray-400">Sin dependencias con procesos</p>
+                    </div>
+                    @endforelse
+                </div>
+                {{-- Total al pie --}}
+                <div class="px-4 py-2.5 border-t" style="border-color:#f1f5f9;background:#fafafa">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-gray-400 font-medium">Total procesos</span>
+                        <span class="text-sm font-black text-gray-800">{{ number_format($totalProcesos) }}</span>
                     </div>
                 </div>
             </div>
 
-            {{-- Gráfica de barras: Procesos por estado --}}
-            <div class="lg:col-span-3 bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-                <div class="px-6 py-4 border-b flex items-center justify-between" style="border-color:#f1f5f9">
+            {{-- GRÁFICA CENTRAL: Procesos por mes (barras agrupadas) --}}
+            <div class="xl:col-span-6 bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+                <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:#f1f5f9">
                     <div>
-                        <h2 class="text-sm font-bold text-gray-800">Estado del flujo contractual</h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Avance por área en el proceso</p>
+                        <h2 class="text-sm font-black text-gray-800">Procesos por mes</h2>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Últimos 6 meses — creados, finalizados y rechazados</p>
                     </div>
-                    <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#f0fdf4;color:#15803d">
-                        Tiempo real
-                    </span>
+                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:#f0fdf4;color:#15803d">Tiempo real</span>
                 </div>
-                <div class="p-5" style="height:260px">
-                    <canvas id="barChart"></canvas>
+                <div class="p-4" style="height:300px">
+                    <canvas id="barMensualChart"></canvas>
+                </div>
+            </div>
+
+            {{-- PANEL DERECHO: Distribución por área --}}
+            <div class="xl:col-span-3 bg-white rounded-2xl border overflow-hidden flex flex-col" style="border-color:#e2e8f0">
+                <div class="px-4 py-3 border-b" style="border-color:#f1f5f9;background:#fafafa">
+                    <p class="text-xs font-black text-gray-700 uppercase tracking-wider">Por área</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">Procesos EN CURSO por área actual</p>
+                </div>
+                <div class="flex-1 p-3 space-y-2">
+                    @foreach($porArea as $a)
+                    @php $maxArea = max(1, collect($porArea)->max('total')); @endphp
+                    <div class="group">
+                        <div class="flex items-center justify-between mb-1">
+                            <a href="{{ $areaRoutes[$a['area']] ?? '#' }}"
+                               class="text-xs font-semibold text-gray-600 hover:underline truncate">{{ $a['label'] }}</a>
+                            <span class="text-xs font-black ml-2 shrink-0" style="color:{{ $a['color'] }}">{{ $a['total'] }}</span>
+                        </div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background:#f1f5f9">
+                            <div class="h-2 rounded-full transition-all"
+                                 style="width:{{ $maxArea>0 ? round($a['total']/$maxArea*100) : 0 }}%;background:{{ $a['color'] }}"></div>
+                        </div>
+                        @if($a['alertas'] > 0)
+                        <p class="text-[10px] mt-0.5" style="color:#d97706">{{ $a['alertas'] }} alerta(s)</p>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+                {{-- Donut mini --}}
+                <div class="px-4 pb-4 flex items-center justify-center">
+                    <div style="width:120px;height:120px;position:relative">
+                        <canvas id="donutAreaChart"></canvas>
+                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+                            <span class="text-lg font-black text-gray-800">{{ collect($porArea)->sum('total') }}</span>
+                            <span class="text-[9px] text-gray-400">activos</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- ═══ ALERTAS + EFICIENCIA ═══ --}}
-        <div class="grid lg:grid-cols-3 gap-4">
+        {{-- ═══ FILA INFERIOR: Tendencia + Modalidades + Alertas + Tabla ═══ --}}
+        <div class="grid xl:grid-cols-12 gap-4">
 
-            {{-- Alertas --}}
-            <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-                <div class="px-6 py-4 border-b" style="border-color:#f1f5f9">
-                    <h2 class="text-sm font-bold text-gray-800">Centro de alertas</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Situaciones que requieren atención</p>
+            {{-- Gráfica línea: Tendencia --}}
+            <div class="xl:col-span-5 bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+                <div class="px-5 py-3 border-b" style="border-color:#f1f5f9">
+                    <h2 class="text-sm font-black text-gray-800">Tendencia de procesos</h2>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Evolución mensual por estado</p>
+                </div>
+                <div class="p-4" style="height:220px">
+                    <canvas id="lineaTendenciaChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Por modalidad + alertas --}}
+            <div class="xl:col-span-3 bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+                <div class="px-5 py-3 border-b" style="border-color:#f1f5f9">
+                    <h2 class="text-sm font-black text-gray-800">Por modalidad</h2>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Tipos de contratación</p>
                 </div>
                 <div class="p-4 space-y-2.5">
+                    @forelse($porModalidad as $m)
+                    @php $maxMod = max(1, $porModalidad->max('total')); @endphp
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs text-gray-600 font-medium truncate flex-1 pr-2">{{ $m->nombre }}</span>
+                            <span class="text-xs font-black text-gray-800 shrink-0">{{ $m->total }}</span>
+                        </div>
+                        <div class="h-1.5 rounded-full overflow-hidden" style="background:#f1f5f9">
+                            <div class="h-1.5 rounded-full" style="width:{{ round($m->total/$maxMod*100) }}%;background:linear-gradient(90deg,#818cf8,#4f46e5)"></div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="flex flex-col items-center py-6 text-center">
+                        <svg class="w-8 h-8 text-gray-200 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586"/></svg>
+                        <p class="text-xs text-gray-400">Sin datos de modalidades</p>
+                    </div>
+                    @endforelse
+                </div>
+
+                {{-- Alertas y riesgos --}}
+                <div class="px-4 pb-4 pt-2 border-t space-y-1.5" style="border-color:#f1f5f9">
+                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2">Centro de alertas</p>
                     @php
                     $alertasList = [
-                        ['l'=>'Procesos con retraso',  'v'=>$alertasRiesgos['procesos_con_retraso']??0,     'c'=>'#d97706','bg'=>'#fffbeb','b'=>'#fde68a','i'=>'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                        ['l'=>'Documentos rechazados', 'v'=>$alertasRiesgos['documentos_rechazados']??0,    'c'=>'#dc2626','bg'=>'#fef2f2','b'=>'#fecaca','i'=>'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                        ['l'=>'Sin actividad (7 días)','v'=>$alertasRiesgos['procesos_sin_actividad']??0,   'c'=>'#7c3aed','bg'=>'#faf5ff','b'=>'#e9d5ff','i'=>'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636'],
-                        ['l'=>'Certificados por vencer','v'=>$alertasRiesgos['certificados_por_vencer']??0,'c'=>'#ea580c','bg'=>'#fff7ed','b'=>'#fed7aa','i'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'],
+                        ['l'=>'Con retraso',       'v'=>$alertasRiesgos['procesos_con_retraso'],   'c'=>'#d97706','bg'=>'#fffbeb'],
+                        ['l'=>'Docs. rechazados',  'v'=>$alertasRiesgos['documentos_rechazados'],  'c'=>'#dc2626','bg'=>'#fef2f2'],
+                        ['l'=>'Sin actividad',     'v'=>$alertasRiesgos['procesos_sin_actividad'], 'c'=>'#7c3aed','bg'=>'#faf5ff'],
+                        ['l'=>'Cert. por vencer',  'v'=>$alertasRiesgos['certificados_por_vencer'],'c'=>'#ea580c','bg'=>'#fff7ed'],
                     ];
                     @endphp
                     @foreach($alertasList as $al)
-                    <div class="flex items-center gap-3 p-3 rounded-xl border transition-all hover:shadow-sm" style="background:{{ $al['bg'] }};border-color:{{ $al['b'] }}">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background:{{ $al['c'] }}22">
-                            <svg class="w-4 h-4" fill="none" stroke="{{ $al['c'] }}" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $al['i'] }}"/></svg>
-                        </div>
-                        <span class="flex-1 text-xs font-medium text-gray-700 leading-tight">{{ $al['l'] }}</span>
-                        <div class="flex flex-col items-end">
-                            <span class="text-lg font-black leading-none" style="color:{{ $al['c'] }}">{{ $al['v'] }}</span>
-                        </div>
+                    <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg" style="background:{{ $al['bg'] }}">
+                        <span class="text-[11px] font-medium text-gray-600">{{ $al['l'] }}</span>
+                        <span class="text-xs font-black" style="color:{{ $al['c'] }}">{{ $al['v'] }}</span>
                     </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Gráfica Gauge / Eficiencia --}}
-            <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-                <div class="px-6 py-4 border-b" style="border-color:#f1f5f9">
-                    <h2 class="text-sm font-bold text-gray-800">Eficiencia del proceso</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Indicadores clave de rendimiento</p>
-                </div>
-                <div class="p-5">
-                    <div class="flex items-center justify-center" style="height:140px">
-                        <canvas id="gaugeChart"></canvas>
+            {{-- Tabla de procesos recientes --}}
+            <div class="xl:col-span-4 bg-white rounded-2xl border overflow-hidden flex flex-col" style="border-color:#e2e8f0">
+                <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:#f1f5f9">
+                    <div>
+                        <h2 class="text-sm font-black text-gray-800">Procesos recientes</h2>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Últimos registros del sistema</p>
                     </div>
-                    <div class="mt-3 grid grid-cols-2 gap-2">
-                        <div class="rounded-xl p-3 text-center" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">
-                            <p class="text-2xl font-black leading-none" style="color:#14532d">
-                                {{ number_format($eficiencia['promedio_general_dias']??0,1) }}
-                            </p>
-                            <p class="text-[10px] text-gray-500 mt-1 leading-tight">días promedio</p>
-                        </div>
-                        <div class="rounded-xl p-3 text-center" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
-                            <p class="text-2xl font-black leading-none" style="color:#1e3a8a">
-                                {{ $eficiencia['procesos_finalizados_3meses']??0 }}
-                            </p>
-                            <p class="text-[10px] text-gray-500 mt-1 leading-tight">finalizados (3m)</p>
-                        </div>
-                    </div>
+                    <a href="{{ route('procesos.index') }}" class="text-[11px] font-bold hover:underline" style="color:#15803d">
+                        Ver todos →
+                    </a>
                 </div>
-            </div>
-
-            {{-- Etapas --}}
-            <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-                <div class="px-6 py-4 border-b" style="border-color:#f1f5f9">
-                    <h2 class="text-sm font-bold text-gray-800">Procesos por etapa</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Concentración actual del flujo</p>
-                </div>
-                <div class="p-5 space-y-3">
-                    @forelse($estadisticasEtapa['distribucion']??[] as $i=>$item)
-                    @php $etapaColors=['#3b82f6','#16a34a','#ca8a04','#ea580c','#9333ea','#0891b2']; $ec=$etapaColors[$i%6]; @endphp
-                    <div class="flex items-center gap-3">
-                        <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black text-white shrink-0" style="background:{{ $ec }}">{{ $item->total }}</span>
+                <div class="flex-1 overflow-y-auto divide-y" style="divide-color:#f8fafc;max-height:360px">
+                    @forelse($procesosRecientes as $proc)
+                    @php
+                        $eCfg = $estadoConfig[$proc->estado] ?? ['label'=>$proc->estado,'color'=>'#6b7280','bg'=>'#f8fafc'];
+                        $rutaProc = match($proc->area_actual_role) {
+                            'planeacion' => url('/planeacion/procesos/'.$proc->id),
+                            'hacienda'   => url('/hacienda/procesos/'.$proc->id),
+                            'juridica'   => url('/juridica/procesos/'.$proc->id),
+                            'secop'      => url('/secop/procesos/'.$proc->id),
+                            default      => route('procesos.show', $proc->id),
+                        };
+                    @endphp
+                    <a href="{{ $rutaProc }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors block">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style="background:{{ $eCfg['bg'] }}">
+                            @if($proc->estado === 'EN_CURSO')
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="{{ $eCfg['color'] }}" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            @elseif(in_array($proc->estado, ['FINALIZADO','completado','cerrado']))
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="{{ $eCfg['color'] }}" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            @else
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="{{ $eCfg['color'] }}" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            @endif
+                        </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-semibold text-gray-700 truncate leading-none">{{ $item->etapa }}</p>
-                            <p class="text-[10px] text-gray-400 truncate mt-0.5">{{ $item->workflow }}</p>
+                            <div class="flex items-center justify-between gap-1 mb-0.5">
+                                <span class="text-[10px] font-mono font-bold text-gray-500">{{ $proc->codigo }}</span>
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style="background:{{ $eCfg['bg'] }};color:{{ $eCfg['color'] }}">{{ $eCfg['label'] }}</span>
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700 leading-tight truncate">{{ $proc->objeto }}</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($proc->updated_at)->diffForHumans() }}</p>
                         </div>
-                        <div class="w-16 h-1.5 rounded-full overflow-hidden shrink-0" style="background:#f1f5f9">
-                            <div class="h-1.5 rounded-full" style="width:{{ min(100,($item->total??0)*15) }}%;background:{{ $ec }}"></div>
-                        </div>
-                    </div>
+                    </a>
                     @empty
-                    <div class="flex flex-col items-center gap-2 py-6">
-                        <svg class="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <p class="text-xs text-gray-400 text-center">No hay procesos<br>en etapas activas</p>
+                    <div class="flex flex-col items-center py-10 text-center">
+                        <svg class="w-10 h-10 text-gray-200 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <p class="text-xs text-gray-400 font-medium">Sin procesos registrados</p>
+                        <a href="{{ route('procesos.create') }}" class="text-xs font-bold mt-1 hover:underline" style="color:#15803d">Crear primera solicitud</a>
                     </div>
                     @endforelse
                 </div>
             </div>
         </div>
 
-        {{-- ═══ TABLA SEGUIMIENTO ═══ --}}
+        {{-- ═══ TABLA COMPLETA DE SEGUIMIENTO ═══ --}}
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
-            <div class="px-6 py-4 border-b flex items-center justify-between" style="border-color:#f1f5f9">
+            <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:#f1f5f9">
                 <div>
-                    <h2 class="text-sm font-bold text-gray-800">Seguimiento en tiempo real</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Ubicación y estado actual de cada proceso en el flujo</p>
+                    <h2 class="text-sm font-black text-gray-800">Seguimiento en tiempo real</h2>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Ubicación y estado actual de cada proceso en el flujo contractual</p>
                 </div>
-                <a href="{{ route('procesos.index') }}" class="inline-flex items-center gap-1 text-xs font-semibold hover:underline" style="color:#15803d">
-                    Ver todos <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-gray-400">{{ $procesosRecientes->count() }} procesos</span>
+                    <a href="{{ route('procesos.index') }}" class="inline-flex items-center gap-1 text-xs font-semibold hover:underline" style="color:#15803d">
+                        Ver todos <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr style="background:#f8fafc;border-bottom:2px solid #f1f5f9">
-                            <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Código</th>
-                            <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Objeto</th>
-                            <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Área</th>
-                            <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Etapa</th>
-                            <th class="px-5 py-3 text-center text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Progreso</th>
-                            <th class="px-5 py-3 text-center text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
-                            <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Actualizado</th>
-                            <th class="px-5 py-3"></th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Código</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Objeto</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Modalidad</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Etapa actual</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Área</th>
+                            <th class="px-4 py-2.5 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Actualizado</th>
+                            <th class="px-4 py-2.5"></th>
                         </tr>
                     </thead>
                     <tbody>
-                    @forelse($seguimientoProcesos??[] as $proc)
+                    @forelse($procesosRecientes as $proc)
                     @php
-                        $cfg2  = $areaConfig[$proc->area_actual_role] ?? ['color'=>'#6b7280','bg'=>'#f8fafc','step'=>'?'];
-                        $lbl2  = $areaLabels[$proc->area_actual_role] ?? ucfirst(str_replace('_',' ',$proc->area_actual_role));
-                        $ruta  = match($proc->area_actual_role) {
-                            'unidad_solicitante' => url('/unidad?proceso_id='.$proc->id),
-                            'planeacion'         => url('/planeacion/procesos/'.$proc->id),
-                            'hacienda'           => url('/hacienda/procesos/'.$proc->id),
-                            'juridica'           => url('/juridica/procesos/'.$proc->id),
-                            'secop'              => url('/secop/procesos/'.$proc->id),
-                            default              => route('procesos.index'),
+                        $eCfg2 = $estadoConfig[$proc->estado] ?? ['label'=>$proc->estado,'color'=>'#6b7280','bg'=>'#f8fafc'];
+                        $areaLabel = ['unidad_solicitante'=>'Unidad','planeacion'=>'Planeación','hacienda'=>'Hacienda','juridica'=>'Jurídica','secop'=>'SECOP'][$proc->area_actual_role] ?? ucfirst(str_replace('_',' ',$proc->area_actual_role));
+                        $areaColor = ['unidad_solicitante'=>'#3b82f6','planeacion'=>'#16a34a','hacienda'=>'#ca8a04','juridica'=>'#ea580c','secop'=>'#9333ea'][$proc->area_actual_role] ?? '#6b7280';
+                        $areaStep  = ['unidad_solicitante'=>1,'planeacion'=>2,'hacienda'=>3,'juridica'=>4,'secop'=>5][$proc->area_actual_role] ?? 0;
+                        $pct = $areaStep > 0 ? round($areaStep/5*100) : 0;
+                        $rutaProc2 = match($proc->area_actual_role) {
+                            'planeacion' => url('/planeacion/procesos/'.$proc->id),
+                            'hacienda'   => url('/hacienda/procesos/'.$proc->id),
+                            'juridica'   => url('/juridica/procesos/'.$proc->id),
+                            'secop'      => url('/secop/procesos/'.$proc->id),
+                            default      => route('procesos.show', $proc->id),
                         };
-                        // Progreso basado en el paso del área (1-5)
-                        $paso = (int)$cfg2['step'];
-                        $pct  = round($paso / 5 * 100);
-                        if($proc->enviado)      { $badge=['txt'=>'Enviado',  'bg'=>'#eff6ff','c'=>'#1d4ed8','dot'=>'#3b82f6']; }
-                        elseif($proc->recibido) { $badge=['txt'=>'Recibido', 'bg'=>'#f0fdf4','c'=>'#15803d','dot'=>'#22c55e']; }
-                        else                    { $badge=['txt'=>'Pendiente','bg'=>'#fefce8','c'=>'#a16207','dot'=>'#eab308']; }
                     @endphp
-                    <tr class="border-b hover:bg-slate-50/70 transition-colors" style="border-color:#f8fafc">
-                        <td class="px-5 py-4">
-                            <span class="text-xs font-mono font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded-md">{{ $proc->codigo }}</span>
+                    <tr class="border-b hover:bg-slate-50/60 transition-colors" style="border-color:#f8fafc">
+                        <td class="px-4 py-3">
+                            <span class="text-xs font-mono font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{{ $proc->codigo }}</span>
                         </td>
-                        <td class="px-5 py-4 max-w-[15rem]">
-                            <span class="block text-sm font-medium text-gray-700 truncate">{{ $proc->objeto }}</span>
+                        <td class="px-4 py-3 max-w-[14rem]">
+                            <span class="text-xs font-medium text-gray-700 truncate block">{{ $proc->objeto }}</span>
                         </td>
-                        <td class="px-5 py-4 whitespace-nowrap">
-                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold"
-                                 style="background:{{ $cfg2['bg'] }};color:{{ $cfg2['color'] }}">
-                                <span class="w-4 h-4 rounded-full text-white flex items-center justify-center text-[9px] font-black shrink-0"
-                                      style="background:{{ $cfg2['color'] }}">{{ $cfg2['step'] }}</span>
-                                {{ $lbl2 }}
+                        <td class="px-4 py-3">
+                            <span class="text-[11px] text-gray-500">{{ $proc->workflow ?? 'N/D' }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-[11px] text-gray-500 truncate block max-w-[10rem]">{{ $proc->etapa ?? 'N/D' }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[11px] font-semibold"
+                                 style="background:{{ $areaColor }}18;color:{{ $areaColor }}">
+                                <span class="w-3.5 h-3.5 rounded-full text-white flex items-center justify-center text-[8px] font-black" style="background:{{ $areaColor }}">{{ $areaStep ?: '?' }}</span>
+                                {{ $areaLabel }}
                             </div>
                         </td>
-                        <td class="px-5 py-4 max-w-[12rem]">
-                            <span class="text-xs text-gray-500 truncate block">{{ $proc->etapa ?? 'N/D' }}</span>
-                        </td>
-                        <td class="px-5 py-4 text-center">
-                            <div class="flex items-center gap-2 justify-center">
-                                <div class="w-20 h-1.5 rounded-full overflow-hidden" style="background:#f1f5f9">
-                                    <div class="h-1.5 rounded-full transition-all" style="width:{{ $pct }}%;background:linear-gradient(90deg,#86efac,#15803d)"></div>
-                                </div>
-                                <span class="text-[10px] font-bold text-gray-500 w-7">{{ $pct }}%</span>
-                            </div>
-                        </td>
-                        <td class="px-5 py-4 text-center">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-                                  style="background:{{ $badge['bg'] }};color:{{ $badge['c'] }}">
-                                <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $badge['dot'] }}"></span>
-                                {{ $badge['txt'] }}
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                  style="background:{{ $eCfg2['bg'] }};color:{{ $eCfg2['color'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $eCfg2['color'] }}"></span>
+                                {{ $eCfg2['label'] }}
                             </span>
                         </td>
-                        <td class="px-5 py-4 text-xs text-gray-400 whitespace-nowrap">
-                            {{ \Carbon\Carbon::parse($proc->updated_at)->diffForHumans() }}
+                        <td class="px-4 py-3">
+                            <span class="text-[11px] text-gray-400">{{ \Carbon\Carbon::parse($proc->updated_at)->diffForHumans() }}</span>
                         </td>
-                        <td class="px-5 py-4">
-                            <a href="{{ $ruta }}"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:shadow-sm"
+                        <td class="px-4 py-3">
+                            <a href="{{ $rutaProc2 }}"
+                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all hover:shadow-sm"
                                style="color:#15803d;border-color:#bbf7d0;background:#f0fdf4">
-                                Abrir
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                Abrir →
                             </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-5 py-16 text-center">
+                        <td colspan="8" class="py-16 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:#f1f5f9">
                                     <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -351,79 +412,53 @@
 
     </div>
 
-    {{-- ═══ CHART.JS SCRIPTS ═══ --}}
+    {{-- ═══ CHART.JS ═══ --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
     Chart.defaults.color = '#94a3b8';
 
-    // ── DONUT: Distribución por área ──
-    (function() {
-        const labels = @json($donutLabelsSafe);
-        const data   = @json($donutData);
-        const colors = @json($donutColorsSafe);
-        const total  = data.reduce((a,b)=>a+b,0);
-        const ctx = document.getElementById('donutChart');
-        if(!ctx) return;
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{
-                    data,
-                    backgroundColor: colors,
-                    borderWidth: 3,
-                    borderColor: '#fff',
-                    hoverOffset: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                cutout: '72%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ` ${ctx.label}: ${ctx.raw} (${total>0?Math.round(ctx.raw/total*100):0}%)`
-                        }
-                    }
-                }
-            }
-        });
-    })();
+    // ─── 1. BAR CHART: Procesos por mes ───────────────────────────────────────
+    (function () {
+        const meses      = @json(collect($tendencia)->pluck('mes_corto'));
+        const creados    = @json(collect($tendencia)->pluck('creados'));
+        const finalizados = @json(collect($tendencia)->pluck('finalizados'));
+        const rechazados = @json(collect($tendencia)->pluck('rechazados'));
+        const ctx = document.getElementById('barMensualChart');
+        if (!ctx) return;
 
-    // ── BAR: Estado del flujo contractual ──
-    (function() {
-        const labels    = @json($donutLabelsSafe);
-        const colors    = @json($donutColorsSafe);
-        const totals    = @json($barTotals);
-        const pendientes = @json($barPendientes);
-        const ctx = document.getElementById('barChart');
-        if(!ctx) return;
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels,
+                labels: meses,
                 datasets: [
                     {
-                        label: 'Procesos',
-                        data: totals,
-                        backgroundColor: colors.map(c => c + 'cc'),
-                        borderColor: colors,
+                        label: 'Creados',
+                        data: creados,
+                        backgroundColor: '#3b82f688',
+                        borderColor: '#3b82f6',
                         borderWidth: 2,
-                        borderRadius: 8,
+                        borderRadius: 6,
                         borderSkipped: false,
                     },
                     {
-                        label: 'Docs. pendientes',
-                        data: pendientes,
-                        backgroundColor: '#fde68a99',
-                        borderColor: '#ca8a04',
-                        borderWidth: 1.5,
-                        borderRadius: 8,
+                        label: 'Finalizados',
+                        data: finalizados,
+                        backgroundColor: '#22c55e88',
+                        borderColor: '#16a34a',
+                        borderWidth: 2,
+                        borderRadius: 6,
                         borderSkipped: false,
-                    }
+                    },
+                    {
+                        label: 'Rechazados',
+                        data: rechazados,
+                        backgroundColor: '#ef444488',
+                        borderColor: '#dc2626',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    },
                 ]
             },
             options: {
@@ -436,14 +471,17 @@
                         align: 'end',
                         labels: { boxWidth: 10, boxHeight: 10, borderRadius: 4, useBorderRadius: true, font: { size: 11 } }
                     },
-                    tooltip: { cornerRadius: 10 }
+                    tooltip: { cornerRadius: 8 }
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 } }
+                    },
                     y: {
                         grid: { color: '#f1f5f9', lineWidth: 1 },
-                        border: { dash: [4,4] },
-                        ticks: { font: { size: 11 }, stepSize: 1, precision: 0 },
+                        border: { dash: [4, 4], color: 'transparent' },
+                        ticks: { font: { size: 11 }, precision: 0, stepSize: 1 },
                         beginAtZero: true,
                     }
                 }
@@ -451,53 +489,124 @@
         });
     })();
 
-    // ── GAUGE: Eficiencia (doughnut semicircular) ──
-    (function() {
-        const dias     = {{ $eficiencia['promedio_general_dias'] ?? 0 }};
-        const maxDias  = 60;
-        const pct      = Math.min(100, Math.round(dias / maxDias * 100));
-        const remaining = 100 - pct;
-        const ctx = document.getElementById('gaugeChart');
-        if(!ctx) return;
+    // ─── 2. DONUT: Por área ────────────────────────────────────────────────────
+    (function () {
+        const labels = @json(collect($porArea)->pluck('label'));
+        const data   = @json(collect($porArea)->pluck('total'));
+        const colors = @json(collect($porArea)->pluck('color'));
+        const total  = data.reduce((a, b) => a + b, 0);
+        const ctx    = document.getElementById('donutAreaChart');
+        if (!ctx) return;
+
         new Chart(ctx, {
             type: 'doughnut',
             data: {
+                labels,
                 datasets: [{
-                    data: [pct, remaining],
-                    backgroundColor: [
-                        pct < 40 ? '#16a34a' : pct < 70 ? '#ca8a04' : '#dc2626',
-                        '#f1f5f9'
-                    ],
-                    borderWidth: 0,
-                    circumference: 180,
-                    rotation: 270,
-                    cutout: '78%',
+                    data: total > 0 ? data : [1, 1, 1, 1, 1],
+                    backgroundColor: total > 0 ? colors : ['#e2e8f0', '#e2e8f0', '#e2e8f0', '#e2e8f0', '#e2e8f0'],
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                    hoverOffset: 4,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                cutout: '70%',
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: false }
+                    tooltip: {
+                        enabled: total > 0,
+                        callbacks: {
+                            label: ctx => ` ${ctx.label}: ${ctx.raw}`
+                        }
+                    }
                 }
+            }
+        });
+    })();
+
+    // ─── 3. LINE: Tendencia ────────────────────────────────────────────────────
+    (function () {
+        const meses       = @json(collect($tendencia)->pluck('mes_corto'));
+        const creados     = @json(collect($tendencia)->pluck('creados'));
+        const finalizados = @json(collect($tendencia)->pluck('finalizados'));
+        const rechazados  = @json(collect($tendencia)->pluck('rechazados'));
+        const ctx = document.getElementById('lineaTendenciaChart');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [
+                    {
+                        label: 'Creados',
+                        data: creados,
+                        borderColor: '#3b82f6',
+                        backgroundColor: '#3b82f612',
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#3b82f6',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    },
+                    {
+                        label: 'Finalizados',
+                        data: finalizados,
+                        borderColor: '#16a34a',
+                        backgroundColor: '#16a34a08',
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        fill: false,
+                        pointBackgroundColor: '#16a34a',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    },
+                    {
+                        label: 'Rechazados',
+                        data: rechazados,
+                        borderColor: '#dc2626',
+                        backgroundColor: '#dc262608',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false,
+                        borderDash: [5, 3],
+                        pointBackgroundColor: '#dc2626',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                    },
+                ]
             },
-            plugins: [{
-                id: 'gaugeLabel',
-                afterDraw(chart) {
-                    const { ctx: c, chartArea: { top, width, height } } = chart;
-                    c.save();
-                    c.textAlign = 'center';
-                    c.fillStyle = '#1e293b';
-                    c.font = 'bold 20px Inter';
-                    c.fillText(dias.toFixed(1) + ' d', chart.width / 2, top + height * 0.72);
-                    c.fillStyle = '#94a3b8';
-                    c.font = '10px Inter';
-                    c.fillText('días promedio', chart.width / 2, top + height * 0.88);
-                    c.restore();
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { boxWidth: 10, boxHeight: 10, borderRadius: 4, useBorderRadius: true, font: { size: 10 } }
+                    },
+                    tooltip: { cornerRadius: 8 }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: '#f1f5f9' },
+                        border: { dash: [4, 4], color: 'transparent' },
+                        ticks: { font: { size: 10 }, precision: 0, stepSize: 1 },
+                        beginAtZero: true,
+                    }
                 }
-            }]
+            }
         });
     })();
     </script>
+
 </x-app-layout>

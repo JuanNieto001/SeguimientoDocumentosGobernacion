@@ -36,6 +36,7 @@
                 <thead>
                     <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc">
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rol</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Alcance Dashboard</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Permisos asignados</th>
                         <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
@@ -56,6 +57,21 @@
                                     <p class="text-xs text-gray-400 mt-0.5">{{ $role->permissions->count() }} {{ $role->permissions->count() === 1 ? 'permiso' : 'permisos' }}</p>
                                 </div>
                             </div>
+                        </td>
+                        <td class="px-5 py-4">
+                            @php
+                                $scopeLabels = [
+                                    'global' => ['🌍 Global', '#dcfce7', '#15803d'],
+                                    'secretaria' => ['🏛️ Secretaría', '#dbeafe', '#1d4ed8'],
+                                    'unidad' => ['📁 Unidad', '#fef3c7', '#b45309'],
+                                    'propios' => ['👤 Propios', '#f3f4f6', '#6b7280'],
+                                ];
+                                $scope = $role->dashboard_scope ?? 'propios';
+                                [$label, $bg, $color] = $scopeLabels[$scope] ?? $scopeLabels['propios'];
+                            @endphp
+                            <span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium" style="background:{{ $bg }};color:{{ $color }}">
+                                {{ $label }}
+                            </span>
                         </td>
                         <td class="px-5 py-4">
                             <div class="flex flex-wrap gap-1.5">

@@ -13,7 +13,6 @@ use App\Http\Controllers\Area\JuridicaController;
 use App\Http\Controllers\Area\SecopController;
 use App\Http\Controllers\Area\SolicitudDocumentosController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Dashboard\DashboardBuilderController;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\WorkflowController;
 use App\Http\Controllers\WorkflowFilesController;
@@ -29,8 +28,6 @@ use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\SecopConsultaController;
 use App\Http\Controllers\Admin\EstivenGuideController;
 use App\Http\Controllers\EstivenHelpController;
-use App\Http\Controllers\DashboardMotorController;
-use App\Http\Controllers\RoleDashboardController;
 use App\Http\Controllers\ContratoAplicacionController;
 
 /*
@@ -73,32 +70,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard.buscar');
     Route::post('/alertas/{alerta}/leer', [DashboardController::class, 'marcarAlertaLeida'])
         ->name('alertas.leer');
-
-    // Dashboard por rol
-    Route::get('/mi-dashboard', [RoleDashboardController::class, 'index'])
-        ->name('dashboards.mi');
-
-    // Motor de dashboards (asignación por rol)
-    Route::get('/dashboards/motor', [DashboardMotorController::class, 'index'])
-        ->name('dashboards.motor.index')
-        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.ver']);
-    Route::post('/dashboards/motor/asignaciones', [DashboardMotorController::class, 'guardarAsignaciones'])
-        ->name('dashboards.motor.assign')
-        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
-    Route::post('/dashboards/motor/asignaciones-usuario', [DashboardMotorController::class, 'guardarAsignacionUsuario'])
-        ->name('dashboards.motor.assign-user')
-        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
-    Route::post('/dashboards/motor/asignaciones-secretaria', [DashboardMotorController::class, 'guardarAsignacionSecretaria'])
-        ->name('dashboards.motor.assign-secretaria')
-        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
-    Route::post('/dashboards/motor/asignaciones-unidad', [DashboardMotorController::class, 'guardarAsignacionUnidad'])
-        ->name('dashboards.motor.assign-unidad')
-        ->middleware(['role:admin|admin_general', 'permission:dashboard.motor.gestionar']);
-
-    // Dashboard Builder - Motor Visual Dinámico
-    Route::get('/dashboards/builder', [App\Http\Controllers\DashboardBuilderController::class, 'index'])
-        ->name('dashboards.builder')
-        ->middleware(['role:admin|admin_general|secretario|jefe_unidad']);
 });
 
 /*
@@ -139,43 +110,6 @@ Route::middleware(['auth'])->prefix('alertas')->name('alertas.')->group(function
     Route::delete('/{alerta}', [AlertaController::class, 'destroy'])->name('destroy');
     Route::get('/widget', [AlertaController::class, 'widget'])->name('widget');
 });
-
-/*
-|--------------------------------------------------------------------------
-| DASHBOARD BUILDER - SOLO ADMIN
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'permission:dashboard.builder.access'])
-    ->prefix('dashboard/builder')
-    ->name('dashboard.builder.')
-    ->group(function () {
-        // Builder principal
-        Route::get('/', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'store'])->name('store');
-        Route::get('/list', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'list'])->name('list');
-        Route::get('/{id}', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'show'])->name('show');
-        
-        // Asignaciones
-        Route::post('/{id}/assign/users', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignToUsers'])->name('assign.users');
-        Route::post('/{id}/assign/roles', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignToRoles'])->name('assign.roles');
-        Route::post('/{id}/assign/secretarias', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignToSecretarias'])->name('assign.secretarias');
-        
-        // Datos para asignación
-        Route::get('/data/assignments', [App\Http\Controllers\Dashboard\DashboardBuilderController::class, 'assignmentData'])->name('assignment.data');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| DASHBOARD VIEWER - USUARIOS CON DASHBOARDS ASIGNADOS
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'permission:dashboard.view.assigned'])
-    ->prefix('dashboard')
-    ->name('dashboard.viewer.')
-    ->group(function () {
-        Route::get('/', [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'index'])->name('index');
-        Route::get('/{id}/view', [App\Http\Controllers\Dashboard\DashboardViewerController::class, 'show'])->name('show');
-    });
 
 /*
 |--------------------------------------------------------------------------

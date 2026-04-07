@@ -17,17 +17,16 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-
-        // Admin: vista principal del sistema con indicadores
-        if ($user->hasRole('admin')) {
-            return $this->dashboardAdmin();
-        }
-
-        // Perfiles ejecutivos: dashboard asignado por rol
-        if ($user->hasAnyRole(['gobernador', 'secretario', 'jefe_unidad'])) {
-            return redirect()->route('dashboards.mi');
-        }
         
+        // Obtener el alcance del rol del usuario
+        $role = $user->roles()->first();
+        $dashboardScope = $role->dashboard_scope ?? 'propios';
+        
+        // Si el alcance es global, secretaria o unidad, usar el dashboard ejecutivo
+        if (in_array($dashboardScope, ['global', 'secretaria', 'unidad'])) {
+            return $this->dashboardEjecutivo($user, $dashboardScope);
+        }
+
         // ── Roles de área específica (solicitudes paralelas Etapa 1) ──────────
         $rolesDocumentos = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
         $userRolesDoc = collect($rolesDocumentos)->filter(fn($r) => $user->hasRole($r));
@@ -87,7 +86,181 @@ class DashboardController extends Controller
     }
 
     /**
-     * Métricas mensuales personalizadas según el rol del usuario
+     * Dashboard ejecutivo con scope según rol:
+     * - 'global'     → Admin / Gobernador: todos los procesos
+     * - 'secretaria' → Secretario: solo procesos de su secretaría
+     * - 'unidad'     → Jefe de unidad: solo procesos de su unidad
+     */
+    private function dashboardEjecutivo($user, $scope)
+    {
+        $inicioMes = now()->startOfMonth();
+        $finMes    = now()->endOfMonth();
+
+        $secId = ($scope === 'secretaria' && $user->secretaria_id) ? (int) $user->secretaria_id : null;
+        $uniId = ($scope === 'unidad'     && $user->unidad_id)     ? (int) $user->unidad_id     : null;
+
+        // Helper: query base con scope aplicado
+        $scoped = fn() => DB::table('procesos')
+            ->when($secId, fn($q) => $q->where('secretaria_origen_id', $secId))
+            ->when($uniId, fn($q) => $q->where('unidad_origen_id', $uniId));
+
+        // ── KPIs principales ────────────────────────────────────────────────
+        $totalProcesos    = $scoped()->count();
+        $enCurso          = $scoped()->where('estado', 'EN_CURSO')->count();
+        $finalizados      = $scoped()->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])->count();
+        $rechazados       = $scoped()->where('estado', 'RECHAZADO')->count();
+        $creadosMes       = $scoped()->whereBetween('created_at', [$inicioMes, $finMes])->count();
+        $finalizadosMes   = $scoped()
+            ->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])
+            ->whereBetween('updated_at', [$inicioMes, $finMes])
+            ->count();
+
+        // ── Alertas ─────────────────────────────────────────────────────────
+        $alertasAltas = Alerta::where('leida', false)->where('prioridad', 'alta')->count();
+        $alertasTotal = Alerta::where('leida', false)->count();
+
+        // ── Tendencia últimos 6 meses ────────────────────────────────────────
+        $tendencia = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $mes = now()->subMonths($i);
+            $ini = $mes->copy()->startOfMonth();
+            $fin = $mes->copy()->endOfMonth();
+            $tendencia[] = [
+                'mes_corto'   => $mes->translatedFormat('M'),
+                'mes'         => $mes->format('M Y'),
+                'creados'     => $scoped()->whereBetween('created_at', [$ini, $fin])->count(),
+                'finalizados' => $scoped()
+                    ->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])
+                    ->whereBetween('updated_at', [$ini, $fin])
+                    ->count(),
+                'rechazados'  => $scoped()
+                    ->where('estado', 'RECHAZADO')
+                    ->whereBetween('updated_at', [$ini, $fin])
+                    ->count(),
+            ];
+        }
+
+        // ── Distribución por área (procesos EN_CURSO por área actual) ────────
+        $areaLabels = [
+            'unidad_solicitante' => 'Unidad Solicitante',
+            'planeacion'         => 'Planeación',
+            'hacienda'           => 'Hacienda',
+            'juridica'           => 'Jurídica',
+            'secop'              => 'SECOP',
+        ];
+        $areaColores = [
+            'unidad_solicitante' => '#3b82f6',
+            'planeacion'         => '#16a34a',
+            'hacienda'           => '#ca8a04',
+            'juridica'           => '#ea580c',
+            'secop'              => '#9333ea',
+        ];
+        $porArea = [];
+        foreach ($areaLabels as $role => $label) {
+            $porArea[] = [
+                'area'   => $role,
+                'label'  => $label,
+                'color'  => $areaColores[$role],
+                'total'  => $scoped()->where('area_actual_role', $role)->where('estado', 'EN_CURSO')->count(),
+                'alertas'=> Alerta::where('area_responsable', $role)->where('leida', false)->count(),
+            ];
+        }
+
+        // ── Distribución por estado (para donut) ────────────────────────────
+        $porEstadoRaw = $scoped()
+            ->select('estado', DB::raw('count(*) as total'))
+            ->groupBy('estado')
+            ->get();
+
+        // ── Por modalidad/workflow ──────────────────────────────────────────
+        $porModalidad = $scoped()
+            ->join('workflows', 'workflows.id', '=', 'procesos.workflow_id')
+            ->select('workflows.nombre', DB::raw('count(*) as total'))
+            ->groupBy('workflows.id', 'workflows.nombre')
+            ->orderByDesc('total')
+            ->get();
+
+        // ── Alertas y riesgos ───────────────────────────────────────────────
+        $alertasRiesgos = [
+            'procesos_con_retraso'    => Alerta::where('tipo', 'tiempo_excedido')
+                ->where('leida', false)->distinct('proceso_id')->count('proceso_id'),
+            'documentos_rechazados'   => Alerta::where('tipo', 'documento_rechazado')
+                ->where('leida', false)->count(),
+            'procesos_sin_actividad'  => Alerta::where('tipo', 'sin_actividad')
+                ->where('leida', false)->distinct('proceso_id')->count('proceso_id'),
+            'certificados_por_vencer' => Alerta::where('tipo', 'certificado_por_vencer')
+                ->where('leida', false)->count(),
+        ];
+
+        // ── Procesos recientes ──────────────────────────────────────────────
+        $procesosRecientes = $scoped()
+            ->leftJoin('workflows as w', 'w.id', '=', 'procesos.workflow_id')
+            ->leftJoin('etapas as e', 'e.id', '=', 'procesos.etapa_actual_id')
+            ->select(
+                'procesos.id',
+                'procesos.codigo',
+                'procesos.objeto',
+                'procesos.estado',
+                'procesos.area_actual_role',
+                'procesos.updated_at',
+                'procesos.created_at',
+                'w.nombre as workflow',
+                'e.nombre as etapa'
+            )
+            ->orderByDesc('procesos.id')
+            ->limit(15)
+            ->get();
+
+        // ── Lista lateral: secretarías (admin/gobernador) o unidades (secretario) ──
+        $listaLateral = collect();
+        $listaLateralTipo = null;
+
+        if ($scope === 'global') {
+            $listaLateralTipo = 'secretarias';
+            $listaLateral = DB::table('secretarias')
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get()
+                ->map(function ($sec) use ($scoped) {
+                    $sec->total   = $scoped()->where('secretaria_origen_id', $sec->id)->count();
+                    $sec->en_curso = $scoped()->where('secretaria_origen_id', $sec->id)->where('estado', 'EN_CURSO')->count();
+                    return $sec;
+                });
+        } elseif ($scope === 'secretaria' && $secId) {
+            $listaLateralTipo = 'unidades';
+            $listaLateral = DB::table('unidades')
+                ->where('secretaria_id', $secId)
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get()
+                ->map(function ($uni) use ($scoped) {
+                    $uni->total    = $scoped()->where('unidad_origen_id', $uni->id)->count();
+                    $uni->en_curso = $scoped()->where('unidad_origen_id', $uni->id)->where('estado', 'EN_CURSO')->count();
+                    return $uni;
+                });
+        }
+
+        // ── Nombre del scope ────────────────────────────────────────────────
+        $scopeNombre = match (true) {
+            $scope === 'global'     => 'Gobernación de Caldas',
+            $scope === 'secretaria' => DB::table('secretarias')->where('id', $secId)->value('nombre') ?? 'Secretaría',
+            $scope === 'unidad'     => DB::table('unidades')->where('id', $uniId)->value('nombre') ?? 'Unidad',
+            default => 'Sistema',
+        };
+
+        return view('dashboard.admin', compact(
+            'scope', 'scopeNombre', 'user',
+            'totalProcesos', 'enCurso', 'finalizados', 'rechazados',
+            'creadosMes', 'finalizadosMes',
+            'alertasAltas', 'alertasTotal',
+            'tendencia', 'porArea', 'porEstadoRaw', 'porModalidad',
+            'alertasRiesgos', 'procesosRecientes',
+            'listaLateral', 'listaLateralTipo'
+        ));
+    }
+
+    /**
+     * Métricas mensuales personalizadas según el rol del usuario (roles de área)
      */
     private function computeMetricas($user, $userRolesDoc)
     {
@@ -251,388 +424,132 @@ class DashboardController extends Controller
         return ['tipo' => 'generic', 'mes' => now()->translatedFormat('F Y'), 'tarjetas' => []];
     }
 
-    /**
-     * Dashboard para administradores con todos los indicadores
-     */
-    private function dashboardAdmin()
-    {
-        $indicadores = $this->indicadoresGenerales();
-        $estadisticasArea = $this->estadisticasPorArea();
-        $estadisticasEtapa = $this->indicadoresPorEtapa();
-        $alertasRiesgos = $this->indicadoresAlertasRiesgos();
-        $eficiencia = $this->indicadoresEficiencia();
-        $seguimientoProcesos = $this->seguimientoProcesos();
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Métodos públicos utilizados por reporte y endpoints de estadísticas
+    // ═══════════════════════════════════════════════════════════════════════════
 
-        return view('dashboard.admin', compact(
-            'indicadores',
-            'estadisticasArea',
-            'estadisticasEtapa',
-            'alertasRiesgos',
-            'eficiencia',
-            'seguimientoProcesos'
-        ));
-    }
-
-    /**
-     * Listado resumido de procesos con su ubicación actual y estado de recibo/envío
-     */
-    private function seguimientoProcesos()
-    {
-        return DB::table('procesos as p')
-            ->leftJoin('workflows as w', 'w.id', '=', 'p.workflow_id')
-            ->leftJoin('etapas as e', 'e.id', '=', 'p.etapa_actual_id')
-            ->leftJoin('proceso_etapas as pe', function ($join) {
-                $join->on('pe.proceso_id', '=', 'p.id')
-                    ->on('pe.etapa_id', '=', 'p.etapa_actual_id');
-            })
-            ->select(
-                'p.id',
-                'p.codigo',
-                'p.objeto',
-                'p.estado',
-                'p.area_actual_role',
-                'p.updated_at',
-                'w.nombre as workflow',
-                'e.nombre as etapa',
-                'pe.recibido',
-                'pe.enviado',
-                'pe.recibido_at',
-                'pe.enviado_at'
-            )
-            ->selectSub(function ($q) {
-                $q->from('proceso_etapa_archivos as a')
-                    ->whereColumn('a.proceso_id', 'p.id')
-                    ->whereColumn('a.etapa_id', 'p.etapa_actual_id')
-                    ->where('a.estado', 'rechazado')
-                    ->selectRaw('count(*)');
-            }, 'rechazados')
-            ->selectSub(function ($q) {
-                $q->from('proceso_etapa_archivos as a')
-                    ->whereColumn('a.proceso_id', 'p.id')
-                    ->whereColumn('a.etapa_id', 'p.etapa_actual_id')
-                    ->whereIn('a.estado', ['pendiente', 'en_revision'])
-                    ->selectRaw('count(*)');
-            }, 'pendientes')
-            ->orderByDesc('p.id')
-            ->limit(20)
-            ->get();
-    }
-
-    /**
-     * Indicadores generales del sistema
-     */
     public function indicadoresGenerales()
     {
         $hoy = now();
         $inicioMes = $hoy->copy()->startOfMonth();
         $finMes = $hoy->copy()->endOfMonth();
 
-        $indicadores = [
-            // Totales generales
-            'total_procesos' => Proceso::count(),
-            'procesos_activos' => Proceso::whereNotIn('estado', ['completado', 'cerrado', 'rechazado'])->count(),
-            'procesos_finalizados' => Proceso::whereIn('estado', ['completado', 'cerrado'])->count(),
-            'procesos_rechazados' => Proceso::where('estado', 'rechazado')->count(),
-            
-            // Del mes actual
-            'procesos_mes' => Proceso::whereBetween('created_at', [$inicioMes, $finMes])->count(),
-            'finalizados_mes' => Proceso::whereIn('estado', ['completado', 'cerrado'])
-                ->whereBetween('updated_at', [$inicioMes, $finMes])
-                ->count(),
-            
-            // Alertas
-            'alertas_activas' => Alerta::where('leida', false)->count(),
-            'alertas_alta_prioridad' => Alerta::where('leida', false)
-                ->where('prioridad', 'alta')
-                ->count(),
-            
-            // Documentos
-            'documentos_totales' => ProcesoEtapaArchivo::count(),
-            'documentos_pendientes' => ProcesoEtapaArchivo::where('estado', 'pendiente')->count(),
-            'documentos_rechazados' => ProcesoEtapaArchivo::where('estado', 'rechazado')->count(),
-            
-            // Por modalidad
-            'por_modalidad' => DB::table('procesos')
+        return [
+            'total_procesos'         => Proceso::count(),
+            'procesos_activos'       => Proceso::whereNotIn('estado', ['completado', 'cerrado', 'rechazado'])->count(),
+            'procesos_finalizados'   => Proceso::whereIn('estado', ['completado', 'cerrado'])->count(),
+            'procesos_rechazados'    => Proceso::where('estado', 'rechazado')->count(),
+            'procesos_mes'           => Proceso::whereBetween('created_at', [$inicioMes, $finMes])->count(),
+            'finalizados_mes'        => Proceso::whereIn('estado', ['completado', 'cerrado'])
+                ->whereBetween('updated_at', [$inicioMes, $finMes])->count(),
+            'alertas_activas'        => Alerta::where('leida', false)->count(),
+            'alertas_alta_prioridad' => Alerta::where('leida', false)->where('prioridad', 'alta')->count(),
+            'documentos_totales'     => ProcesoEtapaArchivo::count(),
+            'documentos_pendientes'  => ProcesoEtapaArchivo::where('estado', 'pendiente')->count(),
+            'documentos_rechazados'  => ProcesoEtapaArchivo::where('estado', 'rechazado')->count(),
+            'por_modalidad'          => DB::table('procesos')
                 ->join('workflows', 'procesos.workflow_id', '=', 'workflows.id')
                 ->select('workflows.nombre', 'workflows.codigo', DB::raw('count(*) as total'))
                 ->groupBy('workflows.id', 'workflows.nombre', 'workflows.codigo')
                 ->get(),
-            
-            // Tendencia (últimos 6 meses)
-            'tendencia' => $this->obtenerTendenciaUltimosSeisMeses(),
+            'tendencia'              => $this->obtenerTendenciaUltimosSeisMeses(),
         ];
-
-        return $indicadores;
     }
 
-    /**
-     * Estadísticas por área responsable
-     */
     public function estadisticasPorArea()
     {
         $areas = ['unidad_solicitante', 'planeacion', 'hacienda', 'juridica', 'secop'];
-        
         $estadisticas = [];
-        
         foreach ($areas as $area) {
             $estadisticas[$area] = [
-                'total' => Proceso::where('area_actual_role', $area)->count(),
-                'alertas' => Alerta::where('area_responsable', $area)
-                    ->where('leida', false)
-                    ->count(),
-                'documentos_pendientes' => ProcesoEtapaArchivo::whereHas('proceso', function($q) use ($area) {
-                    $q->where('area_actual_role', $area);
-                })->where('estado', 'pendiente')->count(),
+                'total'                => Proceso::where('area_actual_role', $area)->count(),
+                'alertas'              => Alerta::where('area_responsable', $area)->where('leida', false)->count(),
+                'documentos_pendientes'=> ProcesoEtapaArchivo::whereHas('proceso', fn($q) => $q->where('area_actual_role', $area))
+                    ->where('estado', 'pendiente')->count(),
             ];
         }
-
         return $estadisticas;
     }
 
-    /**
-     * Indicadores por etapa (distribución de procesos)
-     */
     public function indicadoresPorEtapa()
     {
         $distribucion = DB::table('procesos')
             ->join('etapas', 'procesos.etapa_actual_id', '=', 'etapas.id')
             ->join('workflows', 'procesos.workflow_id', '=', 'workflows.id')
-            ->select(
-                'etapas.nombre as etapa',
-                'workflows.nombre as workflow',
-                // Usamos area_role porque el schema no tiene area_responsable
-                'etapas.area_role',
-                DB::raw('count(*) as total')
-            )
+            ->select('etapas.nombre as etapa', 'workflows.nombre as workflow', 'etapas.area_role', DB::raw('count(*) as total'))
             ->whereNotIn('procesos.estado', ['completado', 'cerrado', 'rechazado'])
             ->groupBy('etapas.id', 'etapas.nombre', 'workflows.nombre', 'etapas.area_role')
             ->orderBy('total', 'desc')
             ->get();
 
-        // Agrupar por fase (Preparatoria, Precontractual, Contractual, Poscontractual)
-        // Nota: el schema actual no tiene columna etapas.fase; devolver vacío para evitar error
-        $porFase = collect();
-
-        return [
-            'distribucion' => $distribucion,
-            'por_fase' => $porFase,
-        ];
+        return ['distribucion' => $distribucion, 'por_fase' => collect()];
     }
 
-    /**
-     * Indicadores de cumplimiento documental
-     */
-    public function indicadoresCumplimientoDocumental()
-    {
-        $procesos = Proceso::whereNotIn('estado', ['completado', 'cerrado', 'rechazado'])->get();
-        
-        $estadisticas = [
-            'procesos_con_documentos_completos' => 0,
-            'procesos_con_documentos_pendientes' => 0,
-            'procesos_con_documentos_rechazados' => 0,
-            'tasa_aprobacion' => 0,
-        ];
-
-        foreach ($procesos as $proceso) {
-            $documentos = ProcesoEtapaArchivo::where('proceso_id', $proceso->id)
-                ->where('etapa_id', $proceso->etapa_actual_id)
-                ->get();
-
-            if ($documentos->isEmpty()) {
-                continue;
-            }
-
-            $pendientes = $documentos->where('estado', 'pendiente')->count();
-            $rechazados = $documentos->where('estado', 'rechazado')->count();
-
-            if ($rechazados > 0) {
-                $estadisticas['procesos_con_documentos_rechazados']++;
-            } elseif ($pendientes > 0) {
-                $estadisticas['procesos_con_documentos_pendientes']++;
-            } else {
-                $estadisticas['procesos_con_documentos_completos']++;
-            }
-        }
-
-        $totalDocumentos = ProcesoEtapaArchivo::count();
-        $documentosAprobados = ProcesoEtapaArchivo::where('estado', 'aprobado')->count();
-        
-        $estadisticas['tasa_aprobacion'] = $totalDocumentos > 0 
-            ? round(($documentosAprobados / $totalDocumentos) * 100, 2) 
-            : 0;
-
-        return $estadisticas;
-    }
-
-    /**
-     * Indicadores de alertas y riesgos
-     */
     public function indicadoresAlertasRiesgos()
     {
-        $indicadores = [
-            'procesos_con_retraso' => Alerta::where('tipo', 'tiempo_excedido')
-                ->where('leida', false)
-                ->distinct('proceso_id')
-                ->count('proceso_id'),
-            
-            'certificados_por_vencer' => Alerta::where('tipo', 'certificado_por_vencer')
-                ->where('leida', false)
-                ->count(),
-            
-            'documentos_rechazados' => Alerta::where('tipo', 'documento_rechazado')
-                ->where('leida', false)
-                ->count(),
-            
-            'procesos_sin_actividad' => Alerta::where('tipo', 'sin_actividad')
-                ->where('leida', false)
-                ->distinct('proceso_id')
-                ->count('proceso_id'),
-            
-            'alertas_por_prioridad' => Alerta::where('leida', false)
-                ->select('prioridad', DB::raw('count(*) as total'))
-                ->groupBy('prioridad')
-                ->pluck('total', 'prioridad')
-                ->toArray(),
+        return [
+            'procesos_con_retraso'    => Alerta::where('tipo', 'tiempo_excedido')->where('leida', false)->distinct('proceso_id')->count('proceso_id'),
+            'certificados_por_vencer' => Alerta::where('tipo', 'certificado_por_vencer')->where('leida', false)->count(),
+            'documentos_rechazados'   => Alerta::where('tipo', 'documento_rechazado')->where('leida', false)->count(),
+            'procesos_sin_actividad'  => Alerta::where('tipo', 'sin_actividad')->where('leida', false)->distinct('proceso_id')->count('proceso_id'),
+            'alertas_por_prioridad'   => Alerta::where('leida', false)->select('prioridad', DB::raw('count(*) as total'))
+                ->groupBy('prioridad')->pluck('total', 'prioridad')->toArray(),
         ];
-
-        return $indicadores;
     }
 
-    /**
-     * Indicadores de eficiencia (tiempos promedio)
-     */
     public function indicadoresEficiencia()
     {
-        // Procesos finalizados en los últimos 3 meses
         $tresMonthsAgo = now()->subMonths(3);
-        
-        $procesosFinalizados = Proceso::whereIn('estado', ['completado', 'cerrado'])
-            ->where('updated_at', '>', $tresMonthsAgo)
-            ->get();
-
-        $tiempoPromedioTotal = 0;
+        $procesosFinalizados = Proceso::whereIn('estado', ['completado', 'cerrado'])->where('updated_at', '>', $tresMonthsAgo)->get();
+        $tiempoTotal = 0;
         $count = 0;
-
-        foreach ($procesosFinalizados as $proceso) {
-            $diasTotal = $proceso->created_at->diffInDays($proceso->updated_at);
-            $tiempoPromedioTotal += $diasTotal;
+        foreach ($procesosFinalizados as $p) {
+            $tiempoTotal += $p->created_at->diffInDays($p->updated_at);
             $count++;
         }
 
-        $promedioGeneral = $count > 0 ? round($tiempoPromedioTotal / $count, 2) : 0;
-
-        // Tiempo promedio por modalidad. SQLite no soporta TIMESTAMPDIFF,
-        // por eso usamos julianday cuando el driver es sqlite.
         $driver = DB::connection()->getDriverName();
-        $avgDaysExpr = $driver === 'sqlite'
+        $avgExpr = $driver === 'sqlite'
             ? 'AVG(julianday(procesos.updated_at) - julianday(procesos.created_at))'
             : 'AVG(TIMESTAMPDIFF(DAY, procesos.created_at, procesos.updated_at))';
 
-        // Tiempo promedio por modalidad
-        $tiempoPorModalidad = DB::table('procesos')
-            ->join('workflows', 'procesos.workflow_id', '=', 'workflows.id')
-            ->select(
-                'workflows.nombre',
-                DB::raw($avgDaysExpr . ' as promedio_dias')
-            )
-            ->whereIn('procesos.estado', ['completado', 'cerrado'])
-            ->where('procesos.updated_at', '>', $tresMonthsAgo)
-            ->groupBy('workflows.id', 'workflows.nombre')
-            ->get();
-
         return [
-            'promedio_general_dias' => $promedioGeneral,
-            'procesos_finalizados_3meses' => $count,
-            'por_modalidad' => $tiempoPorModalidad,
+            'promedio_general_dias'      => $count > 0 ? round($tiempoTotal / $count, 2) : 0,
+            'procesos_finalizados_3meses'=> $count,
+            'por_modalidad'              => DB::table('procesos')
+                ->join('workflows', 'procesos.workflow_id', '=', 'workflows.id')
+                ->select('workflows.nombre', DB::raw($avgExpr . ' as promedio_dias'))
+                ->whereIn('procesos.estado', ['completado', 'cerrado'])
+                ->where('procesos.updated_at', '>', $tresMonthsAgo)
+                ->groupBy('workflows.id', 'workflows.nombre')
+                ->get(),
         ];
     }
 
-    /**
-     * Indicadores por responsable (carga de trabajo)
-     */
-    public function indicadoresPorResponsable()
-    {
-        $usuarios = DB::table('users')
-            ->whereExists(function($query) {
-                $query->select(DB::raw(1))
-                    ->from('model_has_roles')
-                    ->whereColumn('model_has_roles.model_id', 'users.id')
-                    ->whereIn('model_has_roles.role_id', function($q) {
-                        $q->select('id')
-                            ->from('roles')
-                            ->whereIn('name', ['planeacion', 'hacienda', 'juridica', 'secop']);
-                    });
-            })
-            ->get();
-
-        $cargaTrabajo = [];
-
-        foreach ($usuarios as $usuario) {
-            $cargaTrabajo[$usuario->id] = [
-                'nombre' => $usuario->name,
-                'email' => $usuario->email,
-                'procesos_activos' => Proceso::whereNotIn('estado', ['completado', 'cerrado', 'rechazado'])
-                    ->whereHas('procesoEtapas', function($q) use ($usuario) {
-                        $q->where('recibido_por', $usuario->id)
-                            ->whereNull('enviado_at');
-                    })
-                    ->count(),
-                'alertas_pendientes' => Alerta::where('user_id', $usuario->id)
-                    ->where('leida', false)
-                    ->count(),
-                'documentos_por_aprobar' => ProcesoEtapaArchivo::where('uploaded_by', '!=', $usuario->id)
-                    ->where('estado', 'pendiente')
-                    ->whereHas('proceso', function($q) use ($usuario) {
-                        $q->whereHas('procesoEtapas', function($pe) use ($usuario) {
-                            $pe->where('recibido_por', $usuario->id)
-                                ->whereNull('enviado_at');
-                        });
-                    })
-                    ->count(),
-            ];
-        }
-
-        return $cargaTrabajo;
-    }
-
-    /**
-     * Búsqueda rápida de procesos
-     */
     public function buscar(Request $request)
     {
         $termino = $request->input('q');
-        
         $resultados = Proceso::with(['workflow', 'etapaActual'])
-            ->where(function($query) use ($termino) {
-                $query->where('codigo', 'like', "%{$termino}%")
-                    ->orWhere('objeto', 'like', "%{$termino}%")
-                    ->orWhere('descripcion', 'like', "%{$termino}%");
-            })
+            ->where(fn($q) => $q->where('codigo', 'like', "%{$termino}%")
+                ->orWhere('objeto', 'like', "%{$termino}%")
+                ->orWhere('descripcion', 'like', "%{$termino}%"))
             ->limit(20)
             ->get();
-
         return response()->json($resultados);
     }
 
-    /**
-     * Reporte general del dashboard
-     */
     public function reporte(Request $request)
     {
         $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth());
-        $fechaFin = $request->input('fecha_fin', now()->endOfMonth());
+        $fechaFin    = $request->input('fecha_fin',    now()->endOfMonth());
 
         $datos = [
-            'periodo' => [
-                'inicio' => $fechaInicio,
-                'fin' => $fechaFin,
-            ],
-            'indicadores' => $this->indicadoresGenerales(),
-            'por_area' => $this->estadisticasPorArea(),
-            'por_etapa' => $this->indicadoresPorEtapa(),
-            'cumplimiento_documental' => $this->indicadoresCumplimientoDocumental(),
-            'alertas_riesgos' => $this->indicadoresAlertasRiesgos(),
-            'eficiencia' => $this->indicadoresEficiencia(),
+            'periodo'               => ['inicio' => $fechaInicio, 'fin' => $fechaFin],
+            'indicadores'           => $this->indicadoresGenerales(),
+            'por_area'              => $this->estadisticasPorArea(),
+            'por_etapa'             => $this->indicadoresPorEtapa(),
+            'alertas_riesgos'       => $this->indicadoresAlertasRiesgos(),
+            'eficiencia'            => $this->indicadoresEficiencia(),
         ];
 
         if ($request->wantsJson()) {
@@ -642,28 +559,19 @@ class DashboardController extends Controller
         return view('dashboard.reporte', compact('datos'));
     }
 
-    /**
-     * Obtener tendencia de los últimos 6 meses
-     */
     private function obtenerTendenciaUltimosSeisMeses()
     {
         $tendencia = [];
-        
         for ($i = 5; $i >= 0; $i--) {
             $mes = now()->subMonths($i);
-            $inicioMes = $mes->copy()->startOfMonth();
-            $finMes = $mes->copy()->endOfMonth();
-            
+            $ini = $mes->copy()->startOfMonth();
+            $fin = $mes->copy()->endOfMonth();
             $tendencia[] = [
-                'mes' => $mes->format('M Y'),
-                'creados' => Proceso::whereBetween('created_at', [$inicioMes, $finMes])->count(),
-                'finalizados' => Proceso::whereIn('estado', ['completado', 'cerrado'])
-                    ->whereBetween('updated_at', [$inicioMes, $finMes])
-                    ->count(),
+                'mes'         => $mes->format('M Y'),
+                'creados'     => Proceso::whereBetween('created_at', [$ini, $fin])->count(),
+                'finalizados' => Proceso::whereIn('estado', ['completado', 'cerrado'])->whereBetween('updated_at', [$ini, $fin])->count(),
             ];
         }
-        
         return $tendencia;
     }
 }
-

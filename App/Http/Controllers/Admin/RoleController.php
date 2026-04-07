@@ -26,12 +26,17 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'          => ['required', 'string', 'max:100', 'unique:roles,name'],
-            'permissions'   => ['nullable', 'array'],
-            'permissions.*' => ['exists:permissions,id'],
+            'name'            => ['required', 'string', 'max:100', 'unique:roles,name'],
+            'dashboard_scope' => ['nullable', 'in:global,secretaria,unidad,propios'],
+            'permissions'     => ['nullable', 'array'],
+            'permissions.*'   => ['exists:permissions,id'],
         ]);
 
-        $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
+        $role = Role::create([
+            'name'            => $request->name,
+            'guard_name'      => 'web',
+            'dashboard_scope' => $request->dashboard_scope ?? 'propios',
+        ]);
 
         if ($request->filled('permissions')) {
             $role->syncPermissions(Permission::whereIn('id', $request->permissions)->get());
@@ -53,12 +58,16 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         $request->validate([
-            'name'          => ['required', 'string', 'max:100', 'unique:roles,name,' . $role->id],
-            'permissions'   => ['nullable', 'array'],
-            'permissions.*' => ['exists:permissions,id'],
+            'name'            => ['required', 'string', 'max:100', 'unique:roles,name,' . $role->id],
+            'dashboard_scope' => ['nullable', 'in:global,secretaria,unidad,propios'],
+            'permissions'     => ['nullable', 'array'],
+            'permissions.*'   => ['exists:permissions,id'],
         ]);
 
-        $role->update(['name' => $request->name]);
+        $role->update([
+            'name'            => $request->name,
+            'dashboard_scope' => $request->dashboard_scope ?? 'propios',
+        ]);
         $role->syncPermissions(
             $request->filled('permissions')
                 ? Permission::whereIn('id', $request->permissions)->get()
