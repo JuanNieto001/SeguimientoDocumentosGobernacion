@@ -48,10 +48,10 @@
             </div>
         @endif
 
-        <div style="display: flex; align-items: center; gap: 8px; margin: 0; padding: 0;">
+        <div class="flex items-baseline gap-2">
             <input id="remember_me" type="checkbox" name="remember"
                    class="rounded border-gray-300 text-green-700 focus:ring-1 focus:ring-green-600 focus:ring-offset-0">
-            <label for="remember_me" class="text-sm text-gray-600 select-none cursor-pointer" style="margin: 0; line-height: 1.2;">Mantener sesión iniciada</label>
+            <label for="remember_me" class="text-sm text-gray-600 select-none cursor-pointer">Mantener sesión iniciada</label>
         </div>
 
         <button type="submit"
