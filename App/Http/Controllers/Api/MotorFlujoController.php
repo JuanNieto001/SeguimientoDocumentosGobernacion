@@ -74,7 +74,7 @@ class MotorFlujoController extends Controller
     {
         $flujos = Flujo::activos()
             ->porSecretaria($secretariaId)
-            ->with(['secretaria', 'versionActiva'])
+            ->with(['secretaria', 'versionActiva.pasos'])
             ->get();
 
         return response()->json(['flujos' => $flujos]);

@@ -69,12 +69,12 @@
 
     {{-- Panel desplegable con todas las secretarías --}}
     <div x-show="showSecretarias"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 -translate-y-1 max-h-0"
-         x-transition:enter-end="opacity-100 translate-y-0 max-h-[2000px]"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0 -translate-y-1"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 max-h-0"
+         x-transition:enter-end="opacity-100 max-h-[1500px]"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100 max-h-[1500px]"
+         x-transition:leave-end="opacity-0 max-h-0"
          x-cloak
          class="ml-2 pl-2 mt-0.5 space-y-0.5 overflow-hidden"
          style="border-left:1px solid rgba(134,239,172,.18)">
