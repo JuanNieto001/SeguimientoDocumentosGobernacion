@@ -14,8 +14,14 @@
         max-width: 16px !important;
         max-height: 16px !important;
         flex-shrink: 0 !important;
-        vertical-align: middle !important;
-        margin-top: 0 !important;
+        margin: 0 !important;
+        display: inline-block !important;
+    }
+    
+    label[for="remember_me"] {
+        display: inline-block !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 }
 
