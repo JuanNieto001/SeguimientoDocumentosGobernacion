@@ -3,6 +3,21 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
+/* FIX: Checkbox pequeño en login - Sobrescribe @tailwindcss/forms */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+    input[type="checkbox"]#remember_me {
+        width: 16px !important;
+        height: 16px !important;
+        min-width: 16px !important;
+        min-height: 16px !important;
+        max-width: 16px !important;
+        max-height: 16px !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /* RESPONSIVE GLOBAL - Mobile First, Afecta TODO el sistema */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
