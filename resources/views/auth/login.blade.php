@@ -50,8 +50,7 @@
 
         <div class="flex items-center gap-2.5">
             <input id="remember_me" type="checkbox" name="remember"
-                   style="width: 16px !important; height: 16px !important; flex-shrink: 0;"
-                   class="rounded border-gray-300 text-green-700 focus:ring-1 focus:ring-green-600 focus:ring-offset-0">
+                   class="rounded border-gray-300 text-green-700 focus:ring-1 focus:ring-green-600 focus:ring-offset-0 align-middle">
             <label for="remember_me" class="text-sm text-gray-600 select-none cursor-pointer">Mantener sesión iniciada</label>
         </div>
 
