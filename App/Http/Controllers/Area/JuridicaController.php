@@ -60,17 +60,11 @@ class JuridicaController extends Controller
      */
     public function show($id)
     {
-        $proceso = Proceso::with([
-            'workflow',
-            'etapaActual',
-            'procesoEtapas.etapa',
-            'archivos',
-            'auditorias.usuario'
-        ])->findOrFail($id);
+        $proceso = Proceso::findOrFail($id);
 
         abort_unless($proceso->area_actual_role === 'juridica' || auth()->user()->hasRole('admin'), 403);
 
-        return view('areas.juridica-detalle', compact('proceso'));
+        return redirect()->route('procesos.show', $proceso->id);
     }
 
     /**

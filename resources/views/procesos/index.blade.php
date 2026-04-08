@@ -5,7 +5,7 @@
                 <h1 class="text-lg font-bold text-gray-900 leading-none">Procesos</h1>
                 <p class="text-xs text-gray-400 mt-1">Gobernación de Caldas &mdash; Sistema de Contratación Pública</p>
             </div>
-            @if((auth()->user()->hasRole('admin') || auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante')) && !$miRolDoc)
+            @if(auth()->user()->can('procesos.crear') && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante')) && !$miRolDoc)
             <div class="ml-8">
                 <a href="{{ route('procesos.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:opacity-95"

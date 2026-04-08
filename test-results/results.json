@@ -1,7 +1,7 @@
 {
   "config": {
-    "configFile": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\playwright.config.js",
-    "rootDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+    "configFile": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\playwright.config.js",
+    "rootDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
     "forbidOnly": false,
     "fullyParallel": false,
     "globalSetup": null,
@@ -16,7 +16,7 @@
     "preserveOutput": "always",
     "projects": [
       {
-        "outputDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "outputDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -24,7 +24,7 @@
         },
         "id": "chromium",
         "name": "chromium",
-        "testDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -32,7 +32,7 @@
         "timeout": 60000
       },
       {
-        "outputDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "outputDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -40,7 +40,7 @@
         },
         "id": "firefox",
         "name": "firefox",
-        "testDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -48,7 +48,7 @@
         "timeout": 60000
       },
       {
-        "outputDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "outputDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -56,7 +56,7 @@
         },
         "id": "Mobile Chrome",
         "name": "Mobile Chrome",
-        "testDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testDir": "C:/Users/msuarezjc/Desktop/SeguimientoDocumentosGobernacion/tests",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -90,7 +90,7 @@
         null
       ],
       [
-        "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\custom-reporter.js",
+        "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\custom-reporter.js",
         null
       ]
     ],
@@ -113,415 +113,99 @@
   },
   "suites": [
     {
-      "title": "e2e\\flujo-cdpn-completo.spec.js",
-      "file": "e2e/flujo-cdpn-completo.spec.js",
+      "title": "e2e\\auth-casos-ui.spec.js",
+      "file": "e2e/auth-casos-ui.spec.js",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Flujo CD-PN Completo - Persona Natural",
-          "file": "e2e/flujo-cdpn-completo.spec.js",
-          "line": 15,
+          "title": "Casos de Autenticacion UI",
+          "file": "e2e/auth-casos-ui.spec.js",
+          "line": 14,
           "column": 6,
           "specs": [
             {
-              "title": "CDPN-001: Crear proceso con cédula SECOP 1053850113",
+              "title": "AUTH-000-Video completo login error y recuperacion",
               "ok": false,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 60000,
+                  "timeout": 1080000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 20,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 602,
+                      "duration": 61443,
                       "error": {
-                        "message": "TypeError: LoginHelper.loginAsAdmin is not a function",
-                        "stack": "TypeError: LoginHelper.loginAsAdmin is not a function\n    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:41:23",
+                        "message": "Error: page.waitForTimeout: Target page, context or browser has been closed",
+                        "stack": "Error: page.waitForTimeout: Target page, context or browser has been closed\n    at holdForManualEmailCheck (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:179:14)\n    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:72:5",
                         "location": {
-                          "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                          "column": 23,
-                          "line": 41
+                          "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js",
+                          "column": 14,
+                          "line": 179
                         },
-                        "snippet": "\u001b[0m \u001b[90m 39 |\u001b[39m\n \u001b[90m 40 |\u001b[39m   test(\u001b[32m'CDPN-001: Crear proceso con cédula SECOP 1053850113'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/procesos/crear'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m3000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 177 |\u001b[39m   console\u001b[33m.\u001b[39mlog(message)\u001b[33m;\u001b[39m\n \u001b[90m 178 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m startLabel)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[33mAUTH_MANUAL_HOLD_MS\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m endLabel)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m }\n \u001b[90m 182 |\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
-                            "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                            "column": 23,
-                            "line": 41
+                            "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js",
+                            "column": 14,
+                            "line": 179
                           },
-                          "message": "TypeError: LoginHelper.loginAsAdmin is not a function\n\n\u001b[0m \u001b[90m 39 |\u001b[39m\n \u001b[90m 40 |\u001b[39m   test(\u001b[32m'CDPN-001: Crear proceso con cédula SECOP 1053850113'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/procesos/crear'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m3000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[0m\n\u001b[2m    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:41:23\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-04-08T05:38:52.622Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\\test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\\video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\\error-context.md"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\\trace.zip"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                        "column": 23,
-                        "line": 41
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "835227a4e6c2e02cb441-2afb49dd5c4ab2f6aecb",
-              "file": "e2e/flujo-cdpn-completo.spec.js",
-              "line": 40,
-              "column": 3
-            },
-            {
-              "title": "CDPN-002: Subir documento y gestionar versiones",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 21,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 574,
-                      "error": {
-                        "message": "TypeError: LoginHelper.loginAsPlaneacion is not a function",
-                        "stack": "TypeError: LoginHelper.loginAsPlaneacion is not a function\n    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:89:23",
-                        "location": {
-                          "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                          "column": 23,
-                          "line": 89
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 87 |\u001b[39m\n \u001b[90m 88 |\u001b[39m   test(\u001b[32m'CDPN-002: Subir documento y gestionar versiones'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 89 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsPlaneacion(page)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 90 |\u001b[39m     \n \u001b[90m 91 |\u001b[39m     \u001b[90m// Ir a bandeja de Planeación\u001b[39m\n \u001b[90m 92 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/planeacion'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                            "column": 23,
-                            "line": 89
-                          },
-                          "message": "TypeError: LoginHelper.loginAsPlaneacion is not a function\n\n\u001b[0m \u001b[90m 87 |\u001b[39m\n \u001b[90m 88 |\u001b[39m   test(\u001b[32m'CDPN-002: Subir documento y gestionar versiones'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 89 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsPlaneacion(page)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 90 |\u001b[39m     \n \u001b[90m 91 |\u001b[39m     \u001b[90m// Ir a bandeja de Planeación\u001b[39m\n \u001b[90m 92 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/planeacion'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:89:23\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-04-08T05:38:54.356Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\\test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\\video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\\error-context.md"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\\trace.zip"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                        "column": 23,
-                        "line": 89
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "835227a4e6c2e02cb441-55cf63be2f44ab31bdf0",
-              "file": "e2e/flujo-cdpn-completo.spec.js",
-              "line": 88,
-              "column": 3
-            },
-            {
-              "title": "CDPN-003: Consultar SECOP con cédula 1053850113",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 22,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 545,
-                      "error": {
-                        "message": "TypeError: LoginHelper.loginAsAdmin is not a function",
-                        "stack": "TypeError: LoginHelper.loginAsAdmin is not a function\n    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:154:23",
-                        "location": {
-                          "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                          "column": 23,
-                          "line": 154
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 152 |\u001b[39m\n \u001b[90m 153 |\u001b[39m   test(\u001b[32m'CDPN-003: Consultar SECOP con cédula 1053850113'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 154 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 155 |\u001b[39m     \n \u001b[90m 156 |\u001b[39m     \u001b[90m// Ir a la vista de SECOP consultas\u001b[39m\n \u001b[90m 157 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/secop'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                            "column": 23,
-                            "line": 154
-                          },
-                          "message": "TypeError: LoginHelper.loginAsAdmin is not a function\n\n\u001b[0m \u001b[90m 152 |\u001b[39m\n \u001b[90m 153 |\u001b[39m   test(\u001b[32m'CDPN-003: Consultar SECOP con cédula 1053850113'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 154 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 155 |\u001b[39m     \n \u001b[90m 156 |\u001b[39m     \u001b[90m// Ir a la vista de SECOP consultas\u001b[39m\n \u001b[90m 157 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/secop'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:154:23\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-04-08T05:38:55.956Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\\test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\\video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\\error-context.md"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\\trace.zip"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                        "column": 23,
-                        "line": 154
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "835227a4e6c2e02cb441-3e081cd9c37384d85444",
-              "file": "e2e/flujo-cdpn-completo.spec.js",
-              "line": 153,
-              "column": 3
-            },
-            {
-              "title": "CDPN-004: Admin exportar documentación",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 23,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 493,
-                      "error": {
-                        "message": "TypeError: LoginHelper.loginAsAdmin is not a function",
-                        "stack": "TypeError: LoginHelper.loginAsAdmin is not a function\n    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:225:23",
-                        "location": {
-                          "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                          "column": 23,
-                          "line": 225
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 223 |\u001b[39m\n \u001b[90m 224 |\u001b[39m   test(\u001b[32m'CDPN-004: Admin exportar documentación'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 225 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 226 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/paa'\u001b[39m)\u001b[33m;\u001b[39m  \u001b[90m// PAA tiene exportación implementada\u001b[39m\n \u001b[90m 227 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m3000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 228 |\u001b[39m     \u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                            "column": 23,
-                            "line": 225
-                          },
-                          "message": "TypeError: LoginHelper.loginAsAdmin is not a function\n\n\u001b[0m \u001b[90m 223 |\u001b[39m\n \u001b[90m 224 |\u001b[39m   test(\u001b[32m'CDPN-004: Admin exportar documentación'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 225 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 226 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/paa'\u001b[39m)\u001b[33m;\u001b[39m  \u001b[90m// PAA tiene exportación implementada\u001b[39m\n \u001b[90m 227 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m3000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 228 |\u001b[39m     \u001b[0m\n\u001b[2m    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:225:23\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-04-08T05:38:57.567Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\\test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\\video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\\error-context.md"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\\trace.zip"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                        "column": 23,
-                        "line": 225
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "835227a4e6c2e02cb441-d5dcb24a6927ffb28aab",
-              "file": "e2e/flujo-cdpn-completo.spec.js",
-              "line": 224,
-              "column": 3
-            },
-            {
-              "title": "CDPN-005: Flujo completo inicio a fin",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 24,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 506,
-                      "error": {
-                        "message": "TypeError: LoginHelper.loginAsAdmin is not a function",
-                        "stack": "TypeError: LoginHelper.loginAsAdmin is not a function\n    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:275:23",
-                        "location": {
-                          "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                          "column": 23,
-                          "line": 275
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 273 |\u001b[39m     \u001b[90m// ETAPA 0: CREAR PROCESO (Unidad Solicitante)\u001b[39m\n \u001b[90m 274 |\u001b[39m     \u001b[90m// ══════════════════════════════════════════════\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 275 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 276 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/procesos/crear'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 277 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m3000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 278 |\u001b[39m     \u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                            "column": 23,
-                            "line": 275
-                          },
-                          "message": "TypeError: LoginHelper.loginAsAdmin is not a function\n\n\u001b[0m \u001b[90m 273 |\u001b[39m     \u001b[90m// ETAPA 0: CREAR PROCESO (Unidad Solicitante)\u001b[39m\n \u001b[90m 274 |\u001b[39m     \u001b[90m// ══════════════════════════════════════════════\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 275 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[33mLoginHelper\u001b[39m\u001b[33m.\u001b[39mloginAsAdmin(page)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 276 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/procesos/crear'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 277 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m3000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 278 |\u001b[39m     \u001b[0m\n\u001b[2m    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js:275:23\u001b[22m"
+                          "message": "Error: page.waitForTimeout: Target page, context or browser has been closed\n\n\u001b[0m \u001b[90m 177 |\u001b[39m   console\u001b[33m.\u001b[39mlog(message)\u001b[33m;\u001b[39m\n \u001b[90m 178 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m startLabel)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[33mAUTH_MANUAL_HOLD_MS\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m endLabel)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m }\n \u001b[90m 182 |\u001b[39m\u001b[0m\n\u001b[2m    at holdForManualEmailCheck (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:179:14)\u001b[22m\n\u001b[2m    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:72:5\u001b[22m"
                         }
                       ],
                       "stdout": [
                         {
-                          "text": "🎯 INICIANDO FLUJO COMPLETO CD-PN...\n"
+                          "text": "AUTH-000 listo para evidencia manual por 900000 ms después de enviar enlace.\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-04-08T05:38:59.091Z",
+                      "startTime": "2026-04-08T19:54:48.851Z",
                       "annotations": [],
                       "attachments": [
                         {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\\test-failed-1.png"
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\video-1.webm"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\\video.webm"
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\video.webm"
                         },
                         {
                           "name": "error-context",
                           "contentType": "text/markdown",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\\error-context.md"
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\\trace.zip"
+                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\trace.zip"
                         }
                       ],
                       "errorLocation": {
-                        "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-cdpn-completo.spec.js",
-                        "column": 23,
-                        "line": 275
+                        "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js",
+                        "column": 14,
+                        "line": 179
                       }
                     }
                   ],
                   "status": "unexpected"
                 }
               ],
-              "id": "835227a4e6c2e02cb441-862717f922e26cd7a120",
-              "file": "e2e/flujo-cdpn-completo.spec.js",
-              "line": 269,
+              "id": "c2ec03bb8caf9090805b-cbf09579ab0f3d7ba0f0",
+              "file": "e2e/auth-casos-ui.spec.js",
+              "line": 15,
               "column": 3
             }
           ]
@@ -531,11 +215,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-04-08T05:38:51.449Z",
-    "duration": 8570.92100000009,
+    "startTime": "2026-04-08T19:54:47.387Z",
+    "duration": 64914.05899999995,
     "expected": 0,
     "skipped": 0,
-    "unexpected": 5,
+    "unexpected": 1,
     "flaky": 0
   }
 }

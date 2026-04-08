@@ -1,5 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const DEFAULT_SLOW_MO_MS = 180;
+const DEMO_SLOW_MO_MS = 700;
+
+const envSlowMo = Number(process.env.PW_SLOWMO_MS);
+const resolvedSlowMoMs = Number.isFinite(envSlowMo) && envSlowMo >= 0
+  ? envSlowMo
+  : process.env.PW_DEMO_MODE === '1'
+    ? DEMO_SLOW_MO_MS
+    : DEFAULT_SLOW_MO_MS;
+
+const resolvedVideoMode = process.env.PW_VIDEO_MODE || 'on';
+
 export default defineConfig({
   testDir: './tests',
   timeout: 60000,
@@ -9,12 +21,18 @@ export default defineConfig({
   // 🔥 EVIDENCIAS COMPLETAS
   use: {
     screenshot: 'on',
-    video: 'on',
+    video: {
+      mode: resolvedVideoMode,
+      size: { width: 1366, height: 768 },
+    },
     trace: 'on',
     baseURL: 'http://localhost:8000',
     navigationTimeout: 30000,
     actionTimeout: 10000,
     headless: false,  // Abrir navegador para ver qué pasa
+    launchOptions: {
+      slowMo: resolvedSlowMoMs,
+    },
   },
 
   // Configuración de reportes

@@ -125,6 +125,9 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
         $ctrl = \App\Http\Controllers\Api\MotorFlujoController::class;
 
+        // ── Contexto de alcance por usuario ──
+        Route::get('/secretarias-visibles', [$ctrl, 'secretariasVisibles'])->name('api.motor-flujos.secretarias.visibles');
+
         // ── Catálogo de pasos (lectura: todos; escritura: admin) ──
         Route::get('/catalogo-pasos',      [$ctrl, 'catalogoPasos'])->name('api.motor-flujos.catalogo');
         Route::post('/catalogo-pasos',     [$ctrl, 'crearCatalogoPaso'])->name('api.motor-flujos.catalogo.store');
@@ -132,6 +135,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         // ── Flujos por Secretaría ──
         Route::get('/secretarias/{secretariaId}/flujos', [$ctrl, 'flujosPorSecretaria'])->name('api.motor-flujos.flujos.porSecretaria');
         Route::post('/flujos',                           [$ctrl, 'crearFlujo'])->name('api.motor-flujos.flujos.store');
+        Route::post('/flujos/{flujoId}/duplicar',        [$ctrl, 'duplicarFlujo'])->name('api.motor-flujos.flujos.duplicar');
         Route::post('/flujos/guardar-completo',          [$ctrl, 'guardarFlujoCompleto'])->name('api.motor-flujos.flujos.guardarCompleto');
         Route::put('/flujos/{flujoId}',                  [$ctrl, 'actualizarFlujo'])->name('api.motor-flujos.flujos.update');
         Route::delete('/flujos/{flujoId}',               [$ctrl, 'eliminarFlujo'])->name('api.motor-flujos.flujos.destroy');

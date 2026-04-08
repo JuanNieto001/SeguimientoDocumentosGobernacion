@@ -5,6 +5,7 @@
                 <h1 class="text-lg font-bold text-gray-900 leading-none">Mi Bandeja — Descentralización</h1>
                 <p class="text-xs text-gray-400 mt-1">Procesos pendientes en tu área</p>
             </div>
+            @can('procesos.crear')
             <div class="ml-8">
                 <a href="{{ route('procesos.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:opacity-95"
@@ -13,6 +14,7 @@
                     Nueva solicitud
                 </a>
             </div>
+            @endcan
         </div>
     </x-slot>
 

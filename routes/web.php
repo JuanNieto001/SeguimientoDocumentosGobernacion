@@ -39,11 +39,6 @@ Route::get('/', function () {
     if (!auth()->check()) {
         return redirect()->route('login');
     }
-    $rolesDoc = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
-    $tieneRolDoc = collect($rolesDoc)->contains(fn($r) => auth()->user()->hasRole($r));
-    if (auth()->user()->hasRole('planeacion') && !$tieneRolDoc) {
-        return redirect()->route('planeacion.index');
-    }
     return redirect()->route('dashboard');
 });
 
@@ -138,17 +133,17 @@ Route::middleware(['auth'])->prefix('reportes')->name('reportes.')->group(functi
 });
 
 /*
-|--------------------------------------------------------------------------
-| PROCESOS
-|--------------------------------------------------------------------------
-| - Crear/store: Planeación, Unidad Solicitante y Admin
-| - Index/show:  Todos los autenticados (cada rol ve lo suyo)
-| NOTA: /procesos/crear debe definirse ANTES de /procesos/{id}
-|--------------------------------------------------------------------------
+|- -------------------------------------------------------------------------
+|- PROCESOS
+|- -------------------------------------------------------------------------
+|- - Crear/store: Roles permitidos con permiso procesos.crear
+|- - Index/show:  Todos los autenticados (cada rol ve lo suyo)
+|- NOTA: /procesos/crear debe definirse ANTES de /procesos/{id}
+|- -------------------------------------------------------------------------
 */
 
-// Crear solicitud (solo Planeación y Admin)
-Route::middleware(['auth', 'role:admin|planeacion|unidad_solicitante'])->group(function () {
+// Crear solicitud (roles permitidos + controlado por permisos)
+Route::middleware(['auth', 'role:admin|planeacion|unidad_solicitante', 'permission:procesos.crear'])->group(function () {
     Route::get('/procesos/crear', [ProcesoController::class, 'create'])
         ->name('procesos.create');
     Route::post('/procesos', [ProcesoController::class, 'store'])

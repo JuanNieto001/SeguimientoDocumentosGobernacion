@@ -3,7 +3,7 @@ import { LoginHelper } from '../helpers/login.helper.js';
 
 /**
  * PRUEBAS DE MOTOR DE FLUJOS
- * Casos: MOTOR-001 a MOTOR-005
+ * Casos: MOTOR-001 a MOTOR-006
  * Rehabilitadas usando LoginHelper corregido
  */
 
@@ -32,20 +32,28 @@ test.describe('Motor de Flujos - Tests Funcionales', () => {
     expect(cargaOk).toBeTruthy();
   });
 
-  test('MOTOR-002: Visualizar pantalla de flujos configurados', async ({ page }) => {
+  test('MOTOR-002: Abrir constructor con botón Crear Nuevo Flujo', async ({ page }) => {
     await page.goto('/motor-flujos');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    await expect(page.getByText('Flujos Configurados')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/Seleccione uno para ver o editar/i)).toBeVisible({ timeout: 10000 });
+    const crearBtn = page.getByRole('button', { name: /Crear Nuevo Flujo/i }).first();
+    await expect(crearBtn).toBeVisible({ timeout: 10000 });
+    await crearBtn.click();
 
-    const tarjetas = await page.locator('div').filter({ hasText: 'Contratación Directa' }).count();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500);
 
-    await page.screenshot({ path: 'test-results/motor-002-lista-flujos.png', fullPage: true });
+    const canvas = page.locator('.flow-canvas-wrapper .react-flow__pane, .flow-canvas-wrapper .react-flow').first();
+    const catalogoPaso = page.locator('.catalog-sidebar .catalog-item[draggable="true"]').first();
 
-    console.log(`✅ MOTOR-002: pantalla de flujos visible, tarjetas detectadas=${tarjetas}`);
-    expect(tarjetas).toBeGreaterThan(0);
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+    await expect(catalogoPaso).toBeVisible({ timeout: 10000 });
+
+    await page.screenshot({ path: 'test-results/motor-002-abrir-constructor.png', fullPage: true });
+
+    console.log('✅ MOTOR-002: constructor abierto desde botón y listo para edición manual');
+    expect(true).toBeTruthy();
   });
 
   test('MOTOR-003: Seleccionar flujo CD-PN y visualizar canvas', async ({ page }) => {
@@ -187,5 +195,30 @@ test.describe('Motor de Flujos - Tests Funcionales', () => {
     );
     expect(pasoAgregado).toBeTruthy();
     expect(regresoLista).toBeTruthy();
+  });
+
+  test('MOTOR-006: Duplicar un flujo desde el listado', async ({ page }) => {
+    await page.goto('/motor-flujos');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+
+    const totalAntes = await page.locator('h4').count();
+    expect(totalAntes).toBeGreaterThan(0);
+
+    const duplicarBtn = page.getByRole('button', { name: /Duplicar/i }).first();
+    await expect(duplicarBtn).toBeVisible({ timeout: 10000 });
+    await duplicarBtn.click();
+
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500);
+
+    const totalDespues = await page.locator('h4').count();
+    const copias = await page.locator('h4').filter({ hasText: /(copia)/i }).count();
+
+    await page.screenshot({ path: 'test-results/motor-006-duplicar-flujo.png', fullPage: true });
+
+    console.log(`✅ MOTOR-006: duplicación ejecutada. antes=${totalAntes}, despues=${totalDespues}, copiasDetectadas=${copias}`);
+    expect(totalDespues).toBeGreaterThan(totalAntes);
+    expect(copias).toBeGreaterThan(0);
   });
 });

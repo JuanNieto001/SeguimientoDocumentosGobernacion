@@ -25,12 +25,14 @@
                 <p class="text-xs text-gray-400 mt-0.5">{{ $scopeNombre }} &mdash; {{ now()->translatedFormat('F Y') }}</p>
             </div>
             <div class="flex items-center gap-2">
+                @can('procesos.crear')
                 <a href="{{ route('procesos.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:opacity-95"
                    style="background:linear-gradient(135deg,#15803d,#14532d)">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     Nueva solicitud
                 </a>
+                @endcan
                 <a href="{{ route('procesos.index') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 text-sm font-medium bg-white border hover:bg-gray-50"
                    style="border-color:#e2e8f0">
@@ -303,7 +305,9 @@
                     <div class="flex flex-col items-center py-10 text-center">
                         <svg class="w-10 h-10 text-gray-200 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <p class="text-xs text-gray-400 font-medium">Sin procesos registrados</p>
+                        @can('procesos.crear')
                         <a href="{{ route('procesos.create') }}" class="text-xs font-bold mt-1 hover:underline" style="color:#15803d">Crear primera solicitud</a>
+                        @endcan
                     </div>
                     @endforelse
                 </div>
@@ -400,7 +404,9 @@
                                     <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
                                 <p class="text-sm font-semibold text-gray-400">No hay procesos registrados</p>
+                                @can('procesos.crear')
                                 <a href="{{ route('procesos.create') }}" class="text-xs font-bold hover:underline" style="color:#15803d">Crear primera solicitud &rarr;</a>
+                                @endcan
                             </div>
                         </td>
                     </tr>

@@ -3,7 +3,7 @@ import { LoginHelper } from '../helpers/login.helper.js';
 
 /**
  * PRUEBAS COMPLETAS DE MOTOR DE FLUJOS
- * Restauradas para no perder cobertura mientras se continúan ajustes.
+ * Restauradas para no perder cobertura mientras se continúan ajustes (MOTOR-001 a MOTOR-006).
  */
 
 test.describe('Motor de Flujos - Tests Completos', () => {
@@ -26,18 +26,28 @@ test.describe('Motor de Flujos - Tests Completos', () => {
     expect(existe).toBeTruthy();
   });
 
-  test('MOTOR-002: Construir flujo desde catálogo visualmente', async ({ page }) => {
+  test('MOTOR-002: Abrir constructor con botón Crear Nuevo Flujo', async ({ page }) => {
     await page.goto('/motor-flujos');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
-    const catalogoVisible = (await page.locator('.catalog-sidebar, text=/Catálogo de Pasos/i').count()) > 0;
-    const canvasVisible = (await page.locator('.react-flow, .react-flow__renderer').count()) > 0;
+    const crearBtn = page.getByRole('button', { name: /Crear Nuevo Flujo/i }).first();
+    await expect(crearBtn).toBeVisible({ timeout: 10000 });
+    await crearBtn.click();
 
-    await page.screenshot({ path: 'test-results/motor-002-catalogo-canvas.png', fullPage: true });
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500);
 
-    console.log('✅ MOTOR-002: Catálogo y canvas verificados');
-    expect(catalogoVisible || canvasVisible).toBeTruthy();
+    const canvas = page.locator('.flow-canvas-wrapper .react-flow__pane, .flow-canvas-wrapper .react-flow').first();
+    const catalogoPaso = page.locator('.catalog-sidebar .catalog-item[draggable="true"]').first();
+
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+    await expect(catalogoPaso).toBeVisible({ timeout: 10000 });
+
+    await page.screenshot({ path: 'test-results/motor-002-abrir-constructor-completo.png', fullPage: true });
+
+    console.log('✅ MOTOR-002: constructor abierto desde botón y listo para edición manual');
+    expect(true).toBeTruthy();
   });
 
   test('MOTOR-003: Verificar que nodos se pueden visualizar en canvas', async ({ page }) => {
@@ -85,5 +95,30 @@ test.describe('Motor de Flujos - Tests Completos', () => {
     }
 
     expect(true).toBeTruthy();
+  });
+
+  test('MOTOR-006: Duplicar flujo desde listado principal', async ({ page }) => {
+    await page.goto('/motor-flujos');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+
+    const totalAntes = await page.locator('h4').count();
+    expect(totalAntes).toBeGreaterThan(0);
+
+    const duplicarBtn = page.getByRole('button', { name: /Duplicar/i }).first();
+    await expect(duplicarBtn).toBeVisible({ timeout: 10000 });
+    await duplicarBtn.click();
+
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500);
+
+    const totalDespues = await page.locator('h4').count();
+    const copias = await page.locator('h4').filter({ hasText: /(copia)/i }).count();
+
+    await page.screenshot({ path: 'test-results/motor-006-duplicar-flujo-completo.png', fullPage: true });
+
+    console.log(`✅ MOTOR-006: duplicación ejecutada. antes=${totalAntes}, despues=${totalDespues}, copiasDetectadas=${copias}`);
+    expect(totalDespues).toBeGreaterThan(totalAntes);
+    expect(copias).toBeGreaterThan(0);
   });
 });

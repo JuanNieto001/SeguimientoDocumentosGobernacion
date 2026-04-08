@@ -1178,6 +1178,21 @@ function FlujosList({ flujos, loading, onView, onEdit, onNew, onDelete, toast })
         } catch (e) { toast(e.message, 'error'); }
     };
 
+    const handleDuplicate = async (f) => {
+        try {
+            await apiFetch(`${API}/flujos/${f.id}/duplicar`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    nombre: `${f.nombre} (Copia)`,
+                }),
+            });
+            toast('Flujo duplicado correctamente.');
+            onDelete();
+        } catch (e) {
+            toast(e.message, 'error');
+        }
+    };
+
     return (
         <div style={{ padding: '24px 30px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -1257,6 +1272,7 @@ function FlujosList({ flujos, loading, onView, onEdit, onNew, onDelete, toast })
                                     <div style={{ display: 'flex', gap: 8 }} onClick={e => e.stopPropagation()}>
                                         <button onClick={() => onView(f)} style={{ ...S.btnSm('transparent', '#2563eb'), padding: '4px 8px' }}>👁 Ver</button>
                                         <button onClick={() => onEdit(f)} style={{ ...S.btnSm('transparent', '#4f46e5'), padding: '4px 8px' }}>✏️ Editar</button>
+                                        <button onClick={() => handleDuplicate(f)} style={{ ...S.btnSm('transparent', '#0f766e'), padding: '4px 8px' }}>📄 Duplicar</button>
                                         <button onClick={() => handleDelete(f)} style={{ ...S.btnSm('transparent', '#dc2626'), padding: '4px 8px' }}>🗑</button>
                                     </div>
                                 </div>
@@ -1404,6 +1420,7 @@ export default function WorkflowApp() {
     const [error, setError] = useState(null);
     const { toasts, show: toast } = useToast();
     const [secretarias, setSecretarias] = useState([]);
+    const [puedeVerTodasSecretarias, setPuedeVerTodasSecretarias] = useState(false);
     const [secId, setSecId] = useState(null);
     const [flujos, setFlujos] = useState([]);
     const [catalogo, setCatalogo] = useState([]);
@@ -1411,7 +1428,6 @@ export default function WorkflowApp() {
     const [view, setView] = useState('list');   // 'list' | 'view' | 'builder'
     const [activeFlujo, setActive] = useState(null);
 
-    const esAdmin = user?.roles?.some(r => ['admin', 'admin_general', 'admin_unidad'].includes(typeof r === 'string' ? r : r.name));
     const effectiveSecId = secId || user?.secretaria?.id || user?.secretaria_id || null;
 
     // Inject CSS animations
@@ -1423,16 +1439,36 @@ export default function WorkflowApp() {
 
     useEffect(() => {
         if (!user) return;
-        if (esAdmin) {
-            apiFetch('/api/secretarias').then(d => {
-                const list = Array.isArray(d.secretarias || d.data) ? (d.secretarias || d.data) : [];
-                setSecretarias(list);
-                if (!secId && !user?.secretaria?.id && !user?.secretaria_id && list.length > 0) {
-                    const plan = list.find(s => /planeaci/i.test(s.nombre));
-                    setSecId(plan ? plan.id : list[0].id);
+        apiFetch(`${API}/secretarias-visibles`).then(d => {
+            const list = Array.isArray(d.secretarias) ? d.secretarias : [];
+            const canAll = !!d.puede_ver_todas_secretarias;
+            const ownSecId = user?.secretaria?.id || user?.secretaria_id || null;
+
+            setSecretarias(list);
+            setPuedeVerTodasSecretarias(canAll);
+
+            if (canAll) {
+                if (!secId) {
+                    if (ownSecId && list.some(s => s.id === ownSecId)) {
+                        setSecId(ownSecId);
+                    } else if (list.length > 0) {
+                        const plan = list.find(s => /planeaci/i.test(s.nombre));
+                        setSecId(plan ? plan.id : list[0].id);
+                    }
                 }
-            }).catch(() => {});
-        }
+            } else {
+                setSecId(ownSecId || list[0]?.id || null);
+            }
+        }).catch(() => {
+            const ownSecId = user?.secretaria?.id || user?.secretaria_id || null;
+            const ownSecName = user?.secretaria?.nombre || 'Mi Secretaría';
+            setPuedeVerTodasSecretarias(false);
+            if (ownSecId) {
+                setSecretarias([{ id: ownSecId, nombre: ownSecName, activo: true }]);
+                setSecId(ownSecId);
+            }
+        });
+
         apiFetch(`${API}/catalogo-pasos`).then(d => setCatalogo(d.catalogo_pasos || [])).catch(() => {});
     }, [user]);
 
@@ -1489,10 +1525,10 @@ export default function WorkflowApp() {
                         Constructor visual de flujos de contratación por secretaría
                     </p>
                 </div>
-                {esAdmin && secretarias.length > 0 && (
+                {puedeVerTodasSecretarias && secretarias.length > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <label style={{ fontSize: 12, fontWeight: 500, color: '#6b7280' }}>Secretaría:</label>
-                        <select value={effectiveSecId || ''} onChange={e => setSecId(parseInt(e.target.value))}
+                        <select value={effectiveSecId || ''} onChange={e => setSecId(parseInt(e.target.value, 10))}
                             style={{ ...S.select, minWidth: 280 }}>
                             <option value="" disabled>Seleccionar...</option>
                             {secretarias.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}

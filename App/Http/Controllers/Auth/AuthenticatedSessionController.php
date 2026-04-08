@@ -28,15 +28,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $user = Auth::user();
-
-        $rolesDoc = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
-        $tieneRolDoc = collect($rolesDoc)->contains(fn($r) => $user->hasRole($r));
-
-        if ($user->hasRole('planeacion') && !$tieneRolDoc) {
-            return redirect()->intended(route('planeacion.index'));
-        }
-
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

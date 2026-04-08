@@ -20,6 +20,25 @@ npx playwright test --reporter=html,list,./custom-reporter.js
 **✅ Guarda evidencias automáticamente**  
 **✅ Genera reportes CSV + MD + HTML**
 
+## 🐢 MODO VIDEO LENTO (RECOMENDADO PARA EVIDENCIAS)
+
+Si los videos se ven demasiado rapidos, ejecuta en modo demo:
+
+```bash
+npm run test:ui:demo
+```
+
+Tambien puedes ejecutar por consola con velocidad personalizada:
+
+```bash
+set PW_SLOWMO_MS=900&& npx playwright test --project=chromium --headed
+```
+
+Variables utiles:
+- `PW_SLOWMO_MS`: retrasa cada accion del navegador (ej. `700`, `900`, `1200`)
+- `PW_DEMO_MODE=1`: aplica ritmo lento por defecto
+- `PW_VIDEO_MODE=on`: asegura video en todas las pruebas
+
 ---
 
 ## 📊 LO QUE TIENES (118 TESTS)

@@ -8,6 +8,7 @@ use App\Models\Flujo;
 use App\Models\FlujoInstancia;
 use App\Models\FlujoVersion;
 use App\Models\FlujoPaso;
+use App\Models\Secretaria;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,14 +71,40 @@ class MotorFlujoController extends Controller
      * GET /api/motor-flujos/secretarias/{secretariaId}/flujos
      * Lista los flujos activos de una Secretaría.
      */
-    public function flujosPorSecretaria(int $secretariaId): JsonResponse
+    public function flujosPorSecretaria(Request $request, int $secretariaId): JsonResponse
     {
+        $this->verificarAccesoSecretaria($request, $secretariaId);
+
         $flujos = Flujo::activos()
             ->porSecretaria($secretariaId)
             ->with(['secretaria', 'versionActiva.pasos'])
             ->get();
 
         return response()->json(['flujos' => $flujos]);
+    }
+
+    /**
+     * GET /api/motor-flujos/secretarias-visibles
+     * Retorna las secretarías que el usuario puede administrar/ver en el motor.
+     */
+    public function secretariasVisibles(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $puedeVerTodas = $this->puedeVerTodasSecretarias($user);
+
+        $query = Secretaria::query()
+            ->where('activo', true)
+            ->orderBy('nombre');
+
+        if (!$puedeVerTodas) {
+            $query->where('id', (int) $user->secretaria_id);
+        }
+
+        return response()->json([
+            'secretarias' => $query->get(['id', 'nombre', 'activo']),
+            'puede_ver_todas_secretarias' => $puedeVerTodas,
+            'scope_mode' => strtolower((string) config('motor_flujos.secretaria_scope', 'roles')),
+        ]);
     }
 
     /**
@@ -95,6 +122,8 @@ class MotorFlujoController extends Controller
             'tipo_contratacion' => ['nullable', 'string', 'max:50'],
             'secretaria_id'     => ['required', 'exists:secretarias,id'],
         ]);
+
+        $this->verificarAccesoSecretaria($request, (int) $data['secretaria_id']);
 
         $flujo = DB::transaction(function () use ($data, $request) {
             $flujo = Flujo::create($data);
@@ -650,6 +679,9 @@ class MotorFlujoController extends Controller
                 if (Flujo::where('codigo', $data['codigo'])->exists()) {
                     throw new \Exception('Ya existe un flujo con el código "' . $data['codigo'] . '".');
                 }
+
+                $this->verificarAccesoSecretaria($request, (int) $data['secretaria_id']);
+
                 $flujo = Flujo::create([
                     'codigo'            => $data['codigo'],
                     'nombre'            => $data['nombre'],
@@ -757,6 +789,67 @@ class MotorFlujoController extends Controller
     }
 
     /**
+     * POST /api/motor-flujos/flujos/{flujoId}/duplicar
+     * Duplicar un flujo completo (version activa + pasos + docs + condiciones + responsables).
+     */
+    public function duplicarFlujo(Request $request, int $flujoId): JsonResponse
+    {
+        $this->validarAdminUnidad($request);
+
+        $flujoOrigen = Flujo::with('versionActiva')->findOrFail($flujoId);
+        $this->verificarAccesoSecretaria($request, $flujoOrigen);
+
+        $data = $request->validate([
+            'codigo'        => ['nullable', 'string', 'max:50', 'unique:flujos,codigo'],
+            'nombre'        => ['nullable', 'string', 'max:255'],
+            'descripcion'   => ['nullable', 'string'],
+            'secretaria_id' => ['nullable', 'exists:secretarias,id'],
+        ]);
+
+        $secretariaDestinoId = (int) ($data['secretaria_id'] ?? $flujoOrigen->secretaria_id);
+        $this->verificarAccesoSecretaria($request, $secretariaDestinoId);
+
+        $nuevoFlujo = DB::transaction(function () use ($data, $request, $flujoOrigen, $secretariaDestinoId) {
+            $codigo = $data['codigo'] ?? $this->generarCodigoDuplicado($flujoOrigen->codigo);
+
+            $flujo = Flujo::create([
+                'codigo'            => $codigo,
+                'nombre'            => $data['nombre'] ?? ($flujoOrigen->nombre . ' (Copia)'),
+                'descripcion'       => array_key_exists('descripcion', $data)
+                    ? $data['descripcion']
+                    : $flujoOrigen->descripcion,
+                'tipo_contratacion' => $flujoOrigen->tipo_contratacion,
+                'secretaria_id'     => $secretariaDestinoId,
+                'activo'            => true,
+            ]);
+
+            $version = FlujoVersion::create([
+                'flujo_id'       => $flujo->id,
+                'numero_version' => 1,
+                'motivo_cambio'  => 'Duplicado de flujo ID ' . $flujoOrigen->id,
+                'estado'         => 'activa',
+                'creado_por'     => $request->user()->id,
+                'publicada_at'   => now(),
+            ]);
+
+            if ($flujoOrigen->versionActiva) {
+                $version->duplicarPasosDe($flujoOrigen->versionActiva);
+            }
+
+            $flujo->update(['version_activa_id' => $version->id]);
+
+            return $flujo;
+        });
+
+        $nuevoFlujo->load(['secretaria', 'versionActiva.pasos.catalogoPaso', 'versionActiva.pasos.documentos']);
+
+        return response()->json([
+            'message' => 'Flujo duplicado correctamente.',
+            'flujo' => $nuevoFlujo,
+        ], 201);
+    }
+
+    /**
      * DELETE /api/motor-flujos/flujos/{flujoId}
      * Eliminar (desactivar) un flujo.
      */
@@ -786,9 +879,9 @@ class MotorFlujoController extends Controller
         abort_unless($user, 401, 'No autenticado.');
 
         // Admin general o admin de la unidad solicitante puede modificar flujos
-        $esAdmin = $user->hasRole(['admin', 'admin_general', 'admin_unidad']);
+        $esAdmin = $user->hasRole(['admin', 'admin_general', 'super_admin', 'admin_unidad', 'admin_secretaria', 'jefe_unidad']);
 
-        abort_unless($esAdmin, 403, 'Solo el administrador de la unidad solicitante puede modificar flujos.');
+        abort_unless($esAdmin, 403, 'Solo usuarios autorizados pueden modificar flujos.');
     }
 
     /**
@@ -799,8 +892,7 @@ class MotorFlujoController extends Controller
     {
         $user = $request->user();
 
-        // Admin general puede todo
-        if ($user->hasRole(['admin', 'admin_general'])) {
+        if ($this->puedeVerTodasSecretarias($user)) {
             return;
         }
 
@@ -812,6 +904,47 @@ class MotorFlujoController extends Controller
             403,
             'No tiene acceso a modificar flujos de otra Secretaría.'
         );
+    }
+
+    /**
+     * Define si el usuario puede operar/ver flujos de cualquier secretaría.
+     * Se controla por configuración para habilitar modo "todas" en desarrollo.
+     */
+    private function puedeVerTodasSecretarias($user): bool
+    {
+        $scopeMode = strtolower((string) config('motor_flujos.secretaria_scope', 'roles'));
+
+        if ($scopeMode === 'all') {
+            return true;
+        }
+
+        $rolesPermitidos = config('motor_flujos.roles_ver_todas_secretarias', ['admin', 'admin_general', 'super_admin']);
+        if (is_array($rolesPermitidos) && !empty($rolesPermitidos) && $user->hasRole($rolesPermitidos)) {
+            return true;
+        }
+
+        $permiso = trim((string) config('motor_flujos.permission_ver_todas_secretarias', ''));
+        if ($permiso !== '') {
+            try {
+                return $user->hasPermissionTo($permiso);
+            } catch (\Throwable $exception) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Genera un código derivado para copias de flujo.
+     */
+    private function generarCodigoDuplicado(string $codigoBase): string
+    {
+        $base = strtoupper(trim($codigoBase));
+        $base = preg_replace('/[^A-Z0-9_-]/', '-', $base) ?: 'FLUJO';
+        $sufijo = '-CP' . now()->format('His') . random_int(10, 99);
+
+        return substr($base, 0, max(1, 50 - strlen($sufijo))) . $sufijo;
     }
 
     /**

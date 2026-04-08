@@ -116,7 +116,7 @@
             </a>
             @endif
 
-            @if(!$esAreaDocumentos && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante') || auth()->user()->hasRole('admin')))
+                @if(!$esAreaDocumentos && auth()->user()->can('procesos.crear') && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante') || auth()->user()->hasRole('admin')))
             <a href="{{ route('procesos.create') }}"
                class="flex items-center gap-3 p-4 bg-white rounded-2xl transition-all hover:shadow-md hover:-translate-y-0.5"
                style="border:1px solid #e2e8f0">
@@ -225,7 +225,7 @@
             <div class="flex flex-col items-center gap-2 py-12">
                 <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <p class="text-sm text-gray-400">No tienes procesos en curso actualmente</p>
-                @if(auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante'))
+                @if(auth()->user()->can('procesos.crear') && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante')))
                 <a href="{{ route('procesos.create') }}" class="mt-2 text-xs font-semibold text-green-700 hover:text-green-900">+ Crear primera solicitud</a>
                 @endif
             </div>

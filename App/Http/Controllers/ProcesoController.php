@@ -7,13 +7,72 @@ use Illuminate\Support\Facades\DB;
 
 class ProcesoController extends Controller
 {
+    private function isPrivilegedUser($user): bool
+    {
+        $privilegedRoles = ['admin', 'admin_general', 'admin_secretaria', 'gobernador', 'secretario'];
+
+        foreach ($privilegedRoles as $role) {
+            if ($user->hasRole($role)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function activeDocumentRoles($user): array
+    {
+        $rolesDoc = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
+
+        return array_values(array_filter($rolesDoc, fn ($role) => $user->hasRole($role)));
+    }
+
+    private function canUserViewProceso($user, \App\Models\Proceso $proceso): bool
+    {
+        if ($this->isPrivilegedUser($user) || $user->hasRole('planeacion')) {
+            return true;
+        }
+
+        if ($user->hasRole('unidad_solicitante') && $proceso->created_by == $user->id) {
+            return true;
+        }
+
+        $rolesArea = ['hacienda', 'juridica', 'secop'];
+        foreach ($rolesArea as $role) {
+            if (!$user->hasRole($role)) {
+                continue;
+            }
+
+            $wasInArea = $proceso->procesoEtapas
+                ->contains(fn ($pe) => optional($pe->etapa)->area_role === $role);
+
+            if ($wasInArea || $proceso->area_actual_role === $role) {
+                return true;
+            }
+        }
+
+        $rolesDocActivos = $this->activeDocumentRoles($user);
+        if (!empty($rolesDocActivos)) {
+            $tieneSolicitudParaSuArea = DB::table('proceso_documentos_solicitados')
+                ->where('proceso_id', $proceso->id)
+                ->whereIn('area_responsable_rol', $rolesDocActivos)
+                ->exists();
+
+            if ($tieneSolicitudParaSuArea) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
 
         // Roles de solicitud de documentos (etapa 1 paralela)
-        $rolesDoc = ['compras', 'talento_humano', 'rentas', 'contabilidad', 'inversiones_publicas', 'presupuesto', 'radicacion'];
-        $miRolDoc = collect($rolesDoc)->first(fn ($r) => $user->hasRole($r));
+        $miRolDoc = collect($this->activeDocumentRoles($user))->first();
+        $isPrivileged = $this->isPrivilegedUser($user);
 
         $query = DB::table('procesos')
             ->leftJoin('workflows', 'workflows.id', '=', 'procesos.workflow_id')
@@ -50,7 +109,7 @@ class ProcesoController extends Controller
         $query->orderByDesc('procesos.id');
 
         // Visibilidad por rol
-        if (!$user->hasRole('admin')) {
+        if (!$isPrivileged) {
             if ($user->hasRole('planeacion') && !$miRolDoc) {
                 // Planeación supervisa todos los procesos — sin filtro adicional
             } elseif ($user->hasRole('unidad_solicitante')) {
@@ -120,12 +179,8 @@ class ProcesoController extends Controller
     public function create()
     {
         $user = auth()->user();
-        // El middleware de ruta ya valida el rol; doble check por seguridad
-        abort_unless(
-            $user->hasRole('admin') || $user->hasRole('admin_general')
-            || $user->hasRole('planeacion') || $user->hasRole('unidad_solicitante'),
-            403
-        );
+        // El middleware de ruta ya valida el permiso; doble check por seguridad
+        abort_unless($user->can('procesos.crear'), 403);
 
         // Cargar flujos del Motor de Flujos para el selector
         $flujos = DB::table('flujos')
@@ -173,11 +228,7 @@ class ProcesoController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        abort_unless(
-            $user->hasRole('admin') || $user->hasRole('admin_general')
-            || $user->hasRole('planeacion') || $user->hasRole('unidad_solicitante'),
-            403
-        );
+        abort_unless($user->can('procesos.crear'), 403);
 
         $data = $request->validate([
             'flujo_id'                   => ['required', 'exists:flujos,id'],
@@ -388,30 +439,8 @@ class ProcesoController extends Controller
             'unidadOrigen',
         ])->findOrFail($id);
 
-        // Autorización por rol
-        if (!$user->hasRole('admin') && !$user->hasRole('planeacion')) {
-            $canView = false;
-
-            if ($user->hasRole('unidad_solicitante') && $proceso->created_by == $user->id) {
-                $canView = true;
-            }
-
-            if (!$canView) {
-                $areaRoles = ['hacienda', 'juridica', 'secop'];
-                foreach ($areaRoles as $role) {
-                    if ($user->hasRole($role)) {
-                        $wasInArea = $proceso->procesoEtapas
-                            ->contains(fn ($pe) => optional($pe->etapa)->area_role === $role);
-                        if ($wasInArea || $proceso->area_actual_role === $role) {
-                            $canView = true;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            abort_unless($canView, 403, 'No tienes acceso a este proceso.');
-        }
+        // Autorización por rol (unificada para todas las bandejas)
+        abort_unless($this->canUserViewProceso($user, $proceso), 403, 'No tienes acceso a este proceso.');
 
         // Todas las etapas del workflow (para el timeline)
         $etapas = DB::table('etapas')
