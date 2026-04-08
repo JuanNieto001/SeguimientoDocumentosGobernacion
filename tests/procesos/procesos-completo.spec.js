@@ -178,8 +178,6 @@ test.describe('Gestión de Procesos Contractuales', () => {
     expect(true).toBeTruthy();
   });
 
-});
-
   test('PROC-005: Filtrar procesos por estado', async ({ page }) => {
     await page.goto('/procesos');
     

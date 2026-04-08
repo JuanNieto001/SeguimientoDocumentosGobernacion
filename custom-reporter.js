@@ -89,20 +89,24 @@ class CertificationReporter {
   }
 
   generateResultsFile() {
-    const fs = require('fs');
-    const path = require('path');
+    try {
+      const fs = require('fs');
+      const path = require('path');
 
-    // Generar CSV para Excel
-    const csvContent = this.generateCSV();
-    fs.writeFileSync(path.join('test-results', 'resultados-certificacion.csv'), csvContent);
+      // Generar CSV para Excel
+      const csvContent = this.generateCSV();
+      fs.writeFileSync(path.join('test-results', 'resultados-certificacion.csv'), csvContent);
 
-    // Generar MD para documentación
-    const mdContent = this.generateMarkdown();
-    fs.writeFileSync(path.join('test-results', 'REPORTE_CERTIFICACION.md'), mdContent);
+      // Generar MD para documentación
+      const mdContent = this.generateMarkdown();
+      fs.writeFileSync(path.join('test-results', 'REPORTE_CERTIFICACION.md'), mdContent);
 
-    console.log('📄 Reportes generados:');
-    console.log('   - test-results/resultados-certificacion.csv (Excel)');
-    console.log('   - test-results/REPORTE_CERTIFICACION.md (Markdown)');
+      console.log('📄 Reportes generados:');
+      console.log('   - test-results/resultados-certificacion.csv (Excel)');
+      console.log('   - test-results/REPORTE_CERTIFICACION.md (Markdown)');
+    } catch (error) {
+      console.log('📄 No se pudieron generar reportes (modo ES module)');
+    }
   }
 
   generateCSV() {

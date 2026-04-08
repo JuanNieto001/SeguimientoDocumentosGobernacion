@@ -1,0 +1,54 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="1" time="2.0917330000000076">
+<testsuite name="motor-flujos\motor-flujos.spec.js" timestamp="2026-04-08T04:24:02.887Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.499" errors="1">
+<testcase name="Motor de Flujos - Tests Funcionales › MOTOR-001: Acceder al Motor de Flujos" classname="motor-flujos\motor-flujos.spec.js" time="0.499">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\video.webm]]
+
+[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\error-context.md]]
+
+[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\trace.zip]]
+]]>
+</system-out>
+<error message="Cannot read properties of undefined (reading &apos;goto&apos;)" type="TypeError">
+<![CDATA[  [chromium] › motor-flujos\motor-flujos.spec.js:17:3 › Motor de Flujos - Tests Funcionales › MOTOR-001: Acceder al Motor de Flujos 
+
+    TypeError: Cannot read properties of undefined (reading 'goto')
+
+       at helpers\login.helper.js:5
+
+      3 |   
+      4 |   async loginAs(page, email, password = '12345') {
+    > 5 |     await page.goto('/login');
+        |                ^
+      6 |     await page.waitForLoadState('domcontentloaded');
+      7 |     
+      8 |     // Llenar credenciales
+        at LoginHelper.loginAs (C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\helpers\login.helper.js:5:16)
+        at LoginHelper.loginAsAdmin (C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\helpers\login.helper.js:28:16)
+        at C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\motor-flujos\motor-flujos.spec.js:14:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+</testsuite>
+</testsuites>

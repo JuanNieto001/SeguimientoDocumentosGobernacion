@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased" style="background:#f1f5f9;font-family:'Inter',sans-serif" x-data="{ sidebar: false }">
@@ -30,23 +30,26 @@
 
         {{-- Logo --}}
         <div class="flex items-center gap-3 h-16 px-5 border-b shrink-0" style="border-color:rgba(255,255,255,.1)">
-            <div class="w-9 h-9 rounded-xl overflow-hidden shrink-0 flex items-center justify-center" style="background:rgba(255,255,255,0.95)">
+            <div class="w-9 h-9 rounded-xl overflow-hidden shrink-0 flex items-center justify-center shadow-lg" style="background:rgba(255,255,255,0.97);box-shadow:0 0 0 2px rgba(134,239,172,0.3)">
                 <img src="/images/gobernacion.png" alt="Escudo" class="w-8 h-8 object-contain">
             </div>
             <div>
                 <p class="text-white font-bold text-sm leading-none">Gobernación</p>
-                <p class="text-green-300 text-xs mt-0.5">Caldas</p>
+                <p class="text-green-300 text-xs mt-0.5 font-light tracking-wide">de Caldas</p>
             </div>
         </div>
 
         {{-- Usuario --}}
-        <div class="flex items-center gap-3 px-4 py-3.5 shrink-0 border-b" style="border-color:rgba(255,255,255,.08)">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0" style="background:#16a34a">
+        <div class="flex items-center gap-3 px-4 py-3.5 shrink-0 border-b" style="border-color:rgba(255,255,255,.08);background:rgba(0,0,0,0.12)">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0" style="background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 0 0 2px rgba(134,239,172,0.25)">
                 {{ strtoupper(substr(Auth::user()->name,0,2)) }}
             </div>
             <div class="min-w-0">
                 <p class="text-white text-xs font-semibold truncate">{{ Auth::user()->name }}</p>
-                <p class="text-green-300 text-xs truncate opacity-70">{{ Auth::user()->email }}</p>
+                <p class="text-green-300 text-[10px] truncate" style="opacity:0.65">{{ Auth::user()->email }}</p>
+            </div>
+            <div class="ml-auto shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-400 block" style="box-shadow:0 0 4px #4ade80"></span>
             </div>
         </div>
 
@@ -73,7 +76,7 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {{-- Barra superior --}}
-        <header class="flex items-center justify-between h-16 px-6 bg-white border-b shrink-0" style="border-color:#e2e8f0">
+        <header class="flex items-center justify-between h-16 px-6 bg-white border-b shrink-0" style="border-color:#e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
             <div class="flex items-center gap-4">
                 <button @click="sidebar=!sidebar" class="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -110,14 +113,14 @@
                         }
                     );
                 @endphp
-                <a href="{{ route('alertas.index') }}" class="relative p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                <a href="{{ route('alertas.index') }}" class="relative p-2 rounded-xl transition-all duration-150" style="color:#9ca3af" onmouseover="this.style.background='#f1f5f9';this.style.color='#374151'" onmouseout="this.style.background='';this.style.color='#9ca3af'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     @if($unread > 0)
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                    <span class="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-white text-[10px] font-bold leading-none" style="background:#ef4444;box-shadow:0 0 0 2px white">{{ $unread > 9 ? '9+' : $unread }}</span>
                     @endif
                 </a>
                 <div class="flex items-center gap-2.5 pl-3 ml-1 border-l" style="border-color:#e2e8f0">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0" style="background:#166534">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0" style="background:linear-gradient(135deg,#166534,#14532d);box-shadow:0 1px 3px rgba(0,0,0,0.2)">
                         {{ strtoupper(substr(Auth::user()->name,0,2)) }}
                     </div>
                     <span class="hidden sm:block text-sm font-medium text-gray-700">{{ explode(' ',Auth::user()->name)[0] }}</span>

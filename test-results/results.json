@@ -1,0 +1,221 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\playwright.config.js",
+    "rootDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "C:/Users/USUARIO/Desktop/SeguimientoDocumentosGobernacion/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/junit.xml"
+        }
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\custom-reporter.js",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "command": "php artisan serve",
+      "url": "http://localhost:8000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "motor-flujos\\motor-flujos.spec.js",
+      "file": "motor-flujos/motor-flujos.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Motor de Flujos - Tests Funcionales",
+          "file": "motor-flujos/motor-flujos.spec.js",
+          "line": 10,
+          "column": 6,
+          "specs": [
+            {
+              "title": "MOTOR-001: Acceder al Motor de Flujos",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 499,
+                      "error": {
+                        "message": "TypeError: Cannot read properties of undefined (reading 'goto')",
+                        "stack": "TypeError: Cannot read properties of undefined (reading 'goto')\n    at LoginHelper.loginAs (C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js:5:16)\n    at LoginHelper.loginAsAdmin (C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js:28:16)\n    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\motor-flujos\\motor-flujos.spec.js:14:17",
+                        "location": {
+                          "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js",
+                          "column": 16,
+                          "line": 5
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\login.helper.js:5\n\n\u001b[0m \u001b[90m 3 |\u001b[39m   \n \u001b[90m 4 |\u001b[39m   \u001b[36masync\u001b[39m loginAs(page\u001b[33m,\u001b[39m email\u001b[33m,\u001b[39m password \u001b[33m=\u001b[39m \u001b[32m'12345'\u001b[39m) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 5 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/login'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'domcontentloaded'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 7 |\u001b[39m     \n \u001b[90m 8 |\u001b[39m     \u001b[90m// Llenar credenciales\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js",
+                            "column": 16,
+                            "line": 5
+                          },
+                          "message": "TypeError: Cannot read properties of undefined (reading 'goto')\n\n   at helpers\\login.helper.js:5\n\n  3 |   \n  4 |   async loginAs(page, email, password = '12345') {\n> 5 |     await page.goto('/login');\n    |                ^\n  6 |     await page.waitForLoadState('domcontentloaded');\n  7 |     \n  8 |     // Llenar credenciales\n    at LoginHelper.loginAs (C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js:5:16)\n    at LoginHelper.loginAsAdmin (C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js:28:16)\n    at C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\motor-flujos\\motor-flujos.spec.js:14:17"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-08T04:24:03.473Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\USUARIO\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\helpers\\login.helper.js",
+                        "column": 16,
+                        "line": 5
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "624bc205f8636d85956f-a2d07c3f192d78fc8553",
+              "file": "motor-flujos/motor-flujos.spec.js",
+              "line": 17,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-08T04:24:02.305Z",
+    "duration": 2091.7330000000075,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}
