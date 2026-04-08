@@ -1,50 +1,231 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="1" time="2.0917330000000076">
-<testsuite name="motor-flujos\motor-flujos.spec.js" timestamp="2026-04-08T04:24:02.887Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.499" errors="1">
-<testcase name="Motor de Flujos - Tests Funcionales › MOTOR-001: Acceder al Motor de Flujos" classname="motor-flujos\motor-flujos.spec.js" time="0.499">
+<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="5" time="8.570921000000089">
+<testsuite name="e2e\flujo-cdpn-completo.spec.js" timestamp="2026-04-08T05:38:52.054Z" hostname="chromium" tests="5" failures="0" skipped="0" time="2.72" errors="5">
+<testcase name="Flujo CD-PN Completo - Persona Natural › CDPN-001: Crear proceso con cédula SECOP 1053850113" classname="e2e\flujo-cdpn-completo.spec.js" time="0.602">
 <system-out>
 <![CDATA[
-[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\test-failed-1.png]]
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\test-failed-1.png]]
 
-[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\video.webm]]
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\video.webm]]
 
-[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\error-context.md]]
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\error-context.md]]
 
-[[ATTACHMENT|motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\trace.zip]]
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\trace.zip]]
 ]]>
 </system-out>
-<error message="Cannot read properties of undefined (reading &apos;goto&apos;)" type="TypeError">
-<![CDATA[  [chromium] › motor-flujos\motor-flujos.spec.js:17:3 › Motor de Flujos - Tests Funcionales › MOTOR-001: Acceder al Motor de Flujos 
+<error message="LoginHelper.loginAsAdmin is not a function" type="TypeError">
+<![CDATA[  [chromium] › e2e\flujo-cdpn-completo.spec.js:40:3 › Flujo CD-PN Completo - Persona Natural › CDPN-001: Crear proceso con cédula SECOP 1053850113 
 
-    TypeError: Cannot read properties of undefined (reading 'goto')
+    TypeError: LoginHelper.loginAsAdmin is not a function
 
-       at helpers\login.helper.js:5
-
-      3 |   
-      4 |   async loginAs(page, email, password = '12345') {
-    > 5 |     await page.goto('/login');
-        |                ^
-      6 |     await page.waitForLoadState('domcontentloaded');
-      7 |     
-      8 |     // Llenar credenciales
-        at LoginHelper.loginAs (C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\helpers\login.helper.js:5:16)
-        at LoginHelper.loginAsAdmin (C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\helpers\login.helper.js:28:16)
-        at C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\motor-flujos\motor-flujos.spec.js:14:17
+      39 |
+      40 |   test('CDPN-001: Crear proceso con cédula SECOP 1053850113', async ({ page }) => {
+    > 41 |     await LoginHelper.loginAsAdmin(page);
+         |                       ^
+      42 |     await page.goto('/procesos/crear');
+      43 |     await page.waitForTimeout(3000);
+      44 |     
+        at C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-cdpn-completo.spec.js:41:23
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\test-failed-1.png
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\video.webm
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-    Error Context: ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\error-context.md
+    Error Context: ..\test-results\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\error-context.md
 
     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
-    ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\trace.zip
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\trace.zip
     Usage:
 
-        npx playwright show-trace ..\test-results\motor-flujos-motor-flujos--dccb6--Acceder-al-Motor-de-Flujos-chromium\trace.zip
+        npx playwright show-trace ..\test-results\e2e-flujo-cdpn-completo-Fl-ccc9b-con-cédula-SECOP-1053850113-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="Flujo CD-PN Completo - Persona Natural › CDPN-002: Subir documento y gestionar versiones" classname="e2e\flujo-cdpn-completo.spec.js" time="0.574">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\video.webm]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\error-context.md]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\trace.zip]]
+]]>
+</system-out>
+<error message="LoginHelper.loginAsPlaneacion is not a function" type="TypeError">
+<![CDATA[  [chromium] › e2e\flujo-cdpn-completo.spec.js:88:3 › Flujo CD-PN Completo - Persona Natural › CDPN-002: Subir documento y gestionar versiones 
+
+    TypeError: LoginHelper.loginAsPlaneacion is not a function
+
+      87 |
+      88 |   test('CDPN-002: Subir documento y gestionar versiones', async ({ page }) => {
+    > 89 |     await LoginHelper.loginAsPlaneacion(page);
+         |                       ^
+      90 |     
+      91 |     // Ir a bandeja de Planeación
+      92 |     await page.goto('/planeacion');
+        at C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-cdpn-completo.spec.js:89:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\e2e-flujo-cdpn-completo-Fl-c98bc-mento-y-gestionar-versiones-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="Flujo CD-PN Completo - Persona Natural › CDPN-003: Consultar SECOP con cédula 1053850113" classname="e2e\flujo-cdpn-completo.spec.js" time="0.545">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\video.webm]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\error-context.md]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\trace.zip]]
+]]>
+</system-out>
+<error message="LoginHelper.loginAsAdmin is not a function" type="TypeError">
+<![CDATA[  [chromium] › e2e\flujo-cdpn-completo.spec.js:153:3 › Flujo CD-PN Completo - Persona Natural › CDPN-003: Consultar SECOP con cédula 1053850113 
+
+    TypeError: LoginHelper.loginAsAdmin is not a function
+
+      152 |
+      153 |   test('CDPN-003: Consultar SECOP con cédula 1053850113', async ({ page }) => {
+    > 154 |     await LoginHelper.loginAsAdmin(page);
+          |                       ^
+      155 |     
+      156 |     // Ir a la vista de SECOP consultas
+      157 |     await page.goto('/secop');
+        at C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-cdpn-completo.spec.js:154:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\e2e-flujo-cdpn-completo-Fl-d5f18-SECOP-con-cédula-1053850113-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="Flujo CD-PN Completo - Persona Natural › CDPN-004: Admin exportar documentación" classname="e2e\flujo-cdpn-completo.spec.js" time="0.493">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\video.webm]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\error-context.md]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\trace.zip]]
+]]>
+</system-out>
+<error message="LoginHelper.loginAsAdmin is not a function" type="TypeError">
+<![CDATA[  [chromium] › e2e\flujo-cdpn-completo.spec.js:224:3 › Flujo CD-PN Completo - Persona Natural › CDPN-004: Admin exportar documentación 
+
+    TypeError: LoginHelper.loginAsAdmin is not a function
+
+      223 |
+      224 |   test('CDPN-004: Admin exportar documentación', async ({ page }) => {
+    > 225 |     await LoginHelper.loginAsAdmin(page);
+          |                       ^
+      226 |     await page.goto('/paa');  // PAA tiene exportación implementada
+      227 |     await page.waitForTimeout(3000);
+      228 |     
+        at C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-cdpn-completo.spec.js:225:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\e2e-flujo-cdpn-completo-Fl-6818e-dmin-exportar-documentación-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="Flujo CD-PN Completo - Persona Natural › CDPN-005: Flujo completo inicio a fin" classname="e2e\flujo-cdpn-completo.spec.js" time="0.506">
+<system-out>
+<![CDATA[🎯 INICIANDO FLUJO COMPLETO CD-PN...
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\video.webm]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\error-context.md]]
+
+[[ATTACHMENT|e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\trace.zip]]
+]]>
+</system-out>
+<error message="LoginHelper.loginAsAdmin is not a function" type="TypeError">
+<![CDATA[  [chromium] › e2e\flujo-cdpn-completo.spec.js:269:3 › Flujo CD-PN Completo - Persona Natural › CDPN-005: Flujo completo inicio a fin 
+
+    TypeError: LoginHelper.loginAsAdmin is not a function
+
+      273 |     // ETAPA 0: CREAR PROCESO (Unidad Solicitante)
+      274 |     // ══════════════════════════════════════════════
+    > 275 |     await LoginHelper.loginAsAdmin(page);
+          |                       ^
+      276 |     await page.goto('/procesos/crear');
+      277 |     await page.waitForTimeout(3000);
+      278 |     
+        at C:\Users\USUARIO\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-cdpn-completo.spec.js:275:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\e2e-flujo-cdpn-completo-Fl-387bc-Flujo-completo-inicio-a-fin-chromium\trace.zip
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 ]]>
