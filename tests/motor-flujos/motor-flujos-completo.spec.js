@@ -9,12 +9,9 @@ import { LoginHelper } from '../helpers/login.helper.js';
  */
 
 test.describe('Motor de Flujos - Tests Completos', () => {
-  
-  let login;
 
   test.beforeEach(async ({ page }) => {
-    login = new LoginHelper();
-    await login.loginAsAdmin(page);
+    await LoginHelper.loginAsAdmin(page);
   });
 
   test('MOTOR-001: Verificar que flujo CD-PN existe', async ({ page }) => {
