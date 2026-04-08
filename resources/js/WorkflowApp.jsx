@@ -163,46 +163,50 @@ function PasoNode({ data, selected }) {
     return (
         <div className={`paso-node ${selected ? 'selected-node' : ''}`}
             style={{
-                background: '#fff', borderRadius: 12, minWidth: 220, maxWidth: 280,
+                background: '#fff', borderRadius: 10, width: 190, maxWidth: 190,
                 border: selected ? `2px solid ${color}` : '1px solid #e5e7eb',
-                boxShadow: selected ? `0 0 0 3px ${color}33, 0 4px 16px rgba(0,0,0,.1)` : '0 2px 8px rgba(0,0,0,.06)',
+                boxShadow: selected ? `0 0 0 3px ${color}33, 0 4px 12px rgba(0,0,0,.1)` : '0 2px 6px rgba(0,0,0,.06)',
                 overflow: 'hidden', transition: 'all .2s ease', position: 'relative',
             }}>
             {/* Delete button top-right */}
             <button onClick={handleDelete} className="node-delete-btn"
                 title="Eliminar paso del flujo"
                 style={{
-                    position: 'absolute', top: 6, right: 6, zIndex: 10,
-                    width: 22, height: 22, borderRadius: 6, border: 'none',
+                    position: 'absolute', top: 4, right: 4, zIndex: 10,
+                    width: 18, height: 18, borderRadius: 4, border: 'none',
                     background: 'rgba(239,68,68,.08)', color: '#ef4444',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', fontSize: 13, fontWeight: 700, lineHeight: 1,
-                    transition: 'all .15s', opacity: 0.5,
+                    cursor: 'pointer', fontSize: 11, fontWeight: 700, lineHeight: 1,
+                    transition: 'all .15s', opacity: 0.4,
                 }}
                 onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.transform = 'scale(1.15)'; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.background = 'rgba(239,68,68,.08)'; e.currentTarget.style.transform = 'scale(1)'; }}>
+                onMouseLeave={e => { e.currentTarget.style.opacity = '0.4'; e.currentTarget.style.background = 'rgba(239,68,68,.08)'; e.currentTarget.style.transform = 'scale(1)'; }}>
                 ✕
             </button>
 
             {/* Color bar top */}
-            <div style={{ height: 4, background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
 
             <Handle type="target" position={Position.Top}
-                style={{ background: color, border: '2px solid #fff', width: 10, height: 10, top: -5 }} />
+                style={{ background: color, border: '2px solid #fff', width: 8, height: 8, top: -4 }} />
+            <Handle type="target" position={Position.Left} id="left-target"
+                style={{ background: color, border: '2px solid #fff', width: 8, height: 8, left: -4 }} />
+            <Handle type="source" position={Position.Right} id="right-source"
+                style={{ background: color, border: '2px solid #fff', width: 8, height: 8, right: -4 }} />
 
-            <div style={{ padding: '12px 14px' }}>
+            <div style={{ padding: '8px 10px' }}>
                 {/* Order badge + Name */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <div style={{
-                        width: 28, height: 28, borderRadius: 8, background: color, color: '#fff',
+                        width: 22, height: 22, borderRadius: 6, background: color, color: '#fff',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 700, fontSize: 12, flexShrink: 0,
+                        fontWeight: 700, fontSize: 10, flexShrink: 0,
                     }}>
                         {data.order != null ? data.order + 1 : '?'}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
-                            fontWeight: 600, fontSize: 13, color: '#1f2937',
+                            fontWeight: 600, fontSize: 11, color: '#1f2937',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
                             {data.nombre || 'Sin nombre'}
@@ -211,28 +215,32 @@ function PasoNode({ data, selected }) {
                 </div>
 
                 {/* Area label */}
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span style={{ ...S.badge(color), fontSize: 9 }}>{areaLabel(data.area)}</span>
-                    {docsCount > 0 && <span style={{ ...S.badge('#dbeafe'), color: '#2563eb', fontSize: 9 }}>{docsCount} check{docsCount > 1 ? 's' : ''}</span>}
-                    {data.dias && <span style={{ fontSize: 9, color: '#9ca3af' }}>{data.dias}d</span>}
+                <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ ...S.badge(color), fontSize: 8, padding: '1px 6px' }}>{areaLabel(data.area)}</span>
+                    {docsCount > 0 && <span style={{ ...S.badge('#dbeafe'), color: '#2563eb', fontSize: 8, padding: '1px 6px' }}>{docsCount} check{docsCount > 1 ? 's' : ''}</span>}
+                    {data.dias && <span style={{ fontSize: 8, color: '#9ca3af' }}>{data.dias}d</span>}
                 </div>
 
-                {/* Docs preview */}
+                {/* Docs preview - más compacto */}
                 {docsCount > 0 && (
-                    <div style={{ marginTop: 8, borderTop: '1px solid #f3f4f6', paddingTop: 6 }}>
-                        {data.documentos.slice(0, 3).map((d, i) => (
-                            <div key={i} style={{ fontSize: 10, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4, padding: '1px 0' }}>
+                    <div style={{ marginTop: 6, borderTop: '1px solid #f3f4f6', paddingTop: 4 }}>
+                        {data.documentos.slice(0, 2).map((d, i) => (
+                            <div key={i} style={{ fontSize: 9, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 3, padding: '1px 0' }}>
                                 <span style={{ color: d.obligatorio ? '#059669' : '#d97706' }}>{d.obligatorio ? '✓' : '○'}</span>
                                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.nombre}</span>
                             </div>
                         ))}
-                        {docsCount > 3 && <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 2 }}>+{docsCount - 3} más...</div>}
+                        {docsCount > 2 && <div style={{ fontSize: 8, color: '#9ca3af', marginTop: 1 }}>+{docsCount - 2} más...</div>}
                     </div>
                 )}
             </div>
 
-            <Handle type="source" position={Position.Bottom}
-                style={{ background: color, border: '2px solid #fff', width: 10, height: 10, bottom: -5 }} />
+            <Handle type="source" position={Position.Bottom} id="bottom"
+                style={{ background: color, border: '2px solid #fff', width: 8, height: 8, bottom: -4 }} />
+            <Handle type="source" position={Position.Left} id="left-source"
+                style={{ background: color, border: '2px solid #fff', width: 8, height: 8, left: -4 }} />
+            <Handle type="target" position={Position.Right} id="right-target"
+                style={{ background: color, border: '2px solid #fff', width: 8, height: 8, right: -4 }} />
         </div>
     );
 }
@@ -241,13 +249,15 @@ function PasoNode({ data, selected }) {
 function StartNode() {
     return (
         <div className="paso-node" style={{
-            background: 'linear-gradient(135deg, #059669, #10B981)', borderRadius: 50,
-            padding: '10px 24px', color: '#fff', fontWeight: 700, fontSize: 13,
-            boxShadow: '0 2px 12px rgba(16,185,129,.3)', display: 'flex', alignItems: 'center', gap: 6,
+            background: 'linear-gradient(135deg, #059669, #10B981)', borderRadius: 20,
+            padding: '6px 16px', color: '#fff', fontWeight: 600, fontSize: 11,
+            boxShadow: '0 2px 8px rgba(16,185,129,.3)', display: 'flex', alignItems: 'center', gap: 4,
         }}>
-            <span style={{ fontSize: 16 }}>▶</span> INICIO
+            <span style={{ fontSize: 12 }}>▶</span> INICIO
             <Handle type="source" position={Position.Bottom}
-                style={{ background: '#059669', border: '2px solid #fff', width: 10, height: 10, bottom: -5 }} />
+                style={{ background: '#059669', border: '2px solid #fff', width: 8, height: 8, bottom: -4 }} />
+            <Handle type="source" position={Position.Right} id="right"
+                style={{ background: '#059669', border: '2px solid #fff', width: 8, height: 8, right: -4 }} />
         </div>
     );
 }
@@ -255,13 +265,17 @@ function StartNode() {
 function EndNode() {
     return (
         <div className="paso-node" style={{
-            background: 'linear-gradient(135deg, #dc2626, #ef4444)', borderRadius: 50,
-            padding: '10px 24px', color: '#fff', fontWeight: 700, fontSize: 13,
-            boxShadow: '0 2px 12px rgba(220,38,38,.3)', display: 'flex', alignItems: 'center', gap: 6,
+            background: 'linear-gradient(135deg, #dc2626, #ef4444)', borderRadius: 20,
+            padding: '6px 16px', color: '#fff', fontWeight: 600, fontSize: 11,
+            boxShadow: '0 2px 8px rgba(220,38,38,.3)', display: 'flex', alignItems: 'center', gap: 4,
         }}>
             <Handle type="target" position={Position.Top}
-                style={{ background: '#dc2626', border: '2px solid #fff', width: 10, height: 10, top: -5 }} />
-            <span style={{ fontSize: 16 }}>■</span> FIN
+                style={{ background: '#dc2626', border: '2px solid #fff', width: 8, height: 8, top: -4 }} />
+            <Handle type="target" position={Position.Left} id="left"
+                style={{ background: '#dc2626', border: '2px solid #fff', width: 8, height: 8, left: -4 }} />
+            <Handle type="target" position={Position.Right} id="right"
+                style={{ background: '#dc2626', border: '2px solid #fff', width: 8, height: 8, right: -4 }} />
+            <span style={{ fontSize: 12 }}>■</span> FIN
         </div>
     );
 }
@@ -610,63 +624,168 @@ function PasoDetailPanel({ paso, allPasos, catalogo, onChange, onClose, onRemove
 /* ================================================================
    FLOW CANVAS – Main builder using React Flow
    ================================================================ */
-const NODE_WIDTH = 250;
-const NODE_SPACING_Y = 240;
-const CANVAS_CENTER_X = 400;
+const NODE_WIDTH = 200;
+const NODE_HEIGHT = 180;
+const NODE_SPACING_X = 230;
+const NODE_SPACING_Y = 220;
+const COLS_PER_ROW = 4;
+const START_X = 120;
+const START_Y = 60;
 
 function buildNodesAndEdges(pasos, onDeleteNode) {
     const nodes = [];
     const edges = [];
+    
+    // Layout serpentina: izq->der, der->izq, izq->der...
+    const getPosition = (index) => {
+        const row = Math.floor(index / COLS_PER_ROW);
+        const colInRow = index % COLS_PER_ROW;
+        const isReverseRow = row % 2 === 1;
+        const col = isReverseRow ? (COLS_PER_ROW - 1 - colInRow) : colInRow;
+        
+        return {
+            x: START_X + col * NODE_SPACING_X,
+            y: START_Y + row * NODE_SPACING_Y
+        };
+    };
+    
+    // Determina handles basado en posición relativa
+    const getHandles = (sourceIdx, targetIdx) => {
+        const sourceRow = Math.floor(sourceIdx / COLS_PER_ROW);
+        const targetRow = Math.floor(targetIdx / COLS_PER_ROW);
+        const isSourceRowReverse = sourceRow % 2 === 1;
+        const isTargetRowReverse = targetRow % 2 === 1;
+        
+        if (sourceRow === targetRow) {
+            // Misma fila - horizontal
+            if (isSourceRowReverse) {
+                return { sourceHandle: 'left-source', targetHandle: 'right-target' };
+            } else {
+                return { sourceHandle: 'right-source', targetHandle: 'left-target' };
+            }
+        } else {
+            // Cambio de fila - sale por bottom del lado donde termina la fila
+            // y entra por el lado donde empieza la nueva fila
+            if (isSourceRowReverse) {
+                // Fila reversa termina a la IZQUIERDA → sale por bottom-left
+                // Nueva fila normal empieza a la IZQUIERDA → entra por left
+                return { sourceHandle: 'bottom', targetHandle: 'left-target' };
+            } else {
+                // Fila normal termina a la DERECHA → sale por bottom-right
+                // Nueva fila reversa empieza a la DERECHA → entra por right
+                return { sourceHandle: 'bottom', targetHandle: 'right-target' };
+            }
+        }
+    };
 
-    // Start node
+    // Start node - movible
     nodes.push({
         id: 'start',
         type: 'startNode',
-        position: { x: CANVAS_CENTER_X - 60, y: 0 },
+        position: { x: START_X - 100, y: START_Y + 40 },
         data: {},
-        draggable: false,
-        selectable: false,
+        draggable: true,
     });
 
+    // Paso nodes
     pasos.forEach((paso, i) => {
         const nodeId = paso._nodeId || `paso-${i}`;
+        const position = getPosition(i);
+        
         nodes.push({
             id: nodeId,
             type: 'pasoNode',
-            position: { x: CANVAS_CENTER_X - NODE_WIDTH / 2, y: 80 + i * NODE_SPACING_Y },
+            position,
             data: { ...paso, order: i, _nodeId: nodeId, onDelete: onDeleteNode },
-        });
-
-        // Edge from previous
-        const sourceId = i === 0 ? 'start' : (pasos[i - 1]._nodeId || `paso-${i - 1}`);
-        edges.push({
-            id: `e-${sourceId}-${nodeId}`,
-            source: sourceId,
-            target: nodeId,
-            animated: true,
-            style: { stroke: areaColor(paso.area), strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: areaColor(paso.area), width: 16, height: 16 },
+            draggable: false,
         });
     });
 
-    // End node
-    const lastPasoId = pasos.length > 0 ? (pasos[pasos.length - 1]._nodeId || `paso-${pasos.length - 1}`) : 'start';
+    // End node - movible, posición después del último
+    const lastIndex = pasos.length - 1;
+    const lastRow = lastIndex >= 0 ? Math.floor(lastIndex / COLS_PER_ROW) : 0;
+    const lastColInRow = lastIndex >= 0 ? lastIndex % COLS_PER_ROW : 0;
+    const isLastRowReverse = lastRow % 2 === 1;
+    
+    let endPos;
+    if (pasos.length === 0) {
+        endPos = { x: START_X + 100, y: START_Y + 40 };
+    } else {
+        const lastPos = getPosition(lastIndex);
+        if (isLastRowReverse) {
+            // Fila reversa, el último está más a la izquierda
+            endPos = { x: lastPos.x - 100, y: lastPos.y + 40 };
+        } else {
+            // Fila normal, el último está más a la derecha
+            endPos = { x: lastPos.x + NODE_WIDTH + 30, y: lastPos.y + 40 };
+        }
+    }
+    
     nodes.push({
         id: 'end',
         type: 'endNode',
-        position: { x: CANVAS_CENTER_X - 45, y: 80 + pasos.length * NODE_SPACING_Y },
+        position: endPos,
         data: {},
-        draggable: false,
-        selectable: false,
+        draggable: true,
     });
-    edges.push({
+
+    // Edges
+    pasos.forEach((paso, i) => {
+        const nodeId = paso._nodeId || `paso-${i}`;
+        const sourceId = i === 0 ? 'start' : (pasos[i - 1]._nodeId || `paso-${i - 1}`);
+        const color = areaColor(paso.area);
+        
+        let sourceHandle = null;
+        let targetHandle = null;
+        
+        if (i === 0) {
+            sourceHandle = 'right';
+            targetHandle = 'left-target';
+        } else {
+            const handles = getHandles(i - 1, i);
+            sourceHandle = handles.sourceHandle;
+            targetHandle = handles.targetHandle;
+        }
+        
+        const edge = {
+            id: `e-${sourceId}-${nodeId}`,
+            source: sourceId,
+            target: nodeId,
+            type: 'smoothstep',
+            animated: true,
+            style: { stroke: color, strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color, width: 16, height: 16 },
+        };
+        if (sourceHandle) edge.sourceHandle = sourceHandle;
+        if (targetHandle) edge.targetHandle = targetHandle;
+        edges.push(edge);
+    });
+
+    // Edge al nodo final
+    const lastPasoId = pasos.length > 0 ? (pasos[pasos.length - 1]._nodeId || `paso-${pasos.length - 1}`) : 'start';
+    const endEdge = {
         id: `e-${lastPasoId}-end`,
         source: lastPasoId,
         target: 'end',
+        type: 'smoothstep',
         animated: true,
         style: { stroke: '#9ca3af', strokeWidth: 2 },
         markerEnd: { type: MarkerType.ArrowClosed, color: '#9ca3af', width: 16, height: 16 },
-    });
+    };
+    
+    if (pasos.length > 0) {
+        if (isLastRowReverse) {
+            endEdge.sourceHandle = 'left-source';
+            endEdge.targetHandle = 'right';
+        } else {
+            endEdge.sourceHandle = 'right-source';
+            endEdge.targetHandle = 'left';
+        }
+    } else {
+        endEdge.sourceHandle = 'right';
+        endEdge.targetHandle = 'left';
+    }
+    edges.push(endEdge);
 
     return { nodes, edges };
 }
@@ -684,22 +803,14 @@ function FlowCanvasInner({ catalogo, pasos, setPasos, selectedNodeId, setSelecte
         if (selectedNodeId === nodeId) setSelectedNodeId(null);
     }, [setPasos, selectedNodeId, setSelectedNodeId]);
 
-    // Track custom positions from drag
-    const customPositions = useRef({});
-
-    // Rebuild nodes/edges when pasos change
+    // Rebuild nodes/edges when pasos change - layout serpentina fijo
     useEffect(() => {
         const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(pasos, deletePasoByNodeId);
-        // Preserve custom positions from drag
-        const mergedNodes = newNodes.map(n => {
-            if (customPositions.current[n.id]) {
-                return { ...n, position: customPositions.current[n.id] };
-            }
-            return n;
-        });
-        setNodes(mergedNodes);
+        setNodes(newNodes);
         setEdges(newEdges);
-    }, [pasos, deletePasoByNodeId]);
+        // Fit view when pasos change
+        setTimeout(() => reactFlowInstance.fitView({ padding: 0.2, duration: 200 }), 50);
+    }, [pasos, deletePasoByNodeId, reactFlowInstance]);
 
     // ── Keyboard: Delete / Backspace removes selected node ──
     useEffect(() => {
@@ -787,27 +898,11 @@ function FlowCanvasInner({ catalogo, pasos, setPasos, selectedNodeId, setSelecte
         setTimeout(() => reactFlowInstance.fitView({ padding: 0.3, duration: 300 }), 100);
     }, [setPasos, reactFlowInstance]);
 
-    // ── Node drag end – save position freely ──
+    // ── Node drag end – no-op since layout is fixed serpentine ──
     const onNodeDragStop = useCallback((_, node) => {
-        // Save custom position so it persists across rerenders
-        customPositions.current[node.id] = { ...node.position };
-
-        if (node.type !== 'pasoNode') return;
-
-        // Get all paso nodes sorted by Y position
-        const currentNodes = reactFlowInstance.getNodes().filter(n => n.type === 'pasoNode');
-        const sorted = [...currentNodes].sort((a, b) => a.position.y - b.position.y);
-        const newOrder = sorted.map(n => n.id);
-
-        // Rebuild pasos in new order
-        setPasos(prev => {
-            const pasoMap = {};
-            prev.forEach(p => { pasoMap[p._nodeId] = p; });
-            const reordered = newOrder.map(id => pasoMap[id]).filter(Boolean);
-            prev.forEach(p => { if (!reordered.includes(p)) reordered.push(p); });
-            return reordered;
-        });
-    }, [setPasos, reactFlowInstance]);
+        // En layout serpentina, los nodos no se mueven libremente
+        // El orden se mantiene por el array de pasos
+    }, []);
 
     // Selected paso for detail panel
     const selectedPaso = selectedNodeId ? pasos.find(p => p._nodeId === selectedNodeId) : null;
