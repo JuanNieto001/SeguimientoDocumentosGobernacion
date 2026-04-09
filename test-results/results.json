@@ -113,110 +113,126 @@
   },
   "suites": [
     {
-      "title": "e2e\\auth-casos-ui.spec.js",
-      "file": "e2e/auth-casos-ui.spec.js",
+      "title": "e2e\\flujo-ui-desde-cero.spec.js",
+      "file": "e2e/flujo-ui-desde-cero.spec.js",
       "column": 0,
       "line": 0,
-      "specs": [],
-      "suites": [
+      "specs": [
         {
-          "title": "Casos de Autenticacion UI",
-          "file": "e2e/auth-casos-ui.spec.js",
-          "line": 14,
-          "column": 6,
-          "specs": [
+          "title": "FLOW-001-Flujo completo UI con dato SECOP 1053850113",
+          "ok": false,
+          "tags": [],
+          "tests": [
             {
-              "title": "AUTH-000-Video completo login error y recuperacion",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
                 {
-                  "timeout": 1080000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 65573,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 61443,
+                      "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js",
+                        "column": 20,
+                        "line": 800
+                      },
+                      "message": "Error: page.waitForTimeout: Target page, context or browser has been closed\n\n\u001b[0m \u001b[90m 798 |\u001b[39m       lastError \u001b[33m=\u001b[39m error\u001b[33m;\u001b[39m\n \u001b[90m 799 |\u001b[39m       \u001b[36mif\u001b[39m (attempt \u001b[33m<\u001b[39m attempts) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 800 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(delayMs)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 801 |\u001b[39m       }\n \u001b[90m 802 |\u001b[39m     }\n \u001b[90m 803 |\u001b[39m   }\u001b[0m\n\u001b[2m    at retryOnPage (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:800:20)\u001b[22m\n\u001b[2m    at openPlaneacionProcess (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:466:3)\u001b[22m\n\u001b[2m    at advanceStageForArea (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:437:5)\u001b[22m\n\u001b[2m    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:58:7\u001b[22m\n\u001b[2m    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:42:3\u001b[22m"
+                    }
+                  ],
+                  "stdout": [
+                    {
+                      "text": "✅ Login exitoso para jefe.sistemas@demo.com -> http://localhost:8000/panel-principal\n"
+                    },
+                    {
+                      "text": "⚠️ FLOW-002: no se encontró enlace/acción de detalle para CD_PN-2026-0002. Se continúa con el flujo.\n"
+                    },
+                    {
+                      "text": "✅ Login exitoso para admin@demo.com -> http://localhost:8000/panel-principal\n"
+                    },
+                    {
+                      "text": "✅ Login exitoso para planeacion@demo.com -> http://localhost:8000/panel-principal\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "AUTH-001-Login Unidad Solicitante",
+                      "duration": 8329
+                    },
+                    {
+                      "title": "FLOW-002-Crear solicitud con contratista SECOP 1053850113",
+                      "duration": 11239
+                    },
+                    {
+                      "title": "FLOW-003-Avance dinamico por todas las etapas hasta finalizado",
+                      "duration": 45450,
                       "error": {
                         "message": "Error: page.waitForTimeout: Target page, context or browser has been closed",
-                        "stack": "Error: page.waitForTimeout: Target page, context or browser has been closed\n    at holdForManualEmailCheck (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:179:14)\n    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:72:5",
+                        "stack": "Error: page.waitForTimeout: Target page, context or browser has been closed\n    at retryOnPage (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:800:20)\n    at openPlaneacionProcess (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:466:3)\n    at advanceStageForArea (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:437:5)\n    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:58:7\n    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js:42:3",
                         "location": {
-                          "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js",
-                          "column": 14,
-                          "line": 179
+                          "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\flujo-ui-desde-cero.spec.js",
+                          "column": 20,
+                          "line": 800
                         },
-                        "snippet": "\u001b[0m \u001b[90m 177 |\u001b[39m   console\u001b[33m.\u001b[39mlog(message)\u001b[33m;\u001b[39m\n \u001b[90m 178 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m startLabel)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[33mAUTH_MANUAL_HOLD_MS\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m endLabel)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m }\n \u001b[90m 182 |\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js",
-                            "column": 14,
-                            "line": 179
-                          },
-                          "message": "Error: page.waitForTimeout: Target page, context or browser has been closed\n\n\u001b[0m \u001b[90m 177 |\u001b[39m   console\u001b[33m.\u001b[39mlog(message)\u001b[33m;\u001b[39m\n \u001b[90m 178 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m startLabel)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[33mAUTH_MANUAL_HOLD_MS\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m   \u001b[36mawait\u001b[39m saveAuthEvidence(page\u001b[33m,\u001b[39m \u001b[32m'AUTH-000'\u001b[39m\u001b[33m,\u001b[39m endLabel)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m }\n \u001b[90m 182 |\u001b[39m\u001b[0m\n\u001b[2m    at holdForManualEmailCheck (C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:179:14)\u001b[22m\n\u001b[2m    at C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js:72:5\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "AUTH-000 listo para evidencia manual por 900000 ms después de enviar enlace.\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-04-08T19:54:48.851Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\video-1.webm"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\error-context.md"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\\trace.zip"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\tests\\e2e\\auth-casos-ui.spec.js",
-                        "column": 14,
-                        "line": 179
+                        "snippet": "\u001b[0m \u001b[90m 798 |\u001b[39m       lastError \u001b[33m=\u001b[39m error\u001b[33m;\u001b[39m\n \u001b[90m 799 |\u001b[39m       \u001b[36mif\u001b[39m (attempt \u001b[33m<\u001b[39m attempts) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 800 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(delayMs)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 801 |\u001b[39m       }\n \u001b[90m 802 |\u001b[39m     }\n \u001b[90m 803 |\u001b[39m   }\u001b[0m"
                       }
                     }
                   ],
-                  "status": "unexpected"
+                  "startTime": "2026-04-08T20:27:37.379Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\\test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\\video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\msuarezjc\\Desktop\\SeguimientoDocumentosGobernacion\\test-results\\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\\trace.zip"
+                    }
+                  ]
                 }
               ],
-              "id": "c2ec03bb8caf9090805b-cbf09579ab0f3d7ba0f0",
-              "file": "e2e/auth-casos-ui.spec.js",
-              "line": 15,
-              "column": 3
+              "status": "unexpected"
             }
-          ]
+          ],
+          "id": "b196f12e982de444af26-b68d78c2311ac444514d",
+          "file": "e2e/flujo-ui-desde-cero.spec.js",
+          "line": 19,
+          "column": 1
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-04-08T19:54:47.387Z",
-    "duration": 64914.05899999995,
+    "startTime": "2026-04-08T20:27:35.156Z",
+    "duration": 72789.69299999997,
     "expected": 0,
     "skipped": 0,
     "unexpected": 1,

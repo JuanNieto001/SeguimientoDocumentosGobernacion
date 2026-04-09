@@ -1,48 +1,56 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="1" time="64.91405899999995">
-<testsuite name="e2e\auth-casos-ui.spec.js" timestamp="2026-04-08T19:54:48.177Z" hostname="chromium" tests="1" failures="0" skipped="0" time="61.443" errors="1">
-<testcase name="Casos de Autenticacion UI › AUTH-000-Video completo login error y recuperacion" classname="e2e\auth-casos-ui.spec.js" time="61.443">
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="1" time="72.78969299999997">
+<testsuite name="e2e\flujo-ui-desde-cero.spec.js" timestamp="2026-04-08T20:27:36.227Z" hostname="chromium" tests="1" failures="0" skipped="0" time="65.573" errors="1">
+<testcase name="FLOW-001-Flujo completo UI con dato SECOP 1053850113" classname="e2e\flujo-ui-desde-cero.spec.js" time="65.573">
 <system-out>
-<![CDATA[AUTH-000 listo para evidencia manual por 900000 ms después de enviar enlace.
+<![CDATA[✅ Login exitoso para jefe.sistemas@demo.com -> http://localhost:8000/panel-principal
+⚠️ FLOW-002: no se encontró enlace/acción de detalle para CD_PN-2026-0002. Se continúa con el flujo.
+✅ Login exitoso para admin@demo.com -> http://localhost:8000/panel-principal
+✅ Login exitoso para planeacion@demo.com -> http://localhost:8000/panel-principal
 
-[[ATTACHMENT|e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\video-1.webm]]
+[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\test-failed-1.png]]
 
-[[ATTACHMENT|e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\video.webm]]
+[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\video.webm]]
 
-[[ATTACHMENT|e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\error-context.md]]
+[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\error-context.md]]
 
-[[ATTACHMENT|e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\trace.zip]]
+[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\trace.zip]]
 ]]>
 </system-out>
-<error message="page.waitForTimeout: Target page, context or browser has been closed" type="Error">
-<![CDATA[  [chromium] › e2e\auth-casos-ui.spec.js:15:3 › Casos de Autenticacion UI › AUTH-000-Video completo login error y recuperacion 
+<error message="Test timeout of 60000ms exceeded." type="Error">
+<![CDATA[  [chromium] › e2e\flujo-ui-desde-cero.spec.js:19:1 › FLOW-001-Flujo completo UI con dato SECOP 1053850113 › FLOW-003-Avance dinamico por todas las etapas hasta finalizado 
+
+    Test timeout of 60000ms exceeded.
 
     Error: page.waitForTimeout: Target page, context or browser has been closed
 
-      177 |   console.log(message);
-      178 |   await saveAuthEvidence(page, 'AUTH-000', startLabel);
-    > 179 |   await page.waitForTimeout(AUTH_MANUAL_HOLD_MS);
-          |              ^
-      180 |   await saveAuthEvidence(page, 'AUTH-000', endLabel);
-      181 | }
-      182 |
-        at holdForManualEmailCheck (C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\auth-casos-ui.spec.js:179:14)
-        at C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\auth-casos-ui.spec.js:72:5
+      798 |       lastError = error;
+      799 |       if (attempt < attempts) {
+    > 800 |         await page.waitForTimeout(delayMs);
+          |                    ^
+      801 |       }
+      802 |     }
+      803 |   }
+        at retryOnPage (C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:800:20)
+        at openPlaneacionProcess (C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:466:3)
+        at advanceStageForArea (C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:437:5)
+        at C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:58:7
+        at C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:42:3
 
-    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
-    ..\test-results\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\video-1.webm
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ..\test-results\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\video.webm
+    ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-    Error Context: ..\test-results\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\error-context.md
+    Error Context: ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\error-context.md
 
     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
-    ..\test-results\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\trace.zip
+    ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\trace.zip
     Usage:
 
-        npx playwright show-trace ..\test-results\e2e-auth-casos-ui-Casos-de-4688f--login-error-y-recuperacion-chromium\trace.zip
+        npx playwright show-trace ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\trace.zip
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 ]]>
