@@ -30,6 +30,7 @@ powershell -ExecutionPolicy Bypass -File .\backend\scripts\deploy\deploy-app.ps1
 - Crea `.env` desde `.env.example` si falta
 - Genera APP_KEY si hace falta
 - Ejecuta migraciones (`php artisan migrate --force`)
+- Sincroniza roles/permisos y scope del dashboard (`php artisan db:seed --class=RolesAndPermissionsSeeder --force`)
 - Crea storage link si aplica
 - Limpia y optimiza cache de config/vistas
 - Intenta `route:cache` solo si `route:list` funciona

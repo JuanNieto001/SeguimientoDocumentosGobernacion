@@ -4,44 +4,47 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "[1/9] Instalando dependencias PHP (produccion)..."
+echo "[1/10] Instalando dependencias PHP (produccion)..."
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
-echo "[2/9] Instalando dependencias Node..."
+echo "[2/10] Instalando dependencias Node..."
 if [ -f ../frontend/package-lock.json ]; then
   npm --prefix ../frontend ci --no-audit --no-fund
 else
   npm --prefix ../frontend install --no-audit --no-fund
 fi
 
-echo "[3/9] Compilando assets frontend..."
+echo "[3/10] Compilando assets frontend..."
 npm --prefix ../frontend run build
 
-echo "[4/9] Preparando .env..."
+echo "[4/10] Preparando .env..."
 if [ ! -f .env ]; then
   cp .env.example .env
   echo "  - .env creado desde .env.example"
 fi
 
-echo "[5/9] Generando APP_KEY si hace falta..."
+echo "[5/10] Generando APP_KEY si hace falta..."
 if ! grep -q '^APP_KEY=base64:' .env; then
   php artisan key:generate --force
 fi
 
-echo "[6/9] Ejecutando migraciones..."
+echo "[6/10] Ejecutando migraciones..."
 php artisan migrate --force
 
-echo "[7/9] Verificando link de storage..."
+echo "[7/10] Sincronizando roles y permisos..."
+php artisan db:seed --class=RolesAndPermissionsSeeder --force
+
+echo "[8/10] Verificando link de storage..."
 php artisan storage:link || true
 
-echo "[8/9] Limpiando y optimizando cache segura..."
+echo "[9/10] Limpiando y optimizando cache segura..."
 php artisan config:clear
 php artisan cache:clear
 php artisan view:clear
 php artisan config:cache
 php artisan view:cache
 
-echo "[9/9] Intentando cache de rutas (opcional)..."
+echo "[10/10] Intentando cache de rutas (opcional)..."
 if php artisan route:list >/dev/null 2>&1; then
   php artisan route:cache
   echo "  - route:cache aplicado"
