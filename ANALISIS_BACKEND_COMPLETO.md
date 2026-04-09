@@ -1,7 +1,7 @@
 # ANÁLISIS EXHAUSTIVO DEL BACKEND - SISTEMA DE CONTRATACIÓN GOBERNACIÓN DE CALDAS
 
 **Fecha de Análisis:** 17 de Febrero de 2026  
-**Analista:** GitHub Copilot (Claude Sonnet 4.5)  
+**Analista:** Equipo de Ingeniería de Software  
 **Versión del Sistema:** 1.0
 
 ---
@@ -797,6 +797,6 @@ El backend del sistema tiene una **base sólida (85% completo)** con arquitectur
 
 ---
 
-**Generado por:** GitHub Copilot (Claude Sonnet 4.5)  
+**Generado por:** Equipo de Ingeniería de Software  
 **Fecha:** 17 de Febrero de 2026  
 **Versión:** 1.0

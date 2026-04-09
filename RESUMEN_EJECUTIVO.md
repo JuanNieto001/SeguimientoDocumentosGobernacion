@@ -285,5 +285,5 @@ php artisan migrate:fresh --seed
 
 **🎉 ¡Tu backend ahora tiene bases sólidas para crecer!**
 
-**Generado por**: GitHub Copilot (Claude Sonnet 4.5)  
+**Generado por**: Equipo de Ingeniería de Software  
 **Fecha**: 17 de Febrero de 2026

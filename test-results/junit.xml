@@ -1,60 +1,54 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="1" time="72.78969299999997">
-<testsuite name="e2e\flujo-ui-desde-cero.spec.js" timestamp="2026-04-08T20:27:36.227Z" hostname="chromium" tests="1" failures="0" skipped="0" time="65.573" errors="1">
-<testcase name="FLOW-001-Flujo completo UI con dato SECOP 1053850113" classname="e2e\flujo-ui-desde-cero.spec.js" time="65.573">
+<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="0" time="144.450081">
+<testsuite name="smoke\usuarios-principales-flujo.spec.js" timestamp="2026-04-09T17:26:54.274Z" hostname="chromium" tests="5" failures="0" skipped="0" time="128.844" errors="0">
+<testcase name="Smoke de usuarios principales del flujo › USU-FLUJO: Unidad solicitante inicia sesion y carga vistas clave" classname="smoke\usuarios-principales-flujo.spec.js" time="32.102">
 <system-out>
 <![CDATA[✅ Login exitoso para jefe.sistemas@demo.com -> http://localhost:8000/panel-principal
-⚠️ FLOW-002: no se encontró enlace/acción de detalle para CD_PN-2026-0002. Se continúa con el flujo.
-✅ Login exitoso para admin@demo.com -> http://localhost:8000/panel-principal
-✅ Login exitoso para planeacion@demo.com -> http://localhost:8000/panel-principal
 
-[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\test-failed-1.png]]
+[[ATTACHMENT|smoke-usuarios-principales-6d79f-sesion-y-carga-vistas-clave-chromium\test-finished-1.png]]
 
-[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\video.webm]]
-
-[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\error-context.md]]
-
-[[ATTACHMENT|e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\trace.zip]]
+[[ATTACHMENT|smoke-usuarios-principales-6d79f-sesion-y-carga-vistas-clave-chromium\trace.zip]]
 ]]>
 </system-out>
-<error message="Test timeout of 60000ms exceeded." type="Error">
-<![CDATA[  [chromium] › e2e\flujo-ui-desde-cero.spec.js:19:1 › FLOW-001-Flujo completo UI con dato SECOP 1053850113 › FLOW-003-Avance dinamico por todas las etapas hasta finalizado 
+</testcase>
+<testcase name="Smoke de usuarios principales del flujo › USU-FLUJO: Planeacion inicia sesion y carga vistas clave" classname="smoke\usuarios-principales-flujo.spec.js" time="25.86">
+<system-out>
+<![CDATA[✅ Login exitoso para planeacion@demo.com -> http://localhost:8000/panel-principal
 
-    Test timeout of 60000ms exceeded.
+[[ATTACHMENT|smoke-usuarios-principales-bdb87-sesion-y-carga-vistas-clave-chromium\test-finished-1.png]]
 
-    Error: page.waitForTimeout: Target page, context or browser has been closed
-
-      798 |       lastError = error;
-      799 |       if (attempt < attempts) {
-    > 800 |         await page.waitForTimeout(delayMs);
-          |                    ^
-      801 |       }
-      802 |     }
-      803 |   }
-        at retryOnPage (C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:800:20)
-        at openPlaneacionProcess (C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:466:3)
-        at advanceStageForArea (C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:437:5)
-        at C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:58:7
-        at C:\Users\msuarezjc\Desktop\SeguimientoDocumentosGobernacion\tests\e2e\flujo-ui-desde-cero.spec.js:42:3
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\error-context.md
-
-    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
-    ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\trace.zip
-    Usage:
-
-        npx playwright show-trace ..\test-results\e2e-flujo-ui-desde-cero-FL-514e5-I-con-dato-SECOP-1053850113-chromium\trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
+[[ATTACHMENT|smoke-usuarios-principales-bdb87-sesion-y-carga-vistas-clave-chromium\trace.zip]]
 ]]>
-</error>
+</system-out>
+</testcase>
+<testcase name="Smoke de usuarios principales del flujo › USU-FLUJO: Hacienda inicia sesion y carga vistas clave" classname="smoke\usuarios-principales-flujo.spec.js" time="21.938">
+<system-out>
+<![CDATA[✅ Login exitoso para hacienda@demo.com -> http://localhost:8000/panel-principal
+
+[[ATTACHMENT|smoke-usuarios-principales-00463-sesion-y-carga-vistas-clave-chromium\test-finished-1.png]]
+
+[[ATTACHMENT|smoke-usuarios-principales-00463-sesion-y-carga-vistas-clave-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Smoke de usuarios principales del flujo › USU-FLUJO: Juridica inicia sesion y carga vistas clave" classname="smoke\usuarios-principales-flujo.spec.js" time="21.88">
+<system-out>
+<![CDATA[✅ Login exitoso para juridica@demo.com -> http://localhost:8000/panel-principal
+
+[[ATTACHMENT|smoke-usuarios-principales-4aaef-sesion-y-carga-vistas-clave-chromium\test-finished-1.png]]
+
+[[ATTACHMENT|smoke-usuarios-principales-4aaef-sesion-y-carga-vistas-clave-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Smoke de usuarios principales del flujo › USU-FLUJO: SECOP inicia sesion y carga vistas clave" classname="smoke\usuarios-principales-flujo.spec.js" time="27.064">
+<system-out>
+<![CDATA[✅ Login exitoso para secop@demo.com -> http://localhost:8000/panel-principal
+
+[[ATTACHMENT|smoke-usuarios-principales-887dc-sesion-y-carga-vistas-clave-chromium\test-finished-1.png]]
+
+[[ATTACHMENT|smoke-usuarios-principales-887dc-sesion-y-carga-vistas-clave-chromium\trace.zip]]
+]]>
+</system-out>
 </testcase>
 </testsuite>
 </testsuites>

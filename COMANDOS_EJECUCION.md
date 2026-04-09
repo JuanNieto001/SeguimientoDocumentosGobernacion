@@ -367,5 +367,5 @@ Ahora que tienes la base sólida:
 **Dificultad**: Baja (solo comandos)  
 **Prerequisitos**: PowerShell, Composer, PHP, Laravel instalados
 
-**Generado por**: GitHub Copilot (Claude Sonnet 4.5)  
+**Generado por**: Equipo de Ingeniería de Software  
 **Fecha**: 17 de Febrero de 2026

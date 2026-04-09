@@ -3,7 +3,7 @@
 ## 🎯 Análisis Completo del Backend - Gobernación de Caldas
 
 **Fecha de Generación**: 17 de Febrero de 2026  
-**Analista**: GitHub Copilot (Claude Sonnet 4.5)  
+**Analista**: Equipo de Ingeniería de Software  
 **Estado**: ✅ **Análisis Completado**
 
 ---
@@ -289,7 +289,7 @@ Ahora tienes todo lo necesario para llevar tu backend de **65/100** a **95/100**
 
 ---
 
-**Generado por**: GitHub Copilot (Claude Sonnet 4.5)  
+**Generado por**: Equipo de Ingeniería de Software  
 **Fecha**: 17 de Febrero de 2026  
 **Versión**: 1.0  
 **Licencia**: Documentación para uso interno de la Gobernación de Caldas

@@ -591,4 +591,4 @@ Si tienes dudas durante la implementación:
 
 **Última actualización**: 17 de Febrero de 2026  
 **Versión**: 1.0  
-**Autor**: GitHub Copilot (Claude Sonnet 4.5)
+**Autor**: Equipo de Ingeniería de Software
