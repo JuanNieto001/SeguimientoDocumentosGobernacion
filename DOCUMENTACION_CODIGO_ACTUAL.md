@@ -38,7 +38,7 @@ Capas principales:
 
 - `app/` -> codigo de negocio y HTTP.
 - `routes/` -> definicion de rutas web/API/console/auth.
-- `resources/views/` -> vistas Blade por modulo.
+- `resources/views/` -> vistas Blade separadas en `backend`, `frontend` y carpetas compartidas.
 - `resources/js/` -> apps React y modulos JS.
 - `database/migrations/` -> definicion de esquema.
 - `database/seeders/` -> carga de datos base.
@@ -219,28 +219,17 @@ Bloques API principales:
 
 Se identifican 129 vistas Blade activas.
 
-Carpetas de vistas por dominio:
+Carpetas de vistas por capa:
 
-- `resources/views/admin`
-- `resources/views/areas`
-- `resources/views/dashboard`
-- `resources/views/dashboards`
-- `resources/views/proceso-cd`
-- `resources/views/procesos`
-- `resources/views/contract-processes`
-- `resources/views/alertas`
-- `resources/views/reportes`
-- `resources/views/supervision`
-- `resources/views/tracking`
-- `resources/views/paa`
-- `resources/views/auth`
-- `resources/views/layouts`
+- `resources/views/backend/*` -> modulos funcionales internos (admin, areas, procesos, reportes, dashboards, etc.).
+- `resources/views/frontend/*` -> autenticacion, perfil y vistas publicas.
+- `resources/views/layouts`, `resources/views/components`, `resources/views/partials` -> vistas compartidas.
 
 Vistas clave de dashboard:
 
-- `resources/views/dashboard/admin.blade.php`
-- `resources/views/dashboard/reporte.blade.php`
-- `resources/views/dashboard/show.blade.php`
+- `resources/views/backend/dashboard/admin.blade.php`
+- `resources/views/backend/dashboard/reporte.blade.php`
+- `resources/views/backend/dashboard/show.blade.php`
 
 ### 7.2 Scripts y modulos JS/React
 

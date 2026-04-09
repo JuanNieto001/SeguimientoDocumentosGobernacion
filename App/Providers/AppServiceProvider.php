@@ -30,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerViewLocations();
+
         // Cuando se accede por host publico (IP o dominio), evitar que @vite use localhost:5173.
         if (! app()->runningInConsole()) {
             $requestHost = request()->getHost();
@@ -49,6 +51,20 @@ class AppServiceProvider extends ServiceProvider
 
         // Registrar policies
         Gate::policy(ContractProcess::class, ContractProcessPolicy::class);
+    }
+
+    /**
+     * Add backend/frontend Blade locations while preserving existing view() names.
+     */
+    private function registerViewLocations(): void
+    {
+        $finder = app('view')->getFinder();
+
+        foreach ([resource_path('views/backend'), resource_path('views/frontend')] as $path) {
+            if (is_dir($path) && ! in_array($path, $finder->getPaths(), true)) {
+                $finder->addLocation($path);
+            }
+        }
     }
 }
 

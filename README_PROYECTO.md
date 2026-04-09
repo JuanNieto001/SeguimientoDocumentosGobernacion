@@ -32,6 +32,12 @@ Carpetas principales:
 - `scripts/local/testing` para lanzadores locales de pruebas (opcionales)
 - `scripts/deploy` para despliegue automatizado en servidor
 
+Vistas Blade separadas por capa:
+
+- `resources/views/backend` para vistas funcionales internas (admin, areas, procesos, reportes, dashboards).
+- `resources/views/frontend` para autenticacion, perfil y vistas publicas.
+- `resources/views/layouts`, `resources/views/components`, `resources/views/partials` para elementos compartidos.
+
 Archivos de entrada que se mantienen en raiz:
 
 - `artisan`

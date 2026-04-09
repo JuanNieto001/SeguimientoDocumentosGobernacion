@@ -145,5 +145,5 @@
 
 @push('scripts')
 @viteReactRefresh
-@vite('resources/js/dashboard-builder/app.jsx')
+@vite('resources/js/dashboard-builder.jsx')
 @endpush
