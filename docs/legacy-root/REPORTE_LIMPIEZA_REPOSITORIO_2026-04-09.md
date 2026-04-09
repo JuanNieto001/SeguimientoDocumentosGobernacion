@@ -18,7 +18,6 @@ Se creo un respaldo completo antes de borrar:
   - `test-results/`
   - `_OLD_CYPRESS_QUICK_START.md`
   - `_OLD_FASE_3_CYPRESS_COMPLETA.md`
-  - `_OLD_WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md`
 
 ## 3) Resultado de la limpieza
 

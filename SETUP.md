@@ -23,7 +23,7 @@ Sistema web de seguimiento y trazabilidad del proceso de contratación tipo "ban
 ### 1. Clonar o descargar el proyecto
 
 ```bash
-cd c:\Users\jesin\OneDrive\Desktop\SeguimientoDocumentosGobernacion
+cd SeguimientoDocumentosGobernacion
 ```
 
 ### 2. Instalar dependencias
@@ -74,6 +74,24 @@ php artisan serve
 ```
 
 Accede a: `http://localhost:8000`
+
+### 7. Dejar listo para servidor (deploy automatico)
+
+Linux:
+
+```bash
+bash scripts/deploy/deploy-app.sh
+```
+
+Windows PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy\deploy-app.ps1
+```
+
+Guia completa:
+
+- [docs/deploy/DEPLOY_SERVIDOR.md](docs/deploy/DEPLOY_SERVIDOR.md)
 
 ## 👥 Usuarios de Prueba
 

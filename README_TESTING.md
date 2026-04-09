@@ -20,6 +20,10 @@ npx playwright test --reporter=html,list,./custom-reporter.js
 **✅ Guarda evidencias automáticamente**  
 **✅ Genera reportes CSV + MD + HTML**
 
+Lanzadores locales opcionales (.bat/.sh) se movieron a:
+
+- [scripts/local/testing](scripts/local/testing)
+
 ## 🐢 MODO VIDEO LENTO (RECOMENDADO PARA EVIDENCIAS)
 
 Si los videos se ven demasiado rapidos, ejecuta en modo demo:

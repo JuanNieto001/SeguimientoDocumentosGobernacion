@@ -26,14 +26,11 @@ La API estará disponible en: `http://localhost:8000`
 
 ---
 
-## 🌍 TERMINAL 2: Inicia Ngrok (AQUÍ GENERARÁS TU LINK)
 
 ```bash
 # En cualquier carpeta
-./start-ngrok.sh        # Mac/Linux
 
 # O en Windows
-start-ngrok.bat
 ```
 
 **Aparecerá un menú:**
@@ -65,7 +62,6 @@ Account                       tu_email@example.com
 Version                        3.3.0
 Region                        United States (us)
 
-Forwarding    https://abc123de.ngrok.io → http://localhost:8000
 Connections   ttl opn rt1 rt5 p50 p95
               0   0   0.00 0.00 0.00 0.00
 
@@ -74,7 +70,6 @@ Web Interface  http://127.0.0.1:4040
 
 ### 📌 **TU LINK PÚBLICO ES:**
 ```
-https://abc123de.ngrok.io
 ```
 
 ---
@@ -95,7 +90,6 @@ npm run cypress:open
 
 ### 1. Copia tu link:
 ```
-https://abc123de.ngrok.io
 ```
 
 ### 2. Envía a tu equipo por:
@@ -106,7 +100,6 @@ https://abc123de.ngrok.io
 
 ### 3. Diles que abran en navegador:
 ```
-Abre en navegador: https://abc123de.ngrok.io
 ```
 
 ### 4. Ellos verán:
@@ -126,7 +119,6 @@ Abre en navegador: https://abc123de.ngrok.io
 
 Aquí está el link para acceder al Sistema de Seguimiento de Documentos:
 
-🔗 https://abc123de.ngrok.io
 
 Puedes:
 ✓ Acceder desde tu navegador
@@ -186,7 +178,6 @@ Verás un dashboard con:
 Cuando termines de compartir:
 
 ```bash
-# En la terminal de Ngrok, presiona:
 Ctrl + C
 ```
 
@@ -199,7 +190,6 @@ El link público se desactiva inmediatamente.
 Si solo ciertos usuarios deben acceder:
 
 ```bash
-ngrok http 8000 --basic-auth usuario:contraseña
 ```
 
 Cuando intenten acceder, les pedirá:
@@ -211,10 +201,7 @@ Cuando intenten acceder, les pedirá:
 ## ⚠️ IMPORTANTE
 
 ### El link es TEMPORAL
-- Se activa cuando inicie Ngrok
 - Se desactiva cuando lo cierre
-- Es único cada vez que inicia Ngrok
-- Para link permanente, necesita plan pagado de Ngrok
 
 ### Es PÚBLICO
 - Quien tenga el link puede acceder
@@ -222,7 +209,6 @@ Cuando intenten acceder, les pedirá:
 - Ciérralo cuando termines de compartir
 
 ### Requiere que la API esté corriendo
-- Mientras Ngrok corre
 - Tu API debe estar corriendo
 - Si cierras API, el link no funciona
 
@@ -249,7 +235,6 @@ Verifica:
 1. ¿CLI API está corriendo? (Terminal 1)
    curl http://localhost:8000
 
-2. ¿Ngrok está corriendo? (Terminal 2)
    curl http://localhost:4040
 
 3. ¿Copiaste bien el link?
@@ -260,9 +245,7 @@ Verifica:
 
 Soluciones:
 ```
-1. Reinicia Ngrok
 2. Cierra firewall temporalmente
-3. Usa otra región en Ngrok
 4. Regenera el link
 ```
 
@@ -270,7 +253,6 @@ Soluciones:
 
 ```
 1. Actualiza el navegador (F5)
-2. Si persiste, reinicia Ngrok
 3. Asegúrate que la API está corriendo
 ```
 
@@ -281,7 +263,6 @@ Soluciones:
 **Ahora mismo:**
 
 1. Abre Terminal 1: `php artisan serve`
-2. Abre Terminal 2: `./start-ngrok.sh` (o start-ngrok.bat)
 3. Selecciona opción `1`
 4. Copia tu link público
 5. Comparte con otros

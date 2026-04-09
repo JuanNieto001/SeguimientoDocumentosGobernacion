@@ -23,14 +23,12 @@
 | # | Archivo | Descripción | Contenido |
 |---|---------|-----------|----------|
 | 1 | **CYPRESS_QUICK_START.md** | Guía de 5 minutos | Comandos, usuarios, troubleshooting |
-| 2 | **GUIA_NGROK_INTEGRACION.md** | Setup Ngrok rápido | Instalación, autenticación, ejecución |
 
 ### 🟠 NIVEL 2: REFERENCIA (30 minutos)
 
 | # | Archivo | Descripción | Contenido |
 |---|---------|-----------|----------|
 | 3 | **FASE_3_CYPRESS_COMPLETA.md** | Guía completa de FASE 3 | 1,200+ líneas, todos los detalles |
-| 4 | **WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md** | Workflow integrado | Arquitectura, casos de uso, ejemplos |
 | 5 | **REPORTE_EJECUCION_FASE_3.md** | Estado de ejecución | Tests disponibles, datos de config |
 
 ### 🔴 NIVEL 3: VALIDACIÓN (1 hora)
@@ -59,8 +57,6 @@
 |----|--------|---------|
 | **Windows** | `run-tests.bat` | Ejecutar Cypress (menú interactivo) |
 | **Mac/Linux** | `run-tests.sh` | Ejecutar Cypress (menú interactivo) |
-| **Windows** | `start-ngrok.bat` | Iniciar Ngrok (menú interactivo) |
-| **Mac/Linux** | `start-ngrok.sh` | Iniciar Ngrok (menú interactivo) |
 
 ---
 
@@ -73,8 +69,6 @@ SeguimientoDocumentosGobernacion/
 │   ├── 00-COMIENZA-AQUI-FASE-3.md           ⭐ LEER PRIMERO
 │   ├── CYPRESS_QUICK_START.md               🟡 Nivel 1
 │   ├── FASE_3_CYPRESS_COMPLETA.md           🟠 Nivel 2
-│   ├── WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md 🟠 Nivel 2
-│   ├── GUIA_NGROK_INTEGRACION.md            🟡 Nivel 1
 │   ├── VERIFICACION_FASE_3_CHECKLIST.md     🔴 Nivel 3
 │   ├── REPORTE_EJECUCION_FASE_3.md          🟠 Nivel 2
 │   ├── PROYECTO_COMPLETO_RESUMEN_FINAL.md   🔴 Nivel 3
@@ -86,8 +80,6 @@ SeguimientoDocumentosGobernacion/
 ├── 🔧 SCRIPTS EJECUTABLES
 │   ├── run-tests.bat                        (Windows - Cypress)
 │   ├── run-tests.sh                         (Mac/Linux - Cypress)
-│   ├── start-ngrok.bat                      (Windows - Ngrok)
-│   └── start-ngrok.sh                       (Mac/Linux - Ngrok)
 │
 ├── 📝 CONFIGURACIÓN
 │   ├── package.json                         (17 npm scripts)
@@ -137,8 +129,6 @@ Ejecuta: npm run test:auth  (por ejemplo)
 ### Caso 3: "Necesito compartir con QA"
 
 ```
-1. Lee: GUIA_NGROK_INTEGRACION.md
-2. Ejecuta: ./start-ngrok.sh
 3. Comparte URL pública
 ```
 
@@ -158,10 +148,8 @@ Ejecuta: npm run test:auth  (por ejemplo)
 3. Verifica cada sección
 ```
 
-### Caso 6: "Necesito workflow completo (Dev + Tests + Ngrok)"
 
 ```
-1. Lee: WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md
 2. Sigue ejemplos prácticos
 3. Implementa según tu caso de uso
 ```
@@ -191,15 +179,11 @@ npm run test:builder        # Dashboard Builder
 npm run test:security       # Seguridad
 ```
 
-### Ngrok
 ```bash
-./start-ngrok.sh            # Mac/Linux
-start-ngrok.bat             # Windows
 ```
 
 ### Testing Remoto
 ```bash
-CYPRESS_BASE_URL=https://abc123de.ngrok.io npm run cypress:run
 ```
 
 ---
@@ -253,11 +237,8 @@ Explora: cypress/e2e/
 ### 📍 Flujo C: "Necesito compartir con el equipo"
 
 ```
-GUIA_NGROK_INTEGRACION.md
     ↓
-WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md
     ↓
-./start-ngrok.sh
     ↓
 npm run cypress:run
 ```
@@ -286,8 +267,6 @@ Ejecuta todos los tests
 |-------|-----|
 | **Cómo empezar rápido** | 00-COMIENZA-AQUI-FASE-3.md |
 | **Comandos Cypress** | CYPRESS_QUICK_START.md |
-| **Setup Ngrok** | GUIA_NGROK_INTEGRACION.md |
-| **Workflow completo** | WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md |
 | **Casos de prueba disponibles** | REPORTE_EJECUCION_FASE_3.md |
 | **Validar setup** | VERIFICACION_FASE_3_CHECKLIST.md |
 | **Arquitectura del sistema** | DOCUMENTACION_SISTEMA_COMPLETA.md |
@@ -354,7 +333,6 @@ Ejecuta todos los tests
 
 ```
 [ ] Cypress instalado: npx cypress --version
-[ ] Ngrok disponible: ngrok --version (opcional)
 [ ] npm scripts funcionales: npm run cypress:open
 ```
 
@@ -372,12 +350,10 @@ Ejecuta todos los tests
 
 1. Ejecuta: `npm run cypress:run` (suite completa)
 2. Revisa: `cypress/screenshots/` (evidencia)
-3. Lee: **WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md**
 
 ### PRÓXIMO MES
 
 1. Integra con CI/CD
-2. Setup Ngrok para QA remoto
 3. Automatiza testing remoto
 
 ---
@@ -389,8 +365,6 @@ Ejecuta todos los tests
 | Tema | Archivo |
 |------|---------|
 | Tests no cargan | CYPRESS_QUICK_START.md → Troubleshooting |
-| Ngrok no conecta | GUIA_NGROK_INTEGRACION.md → Troubleshooting |
-| Tests timeouts | WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md → Debug |
 | Verificar setup | VERIFICACION_FASE_3_CHECKLIST.md |
 | Entender arquitectura | DOCUMENTACION_SISTEMA_COMPLETA.md |
 

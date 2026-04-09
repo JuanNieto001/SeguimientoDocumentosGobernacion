@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Cuando se accede por host publico (ngrok/IP), evitar que @vite use localhost:5173.
+        // Cuando se accede por host publico (IP o dominio), evitar que @vite use localhost:5173.
         if (! app()->runningInConsole()) {
             $requestHost = request()->getHost();
             $appUrlHost = parse_url((string) config('app.url'), PHP_URL_HOST);

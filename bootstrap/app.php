@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-        // Confiar en proxy inverso (ngrok) para detectar correctamente HTTPS y host público.
+        // Confiar en proxy inverso para detectar correctamente HTTPS y host publico.
         $middleware->trustProxies(at: '*');
 
         // 🌐 Compartir sesión web con rutas API (para SPA React)

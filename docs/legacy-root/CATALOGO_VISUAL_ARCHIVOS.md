@@ -11,7 +11,6 @@
 |----------|---------|--------|
 | 👈 Comenzar ya | [00-COMIENZA-AQUI-FASE-3.md](00-COMIENZA-AQUI-FASE-3.md) | 5 min |
 | 🚀 Ejecutar tests | [CYPRESS_QUICK_START.md](CYPRESS_QUICK_START.md) | 10 min |
-| 🌍 Usar Ngrok | [GUIA_NGROK_INTEGRACION.md](GUIA_NGROK_INTEGRACION.md) | 15 min |
 | 📚 Entender todo | [FASE_3_CYPRESS_COMPLETA.md](FASE_3_CYPRESS_COMPLETA.md) | 30 min |
 | ✅ Validar setup | [VERIFICACION_FASE_3_CHECKLIST.md](VERIFICACION_FASE_3_CHECKLIST.md) | 45 min |
 | 🔍 Navegar archivos | [INDICE_MAESTRO_NAVEGACION.md](INDICE_MAESTRO_NAVEGACION.md) | 10 min |
@@ -48,7 +47,6 @@
 └─ Soporte
 ```
 
-#### GUIA_NGROK_INTEGRACION.md
 ```
 ├─ Instalación (2 opciones)
 ├─ Autenticación
@@ -89,7 +87,6 @@
 └─ Referencias
 ```
 
-#### WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md
 ```
 ├─ Flujo completo en 5 minutos (5 scenarios)
 ├─ Arquitectura del workflow
@@ -238,7 +235,6 @@
 ├─ Inicio rápido (3 pasos)
 ├─ Documentación (enlaces a todas las guías)
 ├─ Comandos disponibles
-├─ Ngrok (compartir en vivo)
 ├─ Cobertura de 194 casos en tabla
 ├─ Estructura de carpetas
 ├─ Usuarios de prueba
@@ -277,7 +273,6 @@
 └─ Integración con npm scripts
 ```
 
-### start-ngrok.bat (Windows)
 ```
 ├─ Menu interactivo con 4 opciones
 ├─ Selección de puerto a exponer
@@ -285,7 +280,6 @@
 └─ Tips y dashboard info
 ```
 
-### start-ngrok.sh (Mac/Linux)
 ```
 ├─ Menu interactivo con 4 opciones
 ├─ Selección de puerto a exponer
@@ -304,8 +298,6 @@
 | 1 | 00-COMIENZA-AQUI-FASE-3.md | Inicio | 200+ |
 | 2 | CYPRESS_QUICK_START.md | Práctice | 400+ |
 | 3 | FASE_3_CYPRESS_COMPLETA.md | Completo | 1,200+ |
-| 4 | WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md | Workflow | 500+ |
-| 5 | GUIA_NGROK_INTEGRACION.md | Setup | 600+ |
 | 6 | REPORTE_EJECUCION_FASE-3.md | Status | 350+ |
 | 7 | VERIFICACION_FASE_3_CHECKLIST.md | Validación | 800+ |
 | 8 | PROYECTO_COMPLETO_RESUMEN_FINAL.md | Resumen | 1,500+ |
@@ -322,8 +314,6 @@
 |---|---------|----|---------|
 | 1 | run-tests.bat | Windows | Cypress |
 | 2 | run-tests.sh | Mac/Linux | Cypress |
-| 3 | start-ngrok.bat | Windows | Ngrok |
-| 4 | start-ngrok.sh | Mac/Linux | Ngrok |
 
 **Total**: 4 archivos, 280 líneas
 
@@ -351,9 +341,7 @@
 |-----|------|----------|
 | **Developer** | Todos los archivos | npm run cypress:open |
 | **QA/Tester** | CYPRESS_QUICK_START.md | run-tests.* |
-| **DevOps** | WORKFLOW_COMPLETO, README_PROYECTO.md | start-ngrok.* |
 | **Manager** | PROYECTO_COMPLETO_RESUMEN_FINAL.md | - |
-| **Stakeholder** | GUIA_NGROK_INTEGRACION.md | - |
 
 ### Por Objetivo
 
@@ -361,8 +349,6 @@
 |----------|---------|--------|
 | Empezar rápido | 00-COMIENZA-AQUI-FASE-3.md | 5 min |
 | Entender Cypress | CYPRESS_QUICK_START.md | 10 min |
-| Setup Ngrok | GUIA_NGROK_INTEGRACION.md | 15 min |
-| Workflow completo | WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md | 20 min |
 | Referencia completa | FASE_3_CYPRESS_COMPLETA.md | 30 min |
 | Validar todo | VERIFICACION_FASE_3_CHECKLIST.md | 45 min |
 | Entender sistema | DOCUMENTACION_SISTEMA_COMPLETA.md | 1 hora |
@@ -434,8 +420,6 @@ TOTAL:................... 194 casos ✅ (100%)
 ✅ 00-COMIENZA-AQUI-FASE-3.md
 ✅ CYPRESS_QUICK_START.md
 ✅ FASE_3_CYPRESS_COMPLETA.md
-✅ WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md
-✅ GUIA_NGROK_INTEGRACION.md
 ✅ REPORTE_EJECUCION_FASE_3.md
 ✅ VERIFICACION_FASE_3_CHECKLIST.md
 ✅ PROYECTO_COMPLETO_RESUMEN_FINAL.md
@@ -445,8 +429,6 @@ TOTAL:................... 194 casos ✅ (100%)
 ✅ README_PROYECTO.md
 ✅ run-tests.bat
 ✅ run-tests.sh
-✅ start-ngrok.bat
-✅ start-ngrok.sh
 ✅ 25+ archivos de tests Cypress
 ✅ package.json (mejorado)
 ✅ cypress.config.js

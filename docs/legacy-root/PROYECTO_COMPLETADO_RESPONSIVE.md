@@ -16,7 +16,6 @@
 │  📱 Dispositivos: Mobile, Tablet, Desktop               │
 │  💻 Build: 98.12 kB CSS (16.47 kB gzipped)              │
 │  ⚡ Performance: Optimizado                             │
-│  🔗 Link: https://galactoid-deb-nonmanually.ngrok...    │
 │                                                         │
 │  ✅ SIN NECESIDAD DE CAMBIOS - LISTO PARA USAR          │
 │                                                         │
@@ -255,7 +254,6 @@ Commits:
 ## 🔗 TU LINK ACTIVO AHORA
 
 ```
-🌍 https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **Abre en:**
@@ -341,7 +339,6 @@ Commits:
 
 ### **INMEDIATO (5 minutos)**
 ```
-1. Abre: https://galactoid-deb-nonmanfully.ngrok-free.dev
 2. Presiona: F12 → Ctrl+Shift+M
 3. Selecciona: iPhone/iPad/Laptop
 4. Verifica: Todo responsive ✓
@@ -439,7 +436,6 @@ Commits:
 ## 🌐 ACCESO INMEDIATO
 
 ```
-🔗 https://galactoid-deb-nonmanually.ngrok-free.dev
 
 Pruébalo ahora en:
 • 📱 iPhone → stacked vertical

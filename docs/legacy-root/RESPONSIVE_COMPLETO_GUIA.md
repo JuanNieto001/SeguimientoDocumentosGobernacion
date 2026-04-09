@@ -220,7 +220,6 @@ TABLET/DESKTOP:
 
 ### **OPCIÓN 1: En tu navegador (Recomendado)**
 ```
-1. Abre: https://galactoid-deb-nonmanually.ngrok-free.dev
 2. Presiona: F12 (DevTools)
 3. Presiona: Ctrl+Shift+M (Device Mode)
 4. Selecciona dispositivos:
@@ -234,7 +233,6 @@ TABLET/DESKTOP:
 ```
 1. En tu celular/tablet
 2. Abre navegador
-3. Ve a: https://galactoid-deb-nonmanually.ngrok-free.dev
 4. Todo debe funcionar perfecto
 ```
 
@@ -455,7 +453,6 @@ DESKTOP: Sidebar permanente
 ## 🚀 TU LINK PÚBLICO - FUNCIONAL AHORA
 
 ```
-🔗 https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **Pruébalo en todos los dispositivos:**
@@ -483,7 +480,5 @@ DESKTOP: Sidebar permanente
 ---
 
 **Build**: app-CHM0VD1m.css (98.12 kB | gzipped 16.47 kB)
-**Servidores**: ✅ Corriendo (Vite + Laravel + Ngrok)
 **Status**: 🟢 **COMPLETAMENTE RESPONSIVE**
 
-**Abre ahora**: https://galactoid-deb-nonmanually.ngrok-free.dev

@@ -46,7 +46,6 @@ npx cypress run --config viewportWidth=768,viewportHeight=1024
 
 **Opción B: DevTools Chrome**
 ```
-1. Abre: https://galactoid-deb-nonmanually.ngrok-free.dev
 2. Presiona: F12 (DevTools)
 3. Click: Dispositivo móvil (Ctrl+Shift+M)
 4. Selecciona: iPhone, iPad, etc.
@@ -56,7 +55,6 @@ npx cypress run --config viewportWidth=768,viewportHeight=1024
 **Opción C: Dispositivo Real**
 ```
 1. Abre tu teléfono
-2. Navega a: https://galactoid-deb-nonmanually.ngrok-free.dev
 3. Verás todo responsive
 ```
 
@@ -210,7 +208,6 @@ npm run test:mobile
 npm run test:desktop
 
 # Ver el proyecto
-# https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 ---
@@ -302,7 +299,6 @@ Develop → Enter Responsive Design Mode
 
 ### Dispositivo Real:
 ```
-Abre en tu móvil: https://galactoid-deb-nonmanualmente.ngrok-free.dev
 ```
 
 ---
@@ -327,7 +323,6 @@ Tu frontend ahora se verá **PERFECTO** en todos los dispositivos.
 
 ```bash
 npm run dev
-# Abre en móvil: https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 ---

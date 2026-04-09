@@ -598,7 +598,6 @@ DESKTOP (centrado):
 ## 🚀 TU LINK ACTIVO
 
 ```
-https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **Abre ahora y verás TODO responsive!**

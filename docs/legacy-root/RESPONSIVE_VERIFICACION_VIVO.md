@@ -11,8 +11,6 @@
 ```
 ✅ API Laravel:          http://127.0.0.1:8000
 ✅ Vite Dev Server:      http://localhost:5173
-✅ Link Público NGrok:   https://galactoid-deb-nonmanually.ngrok-free.dev
-✅ NGrok Dashboard:      http://localhost:4040
 ```
 
 ---
@@ -23,7 +21,6 @@
 
 #### Abre en navegador:
 ```
-https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 #### Prueba en diferentes tamaños:
@@ -310,7 +307,6 @@ npm run dev
 
 **Comparte este link:**
 ```
-https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **Instrucciones para otros:**
@@ -382,7 +378,6 @@ Tu aplicación ahora es:
 
 ### INMEDIATO:
 ```
-1. Abre: https://galactoid-deb-nonmanually.ngrok-free.dev
 2. Verifica que todo se vea responsive
 3. Prueba en diferentes tamaños
 4. Verifíca con el checklist anterior
@@ -425,7 +420,6 @@ Si todo funciona correctamente verás:
 **Fecha**: 27 de Marzo de 2026
 **Status**: ✅ **RESPONSIVE - 100% IMPLEMENTADO**
 
-**Link Público**: https://galactoid-deb-nonmanually.ngrok-free.dev
 
 ---
 

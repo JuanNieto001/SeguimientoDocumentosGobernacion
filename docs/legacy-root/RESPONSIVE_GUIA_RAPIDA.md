@@ -8,7 +8,6 @@
 
 ### **Tu Link Público (Activo)**
 ```
-https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **Pruébalo en:**
@@ -267,7 +266,6 @@ padding: var(--safe-padding-mobile); /* Se adapta automáticamente */
 
 ### **Opción 1: DevTools (Recomendado)**
 ```
-1. Abre: https://galactoid-deb-nonmanually.ngrok-free.dev
 2. Presiona: F12 (DevTools)
 3. Presiona: Ctrl+Shift+M (Device Mode)
 4. Selecciona dispositivo:
@@ -282,13 +280,11 @@ padding: var(--safe-padding-mobile); /* Se adapta automáticamente */
 ```
 1. En tu móvil/tablet
 2. Abre navegador
-3. Ve a: https://galactoid-deb-nonmanually.ngrok-free.dev
 4. ¡Automáticamente responsive!
 ```
 
 ### **Opción 3: Redimensionar Ventana**
 ```
-1. Abre: https://galactoid-deb-nonmanually.ngrok-free.dev
 2. Redimensiona ventana:
    - 320px de ancho (móvil)
    - 768px de ancho (tablet)
@@ -378,7 +374,6 @@ padding: var(--safe-padding-mobile); /* Se adapta automáticamente */
 ## 🌐 LINK ACTIVO
 
 ```
-https://galactoid-deb-nonmanualmente.ngrok-free.dev
 ```
 
 **✅ TODO ES 100% RESPONSIVE**

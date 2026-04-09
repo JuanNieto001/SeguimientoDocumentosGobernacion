@@ -38,7 +38,6 @@ ha sido completado exitosamente en su totalidad.
           • Motor SQL runtime
           • Scope filtering automático
 
-  NUEVO:  ✓ Ngrok Integration
           • Acceso remoto al proyecto
           • Testing remoto automatizado
           • Scripts interactivos
@@ -67,12 +66,10 @@ OPCIÓN 1: Tests Locales
 
 OPCIÓN 2: Compartir en Vivo (URL Pública)
   1. Levanta: php artisan serve
-  2. Expone: ./start-ngrok.sh (o start-ngrok.bat en Windows)
   3. Comparte URL pública con el equipo
   4. Todos pueden acceder en tiempo real
 
 OPCIÓN 3: Testing Remoto Automatizado
-  1. Expone con: ./start-ngrok.sh
   2. Ejecuta: npm run cypress:run
   3. Los tests corren contra la URL pública
 
@@ -86,8 +83,6 @@ EMPIEZA AQUÍ (5-10 minutos):
   → CYPRESS_QUICK_START.md
 
 GUÍAS PRÁCTICAS (15-30 minutos):
-  → GUIA_NGROK_INTEGRACION.md
-  → WORKFLOW_COMPLETO_DEV_CYPRESS_NGROK.md
   → REPORTE_EJECUCION_FASE_3.md
 
 REFERENCIA COMPLETA (30-45 minutos):
@@ -111,7 +106,6 @@ OPCIÓN B: Ejecutar Tests (30 segundos)
   npm run cypress:open
 
 OPCIÓN C: Compartir con el Equipo (1 minuto)
-  ./start-ngrok.sh
   (Comparte la URL pública)
 
 OPCIÓN D: Validación Completa (1 hora)
@@ -127,7 +121,6 @@ OPCIÓN D: Validación Completa (1 hora)
 ✓ Captura automática de screenshots
 ✓ Video recording de sesiones
 ✓ Reportes HTML/JSON
-✓ Ngrok para acceso remoto
 ✓ Scripts interactivos (Windows + Mac/Linux)
 ✓ 25+ comandos personalizados
 ✓ Dashboard Builder dinámico

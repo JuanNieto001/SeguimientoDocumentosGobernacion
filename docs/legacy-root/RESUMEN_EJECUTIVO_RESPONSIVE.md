@@ -378,12 +378,10 @@ Características:
 
 ### **Tu Link Público (Activo Ahora)**
 ```
-🔗 https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 ### **En tu navegador**
 ```
-1. Abre: https://galactoid-deb-nonmanually.ngrok-free.dev
 2. F12 (DevTools)
 3. Ctrl+Shift+M (Device Mode)
 4. Selecciona:
@@ -492,7 +490,6 @@ RESULTADO: 🟢 100% RESPONSIVE COMPLETADO
 ### **AHORA MISMO:**
 ```bash
 # Tu link está activo y responsivo
-https://galactoid-deb-nonmanually.ngrok-free.dev
 
 # Abre y verifica en móvil:
 F12 → Ctrl+Shift+M → Selecciona dispositivo
@@ -573,7 +570,6 @@ Commit:
 
 **Abre ahora tu link:**
 ```
-https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **¡Todo es responsivo!** 📱💻

@@ -11,7 +11,6 @@
 ```
 🟢 API Laravel:              CORRIENDO   http://127.0.0.1:8000
 🟢 Vite Dev Server:          CORRIENDO   http://localhost:5173
-🟢 Ngrok Tunnel:             ACTIVO      https://galactoid-deb-nonmanually.ngrok-free.dev
 🟢 Responsive Design:        ✅ IMPLEMENTADO
 🟢 Build Status:             ✅ EXITOSO (51.03s)
 🟢 Tests Automatizados:      ✅ LISTOS (194 casos)
@@ -170,7 +169,6 @@
    • Menú interactivo para tests
    • Cross-platform compatible
 
-✅ start-ngrok.sh / start-ngrok.bat
    • Menú para seleccionar puerto
    • Generación automática de link
 ```
@@ -212,7 +210,6 @@ TESTING:
 ### OPCIÓN 1: Ver en tu máquina (AHORA)
 ```bash
 # Abre en navegador
-https://galactoid-deb-nonmanually.ngrok-free.dev
 
 # Verdifica responsive (DevTools)
 F12 → Ctrl+Shift+M → Selecciona dispositivo → F5
@@ -221,7 +218,6 @@ F12 → Ctrl+Shift+M → Selecciona dispositivo → F5
 ### OPCIÓN 2: Compartir con otros
 ```bash
 # Envía este link:
-https://galactoid-deb-nonmanually.ngrok-free.dev
 
 # Otros pueden acceder desde cualquier navegador
 # Los cambios se ven en tiempo real
@@ -275,10 +271,8 @@ npm run cypress:open       # Interfaz Cypress
 
 | Recurso | URL |
 |---------|-----|
-| **Link Público** | https://galactoid-deb-nonmanually.ngrok-free.dev |
 | **API Local** | http://127.0.0.1:8000 |
 | **Dev Server** | http://localhost:5173 |
-| **Ngrok Dashboard** | http://localhost:4040 |
 | **Documentación** | RESPONSIVE_VERIFICACION_VIVO.md |
 | **Guía Mobile** | GUIA_RESPONSIVE_MOBILE.md |
 | **Comience Aquí** | 00-COMIENZA-AQUI-FASE-3.md |
@@ -369,7 +363,6 @@ Tu proyecto ahora es:
 
 ```
 1. HOY (5 minutos):
-   ✓ Abre: https://galactoid-deb-nonmanualmente.ngrok-free.dev
    ✓ Verifica responsive (F12 → Ctrl+Shift+M)
    ✓ Comparte link con tu equipo
 
@@ -440,7 +433,6 @@ Documentos principales:
 
 **Abre ahora:**
 ```
-https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **¡Disfruta tu sistema responsive!** 🚀

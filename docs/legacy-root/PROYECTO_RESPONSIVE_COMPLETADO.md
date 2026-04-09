@@ -13,7 +13,6 @@ Tu proyecto **está 100% responsive y funcionando en tiempo real**.
 ```
 ✅ API Laravel:              CORRIENDO en http://127.0.0.1:8000
 ✅ Vite Frontend:            CORRIENDO en http://localhost:5173
-✅ Link Público (Ngrok):     https://galactoid-deb-nonmanually.ngrok-free.dev
 ✅ Responsive Design:        IMPLEMENTADO y COMPILADO
 ✅ Build:                    EXITOSO (51.03 segundos)
 ✅ 194 Tests:                LISTOS para ejecutar
@@ -26,7 +25,6 @@ Tu proyecto **está 100% responsive y funcionando en tiempo real**.
 ### OPCIÓN 1: Ver en tu máquina (AHORA)
 ```bash
 # Abre en navegador:
-https://galactoid-deb-nonmanually.ngrok-free.dev
 
 # Para probar responsive:
 F12 → Ctrl+Shift+M → Selecciona dispositivo → F5
@@ -35,7 +33,6 @@ F12 → Ctrl+Shift+M → Selecciona dispositivo → F5
 ### OPCIÓN 2: Compartir con otros
 ```
 Envía este link a tu equipo:
-https://galactoid-deb-nonmanually.ngrok-free.dev
 
 Ellos pueden acceder en cualquier navegador, desde cualquier máquina.
 Los cambios se ven en tiempo real.
@@ -134,7 +131,6 @@ DESKTOP (1024px+):
 ## 🔗 TU LINK PÚBLICO
 
 ```
-🌍 https://galactoid-deb-nonmanualmente.ngrok-free.dev
 ```
 
 **Comparte con:**
@@ -151,7 +147,6 @@ DESKTOP (1024px+):
 ### PASO 1: Verifica que funciona
 ```bash
 # Abre en navegador
-https://galactoid-deb-nonmanually.ngrok-free.dev
 
 # Redimensiona y verifica responsive
 F12 → Ctrl+Shift+M → iPhone/iPad/Desktop
@@ -167,7 +162,6 @@ npm run cypress:run
 
 ### PASO 3: Comparte con tu equipo
 ```
-Envía: https://galactoid-deb-nonmanualmente.ngrok-free.dev
 
 Pueden acceder en cualquier momento mientras el link esté activo.
 ```
@@ -231,7 +225,6 @@ Pueden acceder en cualquier momento mientras el link esté activo.
 
 ## ⚠️ IMPORTANTE
 
-- **El link se desactiva cuando cierres Ngrok**
 - **Mientras esté activo, cualquiera con el link puede acceder**
 - **Los cambios son en tiempo real (no necesitas recargar)**
 - **Todo está sincronizado entre máquinas**
@@ -241,9 +234,7 @@ Pueden acceder en cualquier momento mientras el link esté activo.
 ## 🔐 PARA PROTEGER WITH CONTRASEÑA (Opcional)
 
 ```bash
-# Detén Ngrok actual: Ctrl+C
 # Reinicia con contraseña:
-npx ngrok http 8000 --basic-auth usuario:contraseña
 ```
 
 ---
@@ -274,7 +265,6 @@ npx ngrok http 8000 --basic-auth usuario:contraseña
 ```
 [✓] Build completado exitosamente
 [✓] Servidores corriendo (API + Vite)
-[✓] Ngrok activo con link público
 [✓] Responsive implementado
 [✓] Componentes creados
 [✓] Media queries aplicadas
@@ -312,7 +302,6 @@ STATUS: ✅ 100% COMPLETADO
 
 **Abre en tu navegador:**
 ```
-https://galactoid-deb-nonmanually.ngrok-free.dev
 ```
 
 **Verifica responsive (F12 → Ctrl+Shift+M):**
