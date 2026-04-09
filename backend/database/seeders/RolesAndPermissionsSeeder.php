@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Facades\DB;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -165,6 +166,22 @@ class RolesAndPermissionsSeeder extends Seeder
 
         foreach ($nuevosRoles as $roleName => $description) {
             Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+        }
+
+        // Asegurar alcance del dashboard para roles clave (por si las migraciones corrieron antes de los seeders)
+        $dashboardScopes = [
+            'admin' => 'global',
+            'admin_general' => 'global',
+            'gobernador' => 'global',
+            'secretario' => 'secretaria',
+            'admin_secretaria' => 'secretaria',
+            'jefe_unidad' => 'unidad',
+        ];
+
+        foreach ($dashboardScopes as $roleName => $scope) {
+            DB::table('roles')
+                ->where('name', $roleName)
+                ->update(['dashboard_scope' => $scope]);
         }
 
         /*
