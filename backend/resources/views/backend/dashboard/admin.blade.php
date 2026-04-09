@@ -3,24 +3,6 @@
     <x-slot name="header">
         <div class="flex items-center justify-between flex-wrap gap-2">
             <div>
-                <div class="flex items-center gap-2 mb-0.5">
-                    @if($scope === 'global')
-                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:#dcfce7;color:#15803d">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
-                            VISTA GLOBAL
-                        </span>
-                    @elseif($scope === 'secretaria')
-                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:#dbeafe;color:#1d4ed8">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
-                            SECRETARÍA
-                        </span>
-                    @else
-                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:#fef3c7;color:#92400e">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></span>
-                            UNIDAD
-                        </span>
-                    @endif
-                </div>
                 <h1 class="text-base font-black text-gray-900 leading-none">Panel de Control</h1>
                 <p class="text-[11px] text-gray-400 mt-0.5">{{ $scopeNombre }} &mdash; {{ now()->translatedFormat('F Y') }}</p>
             </div>

@@ -39,20 +39,6 @@
             </div>
         </div>
 
-        {{-- Usuario --}}
-        <div class="flex items-center gap-3 px-4 py-3.5 shrink-0 border-b" style="border-color:rgba(255,255,255,.08);background:rgba(0,0,0,0.12)">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0" style="background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 0 0 2px rgba(134,239,172,0.25)">
-                {{ strtoupper(substr(Auth::user()->name,0,2)) }}
-            </div>
-            <div class="min-w-0">
-                <p class="text-white text-xs font-semibold truncate">{{ Auth::user()->name }}</p>
-                <p class="text-green-300 text-[10px] truncate" style="opacity:0.65">{{ Auth::user()->email }}</p>
-            </div>
-            <div class="ml-auto shrink-0">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-400 block" style="box-shadow:0 0 4px #4ade80"></span>
-            </div>
-        </div>
-
         {{-- Navegación --}}
         <nav class="sidebar-nav flex-1 overflow-y-auto px-3 py-3 scroll-smooth" 
              style="scrollbar-width: thin; 
