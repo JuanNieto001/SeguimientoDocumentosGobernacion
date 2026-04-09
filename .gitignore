@@ -21,6 +21,8 @@
 /vendor
 /playwright-report
 /test-results
+/test-results.json
+/cypress
 /.claude
 Homestead.json
 Homestead.yaml

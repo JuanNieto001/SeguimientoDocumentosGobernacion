@@ -4,7 +4,7 @@
 **Version:** 1.0.0
 **Fecha:** 2026-03-27
 **Preparado por:** Equipo QA
-**Estado:** Listo para automatizacion con Cypress
+**Estado:** Listo para automatizacion con Playwright
 
 ---
 
@@ -58,11 +58,11 @@ Verificar el correcto funcionamiento de todas las funcionalidades del Sistema de
 
 | Tipo de Prueba | Herramienta | Prioridad |
 |----------------|-------------|-----------|
-| Funcionales E2E | Cypress | Alta |
-| Integracion | Cypress | Alta |
-| Validacion de formularios | Cypress | Alta |
-| Pruebas de API | Cypress | Media |
-| Pruebas de permisos | Cypress | Alta |
+| Funcionales E2E | Playwright | Alta |
+| Integracion | Playwright | Alta |
+| Validacion de formularios | Playwright | Alta |
+| Pruebas de API | Playwright | Media |
+| Pruebas de permisos | Playwright | Alta |
 
 ## 1.4 Entornos de Prueba
 
@@ -1496,5 +1496,5 @@ Verificar el correcto funcionamiento de todas las funcionalidades del Sistema de
 
 ---
 
-**Documento preparado para automatizacion con Cypress**
+**Documento preparado para automatizacion con Playwright**
 **Sistema de Seguimiento de Documentos Contractuales - Gobernacion de Caldas**

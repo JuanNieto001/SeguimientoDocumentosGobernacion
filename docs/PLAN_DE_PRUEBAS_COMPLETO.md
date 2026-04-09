@@ -583,5 +583,5 @@ Validar que todas las funcionalidades del Sistema de Seguimiento de Documentos C
 
 ---
 
-**Documento preparado para automatizacion con Cypress**
+**Documento preparado para automatizacion con Playwright**
 **Formato estructurado tipo tabla para facil copia a Excel**

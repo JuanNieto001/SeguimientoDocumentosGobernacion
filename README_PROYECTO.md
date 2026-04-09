@@ -27,7 +27,6 @@ npm run test:run
 Carpetas principales:
 
 - `App`, `bootstrap`, `config`, `database`, `public`, `resources`, `routes`, `storage`, `tests`
-- `docs/legacy-root` para documentacion historica que antes estaba en raiz
 - `scripts/php-maintenance` para scripts PHP auxiliares de verificacion y mantenimiento
 - `scripts/local/testing` para lanzadores locales de pruebas (opcionales)
 - `scripts/deploy` para despliegue automatizado en servidor
@@ -52,7 +51,6 @@ Archivos de entrada que se mantienen en raiz:
 ## Documentacion principal
 
 - Guía técnica actual: [DOCUMENTACION_CODIGO_ACTUAL.md](DOCUMENTACION_CODIGO_ACTUAL.md)
-- Índice de documentos movidos: [docs/legacy-root/README.md](docs/legacy-root/README.md)
 - Guía de pruebas: [README_TESTING.md](README_TESTING.md)
 - Guía de despliegue: [docs/deploy/DEPLOY_SERVIDOR.md](docs/deploy/DEPLOY_SERVIDOR.md)
 

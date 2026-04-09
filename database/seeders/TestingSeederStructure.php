@@ -19,7 +19,7 @@ class TestingSeederStructure extends Seeder
 {
     /**
      * Seeder especializado para testing automatizado
-     * Crea estructura completa y datos predecibles para Cypress E2E
+    * Crea estructura completa y datos predecibles para pruebas E2E
      */
     public function run()
     {
