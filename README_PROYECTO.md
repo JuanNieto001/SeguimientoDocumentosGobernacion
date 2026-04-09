@@ -7,29 +7,30 @@ Repositorio del sistema de gestion documental y flujo de contratacion de la Gobe
 1. Instalar dependencias:
 
 ```bash
-npm install
+cd backend && composer install
+cd ../frontend && npm install
 ```
 
-2. Levantar backend Laravel:
+2. Iniciar backend Laravel (terminal 1, desde `backend/`):
 
 ```bash
+cd backend
 php artisan serve
 ```
 
-3. Ejecutar pruebas Playwright:
+3. Iniciar frontend Vite (terminal 2, desde `frontend/`):
 
 ```bash
-npm run test:run
+cd frontend
+npm run dev
 ```
 
 ## Estructura organizada
 
 Carpetas principales:
 
-- `App`, `bootstrap`, `config`, `database`, `public`, `resources`, `routes`, `storage`, `tests`
-- `scripts/php-maintenance` para scripts PHP auxiliares de verificacion y mantenimiento
-- `scripts/local/testing` para lanzadores locales de pruebas (opcionales)
-- `scripts/deploy` para despliegue automatizado en servidor
+- `backend/` para API Laravel, vistas Blade, rutas, base de datos, deploy y scripts PHP.
+- `frontend/` para toolchain Node (Vite/Tailwind) y fuentes `resources/js` y `resources/css`.
 
 Vistas Blade separadas por capa:
 
@@ -37,33 +38,26 @@ Vistas Blade separadas por capa:
 - `resources/views/frontend` para autenticacion, perfil y vistas publicas.
 - `resources/views/layouts`, `resources/views/components`, `resources/views/partials` para elementos compartidos.
 
-Archivos de entrada que se mantienen en raiz:
+Archivos principales por carpeta:
 
-- `artisan`
-- `composer.json`
-- `package.json`
-- `playwright.config.js`
-- `README.md`
-- `README_PROYECTO.md`
-- `README_TESTING.md`
-- `SETUP.md`
+- `backend/artisan`, `backend/composer.json`, `backend/SETUP.md`
+- `frontend/package.json`, `frontend/vite.config.js`, `frontend/tailwind.config.js`
+- `README.md`, `README_PROYECTO.md`
 
 ## Documentacion principal
 
-- Guía técnica actual: [DOCUMENTACION_CODIGO_ACTUAL.md](DOCUMENTACION_CODIGO_ACTUAL.md)
-- Guía de pruebas: [README_TESTING.md](README_TESTING.md)
-- Guía de despliegue: [docs/deploy/DEPLOY_SERVIDOR.md](docs/deploy/DEPLOY_SERVIDOR.md)
+- Guía de despliegue: [backend/scripts/deploy/DEPLOY_SERVIDOR.md](backend/scripts/deploy/DEPLOY_SERVIDOR.md)
 
 ## Scripts de mantenimiento
 
 Los scripts PHP sueltos que antes estaban en raiz ahora estan en:
 
-- [scripts/php-maintenance](scripts/php-maintenance)
+- [backend/scripts/php-maintenance](backend/scripts/php-maintenance)
 
 Ejemplo de uso:
 
 ```bash
-php scripts/php-maintenance/check_db_state.php
+php backend/scripts/php-maintenance/check_db_state.php
 ```
 
 ## Despliegue automatico (servidor)
@@ -71,19 +65,19 @@ php scripts/php-maintenance/check_db_state.php
 Linux:
 
 ```bash
-bash scripts/deploy/deploy-app.sh
+bash backend/scripts/deploy/deploy-app.sh
 ```
 
 Windows / PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\deploy\deploy-app.ps1
+powershell -ExecutionPolicy Bypass -File .\backend\scripts\deploy\deploy-app.ps1
 ```
 
 El flujo completo de deploy esta documentado en:
 
-- [scripts/deploy/README.md](scripts/deploy/README.md)
-- [docs/deploy/DEPLOY_SERVIDOR.md](docs/deploy/DEPLOY_SERVIDOR.md)
+- [backend/scripts/deploy/README.md](backend/scripts/deploy/README.md)
+- [backend/scripts/deploy/DEPLOY_SERVIDOR.md](backend/scripts/deploy/DEPLOY_SERVIDOR.md)
 
 ## Notas de compatibilidad
 
