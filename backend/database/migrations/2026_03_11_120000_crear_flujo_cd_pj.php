@@ -29,9 +29,18 @@ return new class extends Migration
         // ═══════════════════════════════════════════════════════════════
         // 1) CREAR FLUJO EN EL MOTOR DE FLUJOS
         // ═══════════════════════════════════════════════════════════════
-        $secPlaneacion = DB::table('secretarias')->where('nombre', 'like', '%Planeación%')->value('id');
+        $secPlaneacion = DB::table('secretarias')
+            ->where('nombre', 'like', '%Planeación%')
+            ->orWhere('nombre', 'like', '%Planeacion%')
+            ->value('id');
+
         if (!$secPlaneacion) {
-            $secPlaneacion = DB::table('secretarias')->first()?->id ?? 1;
+            $secPlaneacion = DB::table('secretarias')->insertGetId([
+                'nombre'     => 'Secretaría de Planeación',
+                'activo'     => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
         }
 
         $flujoId = DB::table('flujos')->insertGetId([
