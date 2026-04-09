@@ -17,12 +17,24 @@ try {
     
     # Crear nueva regla
     netsh advfirewall firewall add rule name="Laravel Dev 8000" dir=in action=allow protocol=TCP localport=8000 profile=any enable=yes | Out-Null
+
+    $ipv4 = Get-NetIPAddress -AddressFamily IPv4 |
+        Where-Object {
+            $_.IPAddress -notlike '127.*' -and
+            $_.IPAddress -notlike '169.254*' -and
+            $_.InterfaceAlias -notmatch 'Loopback|vEthernet|WSL|VirtualBox|Hyper-V'
+        } |
+        Select-Object -ExpandProperty IPAddress -First 1
+
+    if (-not $ipv4) {
+        $ipv4 = 'IP_LOCAL_NO_DETECTADA'
+    }
     
     Write-Host "[OK] Regla de firewall creada exitosamente" -ForegroundColor Green
     Write-Host ""
     Write-Host "================================================" -ForegroundColor Cyan
     Write-Host " ACCEDE DESDE OTROS COMPUTADORES USANDO:" -ForegroundColor Yellow
-    Write-Host " http://10.174.112.27:8000" -ForegroundColor White -BackgroundColor Blue
+    Write-Host " http://$ipv4`:8000" -ForegroundColor White -BackgroundColor Blue
     Write-Host "================================================" -ForegroundColor Cyan
     Write-Host ""
     

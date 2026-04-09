@@ -11,8 +11,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>html,body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body class="antialiased">
-<div class="min-h-screen flex">
+<body class="antialiased overflow-x-hidden lg:overflow-hidden">
+<div class="min-h-screen flex lg:overflow-hidden">
 
     {{-- Panel izquierdo: Branding --}}
     <div class="hidden lg:flex lg:w-[46%] relative overflow-hidden flex-col" style="background-image:url('/images/gobernacion.png');background-size:cover;background-position:center;">
@@ -45,7 +45,7 @@
     </div>
 
     {{-- Panel derecho: Formulario --}}
-    <div class="flex-1 flex flex-col items-center justify-center min-h-screen p-8" style="background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)">
+    <div class="flex-1 flex flex-col items-center justify-center min-h-screen box-border p-6 sm:p-8" style="background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)">
         {{-- Header móvil --}}
         <div class="lg:hidden mb-10 text-center">
             <div class="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center mx-auto mb-3 border border-gray-200" style="background:#fff">
