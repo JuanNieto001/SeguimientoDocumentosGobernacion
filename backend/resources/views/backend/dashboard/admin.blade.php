@@ -358,10 +358,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div id="dashboardGraphCanvas" class="grid-stack dash-graph-canvas">
-            <div class="grid-stack-item" id="widget-mensual" gs-x="0" gs-y="0" gs-w="4" gs-h="4">
+        
+            <div class="grid-stack-item" id="widget-mensual" gs-x="0" gs-y="4" gs-w="4" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -380,7 +378,7 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-estado" gs-x="4" gs-y="0" gs-w="4" gs-h="4">
+            <div class="grid-stack-item" id="widget-estado" gs-x="4" gs-y="4" gs-w="4" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -422,7 +420,7 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-tendencia" gs-x="8" gs-y="0" gs-w="4" gs-h="4">
+            <div class="grid-stack-item" id="widget-tendencia" gs-x="8" gs-y="4" gs-w="4" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -440,7 +438,7 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-area" gs-x="0" gs-y="5" gs-w="12" gs-h="2">
+            <div class="grid-stack-item" id="widget-area" gs-x="0" gs-y="8" gs-w="12" gs-h="2">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -801,7 +799,7 @@
         const canvasConfigs = [
             {
                 canvasId: 'dashboardTopCanvas',
-                storageKey: 'dashboard.global.top.layout.v4',
+                storageKey: 'dashboard.global.top.layout.v5',
                 defaultLayout: [
                     { id: 'widget-kpi-total-procesos', x: 0, y: 0, w: 2, h: 1 },
                     { id: 'widget-kpi-en-curso', x: 2, y: 0, w: 2, h: 1 },
@@ -811,16 +809,10 @@
                     { id: 'widget-kpi-alertas-criticas', x: 10, y: 0, w: 2, h: 1 },
                     { id: 'widget-secretarias', x: 0, y: 1, w: 7, h: 3 },
                     { id: 'widget-alertas', x: 7, y: 1, w: 5, h: 3 },
-                ],
-            },
-            {
-                canvasId: 'dashboardGraphCanvas',
-                storageKey: 'dashboard.global.graph.layout.v4',
-                defaultLayout: [
-                    { id: 'widget-mensual', x: 0, y: 0, w: 4, h: 4 },
-                    { id: 'widget-estado', x: 4, y: 0, w: 4, h: 4 },
-                    { id: 'widget-tendencia', x: 8, y: 0, w: 4, h: 4 },
-                    { id: 'widget-area', x: 0, y: 4, w: 12, h: 2 },
+                    { id: 'widget-mensual', x: 0, y: 4, w: 4, h: 4 },
+                    { id: 'widget-estado', x: 4, y: 4, w: 4, h: 4 },
+                    { id: 'widget-tendencia', x: 8, y: 4, w: 4, h: 4 },
+                    { id: 'widget-area', x: 0, y: 8, w: 12, h: 2 },
                 ],
             },
             {
@@ -915,7 +907,7 @@
                 handle: '.grid-stack-item-content',
                 draggable: {
                     handle: '.grid-stack-item-content',
-                    cancel: 'a,button,input,textarea,select,option,canvas'
+                    cancel: 'a,button,input,textarea,select,option'
                 },
                 resizable: { handles: 'all' },
             }, canvas);
