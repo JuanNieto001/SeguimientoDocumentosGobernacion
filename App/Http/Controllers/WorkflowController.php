@@ -9,6 +9,28 @@ use App\Models\TrackingEvento;
 
 class WorkflowController extends Controller
 {
+    /**
+     * CD-PN mantiene solicitudes documentales paralelas en etapa 1
+     * tanto en workflow legacy como en flujo dinámico.
+     */
+    private function usaSolicitudesParalelasEtapa1($proceso): bool
+    {
+        if ((int) ($proceso->flujo_id ?? 0) === 1) {
+            return true;
+        }
+
+        $workflow = DB::table('workflows')
+            ->where('id', $proceso->workflow_id)
+            ->select('codigo', 'nombre')
+            ->first();
+
+        $codigo = strtoupper((string) ($workflow->codigo ?? ''));
+        $nombre = strtoupper((string) ($workflow->nombre ?? ''));
+
+        return in_array($codigo, ['CD_PN', 'FLUJO_1'], true)
+            || str_contains($nombre, 'PERSONA NATURAL');
+    }
+
     private function loadProcesoOrFail(int $procesoId)
     {
         $proceso = DB::table('procesos')->where('id', $procesoId)->first();
@@ -304,9 +326,10 @@ class WorkflowController extends Controller
             // ========== FIN VALIDACIONES ESPECÍFICAS ==========
 
             // ========== VALIDACIÓN ETAPA 1: DESCENTRALIZACIÓN - DOCUMENTOS PARALELOS ==========
-            // Solo aplica para procesos del workflow viejo (sin flujo_id).
-            // Los procesos basados en flujo no usan el mecanismo de solicitudes hardcoded.
-            if ($etapaActual->orden == 1 && $etapaActual->area_role === 'planeacion' && !$proceso->flujo_id) {
+            // CD-PN usa solicitudes paralelas en Etapa 1 incluso con flujo dinámico.
+            if ($etapaActual->orden == 1
+                && $etapaActual->area_role === 'planeacion'
+                && $this->usaSolicitudesParalelasEtapa1($proceso)) {
                 
                 // Verificar si existen solicitudes de documentos para este proceso
                 $totalSolicitudes = DB::table('proceso_documentos_solicitados')

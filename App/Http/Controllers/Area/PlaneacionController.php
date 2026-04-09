@@ -5,12 +5,36 @@ namespace App\Http\Controllers\Area;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Proceso;
 use App\Models\ProcesoAuditoria;
 use App\Models\PlanAnualAdquisicion;
 
 class PlaneacionController extends Controller
 {
+    /**
+     * Determina si el proceso debe usar solicitudes documentales paralelas en Etapa 1.
+     * CD-PN mantiene este comportamiento tanto en workflow legacy como en flujo dinámico.
+     */
+    private function usaSolicitudesParalelasEtapa1(Proceso $proceso): bool
+    {
+        // Flujo dinámico actual de CD-PN
+        if ((int) ($proceso->flujo_id ?? 0) === 1) {
+            return true;
+        }
+
+        $workflow = DB::table('workflows')
+            ->where('id', $proceso->workflow_id)
+            ->select('codigo', 'nombre')
+            ->first();
+
+        $codigo = strtoupper((string) ($workflow->codigo ?? ''));
+        $nombre = strtoupper((string) ($workflow->nombre ?? ''));
+
+        return in_array($codigo, ['CD_PN', 'FLUJO_1'], true)
+            || str_contains($nombre, 'PERSONA NATURAL');
+    }
+
     public function index(Request $request)
     {
         // Bandeja de Descentralización: solo procesos pendientes en su área
@@ -28,10 +52,20 @@ class PlaneacionController extends Controller
 
         if ($request->filled('buscar')) {
             $q = '%'.$request->buscar.'%';
-            $query->where(function ($w) use ($q) {
+            $hasContratistaNombre = Schema::hasColumn('procesos', 'contratista_nombre');
+            $hasContratistaDocumento = Schema::hasColumn('procesos', 'contratista_documento');
+
+                        $query->where(function ($w) use ($q, $hasContratistaNombre, $hasContratistaDocumento) {
                 $w->where('procesos.codigo', 'like', $q)
-                  ->orWhere('procesos.objeto', 'like', $q)
-                  ->orWhere('procesos.contratista', 'like', $q);
+                  ->orWhere('procesos.objeto', 'like', $q);
+
+                if ($hasContratistaNombre) {
+                    $w->orWhere('procesos.contratista_nombre', 'like', $q);
+                }
+
+                if ($hasContratistaDocumento) {
+                    $w->orWhere('procesos.contratista_documento', 'like', $q);
+                }
             });
         }
         if ($request->filled('estado')) {
@@ -167,18 +201,15 @@ class PlaneacionController extends Controller
                     "No se puede aprobar: faltan documentos por recibir de las áreas → {$faltantes}");
             }
         } else {
-            // Para procesos basados en flujo: NO crear solicitudes hardcoded.
-            // El flujo define sus propios pasos/documentos que se manejan como etapas.
-            if (!$proceso->flujo_id) {
-                // Solo el workflow viejo (sin flujo) usa solicitudes hardcoded
+            // CD-PN usa solicitudes paralelas en Etapa 1 incluso con flujo dinámico.
+            if ($this->usaSolicitudesParalelasEtapa1($proceso)) {
                 $wfController = app(\App\Http\Controllers\WorkflowController::class);
                 $wfController->solicitarDocumentosEtapa1($proceso);
-                
-                return redirect()->back()->with('info', 
+
+                return redirect()->back()->with('info',
                     'Se han enviado las solicitudes de documentos a las áreas correspondientes. ' .
                     'Espera a que todas las áreas suban sus documentos antes de aprobar.');
             }
-            // Flujo-based: sin solicitudes — avanzar directamente
         }
         // ── FIN Validación documentos paralelos ──
 
