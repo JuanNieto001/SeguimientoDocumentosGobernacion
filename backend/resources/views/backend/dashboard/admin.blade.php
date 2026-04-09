@@ -72,7 +72,7 @@
             background: #fff;
             border-radius: 10px;
             border: 1px solid #f1f5f9;
-            padding: 7px 9px 7px 11px;
+            padding: 6px 8px 6px 10px;
             display: flex;
             align-items: center;
             gap: 7px;
@@ -102,7 +102,7 @@
             flex-direction: column;
         }
         .chart-card-header {
-            padding: 7px 12px 6px;
+            padding: 5px 8px 4px;
             border-bottom: 1px solid #f8fafc;
             display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
         }
@@ -159,9 +159,9 @@
             color: #ffffff;
         }
 
-        .dash-top-canvas { min-height: 232px; }
-        .dash-graph-canvas { min-height: 330px; }
-        .dash-bottom-canvas { min-height: 520px; }
+        .dash-top-canvas { min-height: 0; }
+        .dash-graph-canvas { min-height: 0; }
+        .dash-bottom-canvas { min-height: 0; }
 
         .dash-top-canvas .grid-stack-item-content,
         .dash-graph-canvas .grid-stack-item-content,
@@ -178,7 +178,7 @@
             height: 100%;
         }
         .dash-grid-widget {
-            padding: 3px;
+            padding: 1px;
         }
         .dash-kpi-widget {
             height: 100%;
@@ -199,7 +199,7 @@
         }
     </style>
 
-    <div class="dash-root p-2 space-y-1.5" style="background:#f4f6f9;min-height:calc(100vh - 72px)">
+    <div class="dash-root p-1 space-y-0.5" style="background:#f4f6f9;min-height:calc(100vh - 72px)">
 
         {{-- ═══ CANVAS PERSONALIZABLE DEL DASHBOARD ═══ --}}
         <div class="flex items-center justify-between px-0.5 pt-0.5">
@@ -361,7 +361,7 @@
         </div>
 
         <div id="dashboardGraphCanvas" class="grid-stack dash-graph-canvas">
-            <div class="grid-stack-item" id="widget-mensual" gs-x="0" gs-y="0" gs-w="4" gs-h="5">
+            <div class="grid-stack-item" id="widget-mensual" gs-x="0" gs-y="0" gs-w="4" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -372,7 +372,7 @@
                                 </div>
                                 <span class="badge-pill" style="background:#f0fdf4;color:#15803d">Tiempo real</span>
                             </div>
-                            <div class="p-2" style="flex:1;min-height:140px">
+                            <div class="p-2" style="flex:1;min-height:120px">
                                 <canvas id="barMensualChart" style="height:100% !important"></canvas>
                             </div>
                         </div>
@@ -380,7 +380,7 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-estado" gs-x="4" gs-y="0" gs-w="4" gs-h="5">
+            <div class="grid-stack-item" id="widget-estado" gs-x="4" gs-y="0" gs-w="4" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -390,7 +390,7 @@
                                     <p>Distribución actual</p>
                                 </div>
                             </div>
-                            <div class="p-2 flex flex-col items-center justify-center" style="flex:1;min-height:140px">
+                            <div class="p-2 flex flex-col items-center justify-center" style="flex:1;min-height:120px">
                                 <div style="width:100px;height:100px;position:relative;flex-shrink:0">
                                     <canvas id="donutEstadoChart"></canvas>
                                     <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
@@ -422,7 +422,7 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-tendencia" gs-x="8" gs-y="0" gs-w="4" gs-h="5">
+            <div class="grid-stack-item" id="widget-tendencia" gs-x="8" gs-y="0" gs-w="4" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -432,7 +432,7 @@
                                     <p>Evolución mensual — creados vs. finalizados vs. rechazados</p>
                                 </div>
                             </div>
-                            <div class="p-2" style="flex:1;min-height:140px">
+                            <div class="p-2" style="flex:1;min-height:120px">
                                 <canvas id="lineaTendenciaChart" style="height:100% !important"></canvas>
                             </div>
                         </div>
@@ -440,7 +440,7 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-area" gs-x="0" gs-y="5" gs-w="12" gs-h="3">
+            <div class="grid-stack-item" id="widget-area" gs-x="0" gs-y="5" gs-w="12" gs-h="2">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -450,7 +450,7 @@
                                     <p>Procesos EN CURSO por área</p>
                                 </div>
                             </div>
-                            <div class="p-2" style="flex:1;min-height:86px">
+                            <div class="p-2" style="flex:1;min-height:60px">
                                 <canvas id="areaHorizChart" style="height:100% !important"></canvas>
                             </div>
                         </div>
@@ -462,7 +462,7 @@
         <div id="dashboardBottomCanvas" class="grid-stack dash-bottom-canvas">
 
         {{-- ═══ FILA 4: PROCESOS RECIENTES ═══ --}}
-        <div class="grid-stack-item" id="widget-recientes" gs-x="0" gs-y="0" gs-w="12" gs-h="6">
+        <div class="grid-stack-item" id="widget-recientes" gs-x="0" gs-y="0" gs-w="12" gs-h="5">
             <div class="grid-stack-item-content">
                 <div class="dash-grid-widget">
         <div class="chart-card">
@@ -474,7 +474,7 @@
                 <a href="{{ route('procesos.index') }}" style="font-size:11px;font-weight:700;color:#15803d;text-decoration:none"
                    onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Ver todos →</a>
             </div>
-            <div style="overflow-y:auto;max-height:190px">
+            <div style="overflow-y:auto;max-height:160px">
                 @forelse($procesosRecientes as $proc)
                 @php
                     $eCfg = $estadoConfig[$proc->estado] ?? ['label'=>$proc->estado,'color'=>'#6b7280','bg'=>'#f8fafc'];
@@ -531,7 +531,7 @@
         </div>
 
         {{-- ═══ FILA 5: TABLA SEGUIMIENTO ═══ --}}
-        <div class="grid-stack-item" id="widget-seguimiento" gs-x="0" gs-y="6" gs-w="12" gs-h="8">
+        <div class="grid-stack-item" id="widget-seguimiento" gs-x="0" gs-y="6" gs-w="12" gs-h="7">
             <div class="grid-stack-item-content">
                 <div class="dash-grid-widget">
         <div class="chart-card">
@@ -801,7 +801,7 @@
         const canvasConfigs = [
             {
                 canvasId: 'dashboardTopCanvas',
-                storageKey: 'dashboard.global.top.layout.v2',
+                storageKey: 'dashboard.global.top.layout.v4',
                 defaultLayout: [
                     { id: 'widget-kpi-total-procesos', x: 0, y: 0, w: 2, h: 1 },
                     { id: 'widget-kpi-en-curso', x: 2, y: 0, w: 2, h: 1 },
@@ -815,20 +815,20 @@
             },
             {
                 canvasId: 'dashboardGraphCanvas',
-                storageKey: 'dashboard.global.graph.layout.v2',
+                storageKey: 'dashboard.global.graph.layout.v4',
                 defaultLayout: [
-                    { id: 'widget-mensual', x: 0, y: 0, w: 4, h: 5 },
-                    { id: 'widget-estado', x: 4, y: 0, w: 4, h: 5 },
-                    { id: 'widget-tendencia', x: 8, y: 0, w: 4, h: 5 },
-                    { id: 'widget-area', x: 0, y: 5, w: 12, h: 3 },
+                    { id: 'widget-mensual', x: 0, y: 0, w: 4, h: 4 },
+                    { id: 'widget-estado', x: 4, y: 0, w: 4, h: 4 },
+                    { id: 'widget-tendencia', x: 8, y: 0, w: 4, h: 4 },
+                    { id: 'widget-area', x: 0, y: 4, w: 12, h: 2 },
                 ],
             },
             {
                 canvasId: 'dashboardBottomCanvas',
-                storageKey: 'dashboard.global.bottom.layout.v1',
+                storageKey: 'dashboard.global.bottom.layout.v3',
                 defaultLayout: [
-                    { id: 'widget-recientes', x: 0, y: 0, w: 12, h: 6 },
-                    { id: 'widget-seguimiento', x: 0, y: 6, w: 12, h: 8 },
+                    { id: 'widget-recientes', x: 0, y: 0, w: 12, h: 5 },
+                    { id: 'widget-seguimiento', x: 0, y: 5, w: 12, h: 7 },
                 ],
             },
         ];
@@ -907,8 +907,8 @@
             const grid = GridStackClass.init({
                 column: 12,
                 float: true,
-                margin: 6,
-                cellHeight: 58,
+                margin: 1,
+                cellHeight: 44,
                 animate: true,
                 disableDrag: false,
                 disableResize: false,

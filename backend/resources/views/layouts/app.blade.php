@@ -12,7 +12,7 @@
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased" style="background:#f1f5f9;font-family:'Inter',sans-serif" x-data="{ sidebar: false }">
+<body class="antialiased" style="margin:0;background:#f1f5f9;font-family:'Inter',sans-serif" x-data="{ sidebar: false }">
 <div class="flex h-screen overflow-hidden">
 
     {{-- Overlay móvil --}}

@@ -11,7 +11,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>html,body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body class="antialiased overflow-x-hidden lg:overflow-hidden">
+<body class="antialiased overflow-x-hidden lg:overflow-hidden" style="margin:0">
 <div class="min-h-screen flex lg:overflow-hidden">
 
     {{-- Panel izquierdo: Branding --}}
