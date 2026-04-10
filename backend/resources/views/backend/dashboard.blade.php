@@ -594,6 +594,12 @@
 
         const setEditMode = (enabled) => {
             grid.setStatic(!enabled);
+            if (typeof grid.enableMove === 'function') {
+                grid.enableMove(enabled);
+            }
+            if (typeof grid.enableResize === 'function') {
+                grid.enableResize(enabled);
+            }
             canvas.classList.toggle('dash-user-editing', enabled);
             if (editBtn) {
                 editBtn.classList.toggle('active', enabled);
@@ -635,7 +641,7 @@
                 if (typeof grid.compact === 'function') {
                     grid.compact();
                 }
-                setEditMode(true);
+                setEditMode(false);
                 saveLayout(grid, defaultLayout);
             });
         }

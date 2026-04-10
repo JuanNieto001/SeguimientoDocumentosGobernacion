@@ -894,7 +894,7 @@
                 resizable: { handles: 'all' },
             }, canvas);
 
-            grid.setStatic(false);
+            grid.setStatic(true);
             applyLayout(grid, readStoredLayout(config.storageKey, config.defaultLayout) || config.defaultLayout, config.defaultLayout);
 
             gridEntries.push({ grid, canvas, config });
@@ -904,8 +904,13 @@
 
         const setEditMode = (enabled) => {
             gridEntries.forEach(({ grid, canvas }) => {
-                grid.enableMove(enabled);
-                grid.enableResize(enabled);
+                grid.setStatic(!enabled);
+                if (typeof grid.enableMove === 'function') {
+                    grid.enableMove(enabled);
+                }
+                if (typeof grid.enableResize === 'function') {
+                    grid.enableResize(enabled);
+                }
                 canvas.classList.toggle('graph-editing', enabled);
 
                 if (enabled) {
@@ -943,7 +948,7 @@
             grid.on('resizestop', onGridChanged);
         });
 
-        setEditMode(true);
+        setEditMode(false);
 
         if (editBtn) {
             editBtn.addEventListener('click', () => {
@@ -962,7 +967,7 @@
                     localStorage.removeItem(config.storageKey);
                     applyLayout(grid, config.defaultLayout, config.defaultLayout);
                 });
-                setEditMode(true);
+                setEditMode(false);
                 persistAll();
             });
         }
