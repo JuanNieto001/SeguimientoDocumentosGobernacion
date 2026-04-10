@@ -12,6 +12,44 @@ if (-not (Get-Command php -ErrorAction SilentlyContinue)) {
     }
 }
 
+$envPath = Join-Path (Get-Location) '.env'
+$envExamplePath = Join-Path (Get-Location) '.env.example'
+$createdEnv = $false
+
+if (-not (Test-Path $envPath)) {
+    if (Test-Path $envExamplePath) {
+        Copy-Item $envExamplePath $envPath
+        $createdEnv = $true
+        Write-Host "Archivo .env creado desde .env.example." -ForegroundColor Green
+    } else {
+        Write-Host "No se encontro .env ni .env.example. Crea el .env manualmente." -ForegroundColor Red
+        exit 1
+    }
+}
+
+$needsKey = $false
+try {
+    $envContent = Get-Content $envPath -ErrorAction Stop
+} catch {
+    $envContent = @()
+}
+$appKeyLine = $envContent | Where-Object { $_ -match '^APP_KEY=' } | Select-Object -First 1
+if (-not $appKeyLine) {
+    $needsKey = $true
+} elseif ($appKeyLine -match '^APP_KEY=$' -or $appKeyLine -match '^APP_KEY=""$' -or $appKeyLine -match "^APP_KEY=''$") {
+    $needsKey = $true
+}
+
+if ($createdEnv -or $needsKey) {
+    Write-Host "Generando APP_KEY..." -ForegroundColor Yellow
+    & $php artisan key:generate --force
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error al generar APP_KEY." -ForegroundColor Red
+        exit 1
+    }
+}
+
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host " Inicializando Sistema de Seguimiento" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
