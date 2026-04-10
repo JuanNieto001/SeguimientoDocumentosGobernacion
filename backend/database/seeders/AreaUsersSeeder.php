@@ -208,13 +208,6 @@ class AreaUsersSeeder extends Seeder
                 'unidad_id'     => $uSistemas?->id,
             ],
             [
-                'name'          => 'Planeación Demo',
-                'email'         => 'planeacion@demo.com',
-                'role'          => 'planeacion',
-                'secretaria_id' => $secPlaneacion?->id,
-                'unidad_id'     => null,
-            ],
-            [
                 'name'          => 'Hacienda Demo',
                 'email'         => 'hacienda@demo.com',
                 'role'          => 'hacienda',
