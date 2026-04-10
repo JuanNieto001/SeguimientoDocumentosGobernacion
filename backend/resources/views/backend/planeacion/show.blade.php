@@ -84,7 +84,7 @@
                 ->where('tipo_archivo', 'estudios_previos')
                 ->first();
         @endphp
-        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+        <div class="bg-white rounded-2xl border overflow-hidden max-w-5xl w-full mx-auto" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">📄 Documento de Estudios Previos</h3>
             </div>
@@ -122,7 +122,7 @@
         </div>
 
         {{-- Recepción --}}
-        <div class="bg-white rounded-2xl border p-5" style="border-color:#e2e8f0">
+        <div class="bg-white rounded-2xl border p-5 max-w-5xl w-full mx-auto" style="border-color:#e2e8f0">
             <h3 class="text-sm font-semibold text-gray-700 mb-3">Recepción del documento</h3>
             <form method="POST" action="{{ route('workflow.recibir', $proceso->id) }}">
                 @csrf

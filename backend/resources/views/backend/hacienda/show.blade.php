@@ -79,7 +79,7 @@
         </div>
 
         {{-- Decisión --}}
-        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
+        <div class="bg-white rounded-2xl border overflow-hidden max-w-5xl w-full mx-auto" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">Decisión de Hacienda</h3>
             </div>
