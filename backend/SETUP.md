@@ -35,7 +35,8 @@ npm --prefix ../frontend install
 
 ### 3. Configurar entorno
 
-El archivo `.env` ya está configurado para SQLite. Si usas MySQL, edita:
+El script de setup crea `.env` desde `.env.example` y genera `APP_KEY` si faltan.
+Si usas MySQL, edita:
 
 ```env
 DB_CONNECTION=mysql
@@ -48,7 +49,7 @@ DB_PASSWORD=tu_contraseña
 
 ### 4. Inicializar base de datos
 
-Ejecuta el script de inicialización:
+Ejecuta el script de inicialización (crea `.env`/`APP_KEY` si faltan, corre migraciones y seeders):
 
 ```powershell
 .\scripts\local\setup\init.ps1
@@ -57,6 +58,7 @@ Ejecuta el script de inicialización:
 O manualmente:
 
 ```bash
+php artisan key:generate
 php artisan migrate --seed
 php artisan storage:link
 ```

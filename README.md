@@ -14,14 +14,21 @@ cd backend && composer install
 cd ../frontend && npm install
 ```
 
-2. Backend (terminal 1):
+2. Inicializar backend (crea `.env` y `APP_KEY` si faltan):
+
+```powershell
+cd backend
+.\scripts\local\setup\init.ps1
+```
+
+3. Backend (terminal 1):
 
 ```bash
 cd backend
 php artisan serve
 ```
 
-3. Frontend (terminal 2):
+4. Frontend (terminal 2):
 
 ```bash
 cd frontend

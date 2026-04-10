@@ -11,14 +11,21 @@ cd backend && composer install
 cd ../frontend && npm install
 ```
 
-2. Iniciar backend Laravel (terminal 1, desde `backend/`):
+2. Inicializar backend (crea `.env` y `APP_KEY` si faltan):
+
+```powershell
+cd backend
+.\scripts\local\setup\init.ps1
+```
+
+3. Iniciar backend Laravel (terminal 1, desde `backend/`):
 
 ```bash
 cd backend
 php artisan serve
 ```
 
-3. Iniciar frontend Vite (terminal 2, desde `frontend/`):
+4. Iniciar frontend Vite (terminal 2, desde `frontend/`):
 
 ```bash
 cd frontend
