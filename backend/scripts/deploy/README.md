@@ -37,6 +37,22 @@ powershell -ExecutionPolicy Bypass -File .\backend\scripts\deploy\deploy-app.ps1
 - Limpia y optimiza cache de config/vistas
 - Intenta `route:cache` solo si `route:list` funciona
 
+## Verificacion rapida del Motor de Flujos
+
+Ejecuta desde `backend/` para confirmar que solo existe CD-PN y que tiene 10 pasos:
+
+```bash
+php artisan tinker --execute="dump([
+	'flujos' => DB::table('flujos')->select('codigo','activo')->orderBy('codigo')->get(),
+	'pasos_cd_pn' => DB::table('flujo_pasos')
+		->join('flujo_versiones','flujo_versiones.id','=','flujo_pasos.flujo_version_id')
+		->join('flujos','flujos.id','=','flujo_versiones.flujo_id')
+		->where('flujos.codigo','CD_PN')
+		->count(),
+	'workflows' => DB::table('workflows')->select('codigo','activo')->orderBy('codigo')->get(),
+]);"
+```
+
 ## Nota importante
 
 Si `route:list` falla por clases/controladores faltantes en rutas API, el script no bloquea el deploy: omite `route:cache` para mantener la aplicacion operativa.
