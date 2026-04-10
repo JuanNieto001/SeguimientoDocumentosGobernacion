@@ -75,6 +75,13 @@
                 @php
                     $authUser = auth()->user();
                     $areaUsuario = match(true) {
+                        $authUser->hasRole('rentas') => 'rentas',
+                        $authUser->hasRole('contabilidad') => 'contabilidad',
+                        $authUser->hasRole('presupuesto') => 'presupuesto',
+                        $authUser->hasRole('inversiones_publicas') => 'inversiones_publicas',
+                        $authUser->hasRole('radicacion') => 'radicacion',
+                        $authUser->hasRole('compras') => 'compras',
+                        $authUser->hasRole('talento_humano') => 'talento_humano',
                         $authUser->hasRole('planeacion') => 'planeacion',
                         $authUser->hasRole('hacienda') => 'hacienda',
                         $authUser->hasRole('juridica') => 'juridica',
@@ -98,6 +105,12 @@
                                 })->count();
                         }
                     );
+                    $displayName = $authUser->name;
+                    $displaySub = $authUser->unidad?->nombre ?: $authUser->secretaria?->nombre;
+                    $displaySub = $displaySub ?: 'Sin unidad';
+                    $displayInitials = strtoupper(substr($displayName, 0, 2));
+                    $displayLabel = \Illuminate\Support\Str::limit($displayName, 24);
+                    $displaySubLabel = \Illuminate\Support\Str::limit($displaySub, 26);
                 @endphp
                 <a href="{{ route('alertas.index') }}" class="relative p-2 rounded-xl transition-all duration-150" style="color:#9ca3af" onmouseover="this.style.background='#f1f5f9';this.style.color='#374151'" onmouseout="this.style.background='';this.style.color='#9ca3af'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -107,9 +120,12 @@
                 </a>
                 <div class="flex items-center gap-2.5 pl-3 ml-1 border-l" style="border-color:#e2e8f0">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0" style="background:linear-gradient(135deg,#166534,#14532d);box-shadow:0 1px 3px rgba(0,0,0,0.2)">
-                        {{ strtoupper(substr(Auth::user()->name,0,2)) }}
+                        {{ $displayInitials }}
                     </div>
-                    <span class="hidden sm:block text-sm font-medium text-gray-700">{{ explode(' ',Auth::user()->name)[0] }}</span>
+                    <div class="hidden sm:flex flex-col leading-tight">
+                        <span class="text-sm font-medium text-gray-700" title="{{ $displayName }}">{{ $displayLabel }}</span>
+                        <span class="text-xs text-gray-400" title="{{ $displaySub }}">{{ $displaySubLabel }}</span>
+                    </div>
                 </div>
             </div>
         </header>

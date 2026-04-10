@@ -56,12 +56,21 @@ class AlertaController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        // Estadísticas
+        // Estadísticas (mismas reglas de visibilidad del usuario)
+        $statsQuery = Alerta::query();
+        if (!$user->hasRole('admin')) {
+            $statsQuery->where(function ($q) use ($user, $area) {
+                $q->where('user_id', $user->id);
+                if ($area) {
+                    $q->orWhere('area_responsable', $area);
+                }
+            });
+        }
         $estadisticas = [
-            'total' => Alerta::where('leida', false)->count(),
-            'alta' => Alerta::where('leida', false)->where('prioridad', 'alta')->count(),
-            'media' => Alerta::where('leida', false)->where('prioridad', 'media')->count(),
-            'baja' => Alerta::where('leida', false)->where('prioridad', 'baja')->count(),
+            'total' => (clone $statsQuery)->where('leida', false)->count(),
+            'alta' => (clone $statsQuery)->where('leida', false)->where('prioridad', 'alta')->count(),
+            'media' => (clone $statsQuery)->where('leida', false)->where('prioridad', 'media')->count(),
+            'baja' => (clone $statsQuery)->where('leida', false)->where('prioridad', 'baja')->count(),
         ];
 
         return view('alertas.index', compact('alertas', 'estadisticas', 'area'));
@@ -153,6 +162,13 @@ class AlertaController extends Controller
      */
     private function obtenerAreaUsuario($user): ?string
     {
+        if ($user->hasRole('rentas')) return 'rentas';
+        if ($user->hasRole('contabilidad')) return 'contabilidad';
+        if ($user->hasRole('presupuesto')) return 'presupuesto';
+        if ($user->hasRole('inversiones_publicas')) return 'inversiones_publicas';
+        if ($user->hasRole('radicacion')) return 'radicacion';
+        if ($user->hasRole('compras')) return 'compras';
+        if ($user->hasRole('talento_humano')) return 'talento_humano';
         if ($user->hasRole('planeacion')) return 'planeacion';
         if ($user->hasRole('hacienda')) return 'hacienda';
         if ($user->hasRole('juridica')) return 'juridica';
