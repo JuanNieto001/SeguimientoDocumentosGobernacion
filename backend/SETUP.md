@@ -97,16 +97,41 @@ Guia completa:
 
 ## 👥 Usuarios de Prueba
 
-Después de ejecutar los seeders, tendrás estos usuarios:
+Se crean dos grupos de usuarios (segun los seeders):
+
+### UsuariosPruebaSeeder (password: Caldas2025*)
 
 | Rol | Email | Password |
 |-----|-------|----------|
-| Admin | admin@gobernacion.gov.co | password |
-| Unidad Solicitante | unidad@gobernacion.gov.co | password |
-| Planeación | planeacion@gobernacion.gov.co | password |
-| Hacienda | hacienda@gobernacion.gov.co | password |
-| Jurídica | juridica@gobernacion.gov.co | password |
-| SECOP | secop@gobernacion.gov.co | password |
+| Admin general | admin@caldas.gov.co | Caldas2025* |
+| Admin secretaria Planeacion | admin.planeacion@caldas.gov.co | Caldas2025* |
+| Admin secretaria Hacienda | admin.hacienda@caldas.gov.co | Caldas2025* |
+| Admin secretaria Juridica | admin.juridica@caldas.gov.co | Caldas2025* |
+| Consulta | consulta1@caldas.gov.co | Caldas2025* |
+
+Otros usuarios (profesionales, revisores y consulta) estan definidos en UsuariosPruebaSeeder.
+
+### AreaUsersSeeder (password: 12345)
+
+| Rol/Area | Email | Password |
+|----------|-------|----------|
+| Jefe Unidad Sistemas (unidad solicitante) | jefe.sistemas@demo.com | 12345 |
+| Planeacion (Descentralizacion) | descentralizacion@demo.com | 12345 |
+| Rentas | rentas@demo.com | 12345 |
+| Contabilidad | contabilidad@demo.com | 12345 |
+| Presupuesto | presupuesto@demo.com | 12345 |
+| Compras | compras@demo.com | 12345 |
+| Talento Humano | talentohumano@demo.com | 12345 |
+| SECOP | secop@demo.com | 12345 |
+| Radicacion | radicacion@demo.com | 12345 |
+
+Para probar el panel ejecutivo de jefe de unidad, asigna el rol `jefe_unidad` a un usuario con unidad_id.
+
+## 🧭 Dashboards por rol
+
+- Panel de Control (ejecutivo): roles con dashboard_scope global/secretaria/unidad (admin, admin_general, gobernador, secretario, jefe_unidad).
+- Dashboard personal: roles de area documentos (compras, talento_humano, rentas, contabilidad, inversiones_publicas, presupuesto, radicacion) y otros.
+- Si un usuario tiene varios roles, se usa el alcance mas alto: global > secretaria > unidad > propios.
 
 ## 📁 Estructura del Proyecto
 

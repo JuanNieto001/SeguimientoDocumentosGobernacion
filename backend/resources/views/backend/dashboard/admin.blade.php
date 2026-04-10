@@ -40,6 +40,35 @@
         'juridica'           => '/juridica',
         'secop'              => '/secop',
     ];
+
+    $docsEstadoMap = [
+        'pendiente' => ['label' => 'Pendientes', 'color' => '#f59e0b'],
+        'aprobado'  => ['label' => 'Aprobados',  'color' => '#16a34a'],
+        'rechazado' => ['label' => 'Rechazados', 'color' => '#dc2626'],
+        'vencido'   => ['label' => 'Vencidos',   'color' => '#7c3aed'],
+    ];
+    $docsEstadoCounts = collect($documentosEstado ?? collect())
+        ->mapWithKeys(fn($row) => [(string) $row->estado => (int) $row->total]);
+    $docsEstadoLabels = [];
+    $docsEstadoValues = [];
+    $docsEstadoColors = [];
+    foreach ($docsEstadoMap as $key => $info) {
+        $docsEstadoLabels[] = $info['label'];
+        $docsEstadoValues[] = $docsEstadoCounts[$key] ?? 0;
+        $docsEstadoColors[] = $info['color'];
+    }
+
+    $etapasChartLabels = collect($etapasActivas ?? collect())->pluck('nombre')->toArray();
+    $etapasChartValues = collect($etapasActivas ?? collect())->pluck('total')->toArray();
+    $etapasChartColors = collect($etapasActivas ?? collect())->pluck('area_role')->map(function ($role) {
+        return [
+            'unidad_solicitante' => '#3b82f6',
+            'planeacion'         => '#16a34a',
+            'hacienda'           => '#ca8a04',
+            'juridica'           => '#ea580c',
+            'secop'              => '#9333ea',
+        ][$role] ?? '#64748b';
+    })->toArray();
     @endphp
 
     <link rel="stylesheet" href="{{ asset('vendor/gridstack/gridstack.min.css') }}">
@@ -437,6 +466,57 @@
                     </div>
                 </div>
             </div>
+
+            @if($scope === 'unidad')
+            <div class="grid-stack-item" id="widget-docs-estado" gs-x="0" gs-y="10" gs-w="4" gs-h="3">
+                <div class="grid-stack-item-content">
+                    <div class="dash-graph-widget">
+                        <div class="chart-card">
+                            <div class="chart-card-header">
+                                <div>
+                                    <h3>Documentos por estado</h3>
+                                    <p>Unidad actual</p>
+                                </div>
+                            </div>
+                            <div class="p-2 flex flex-col items-center justify-center" style="flex:1;min-height:120px">
+                                <div style="width:110px;height:110px;position:relative;flex-shrink:0">
+                                    <canvas id="docsEstadoUnidadChart"></canvas>
+                                </div>
+                                <div class="w-full mt-2 space-y-1">
+                                    @foreach($docsEstadoMap as $key => $info)
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:{{ $info['color'] }}"></span>
+                                            <span style="font-size:10px;color:#475569;font-weight:600">{{ $info['label'] }}</span>
+                                        </div>
+                                        <span style="font-size:11px;font-weight:800;color:{{ $info['color'] }}">{{ $docsEstadoCounts[$key] ?? 0 }}</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-stack-item" id="widget-etapas" gs-x="4" gs-y="10" gs-w="8" gs-h="3">
+                <div class="grid-stack-item-content">
+                    <div class="dash-graph-widget">
+                        <div class="chart-card">
+                            <div class="chart-card-header">
+                                <div>
+                                    <h3>Procesos por etapa</h3>
+                                    <p>Top etapas activas en la unidad</p>
+                                </div>
+                            </div>
+                            <div class="p-2" style="flex:1;min-height:120px">
+                                <canvas id="etapasUnidadChart" style="height:100% !important"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
 
         <div id="dashboardBottomCanvas" class="grid-stack dash-bottom-canvas">
@@ -750,6 +830,88 @@
         window.dashboardCharts.lineaTendenciaChart = trendChart;
     })();
 
+    @if($scope === 'unidad')
+    // ─── 5. DONUT: Documentos por estado ─────────────────────────────────────
+    (function () {
+        if (typeof Chart === 'undefined') return;
+        const ctx = document.getElementById('docsEstadoUnidadChart');
+        if (!ctx) return;
+        const labels = @json($docsEstadoLabels);
+        const data = @json($docsEstadoValues);
+        const colors = @json($docsEstadoColors);
+        const total = data.reduce((acc, val) => acc + val, 0);
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data: total > 0 ? data : [1, 1, 1, 1],
+                    backgroundColor: total > 0 ? colors : ['#e2e8f0','#e2e8f0','#e2e8f0','#e2e8f0'],
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                    hoverOffset: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '68%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: total > 0, cornerRadius: 8 }
+                }
+            }
+        });
+        window.dashboardCharts.docsEstadoUnidadChart = chart;
+    })();
+
+    // ─── 6. HORIZONTAL BAR: Procesos por etapa ───────────────────────────────
+    (function () {
+        if (typeof Chart === 'undefined') return;
+        const ctx = document.getElementById('etapasUnidadChart');
+        if (!ctx) return;
+        const labels = @json($etapasChartLabels);
+        const data = @json($etapasChartValues);
+        const colors = @json($etapasChartColors);
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: colors.map(color => color + '66'),
+                    borderColor: colors,
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { cornerRadius: 8 }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#f1f5f9' },
+                        border: { dash: [3, 3], color: 'transparent' },
+                        ticks: { font: { size: 10 }, precision: 0 },
+                        beginAtZero: true
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 } }
+                    }
+                }
+            }
+        });
+        window.dashboardCharts.etapasUnidadChart = chart;
+    })();
+    @endif
+
     // ─── 5. CANVAS: GridStack para TODO el dashboard ─────────────────────────
     (function () {
         const editBtn = document.getElementById('graphEditToggle');
@@ -795,6 +957,10 @@
                     { id: 'widget-estado', x: 4, y: 4, w: 4, h: 4 },
                     { id: 'widget-tendencia', x: 8, y: 4, w: 4, h: 4 },
                     { id: 'widget-area', x: 0, y: 8, w: 12, h: 2 },
+                    @if($scope === 'unidad')
+                    { id: 'widget-docs-estado', x: 0, y: 10, w: 4, h: 3 },
+                    { id: 'widget-etapas', x: 4, y: 10, w: 8, h: 3 },
+                    @endif
                 ],
             },
             {

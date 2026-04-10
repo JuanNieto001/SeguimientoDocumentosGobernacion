@@ -17,6 +17,8 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $user->loadMissing('roles');
+        $roleNames = $user->roles->pluck('name')->all();
 
         $filtroPeriodo = $request->input('periodo', 'mes');
         $filtroPeriodo = $filtroPeriodo === 'anio' ? 'anio' : 'mes';
@@ -36,12 +38,11 @@ class DashboardController extends Controller
             $periodoLabel = $inicioPeriodo->translatedFormat('F Y');
         }
         
-        // Obtener el alcance del rol del usuario
-        $role = $user->roles()->first();
-        $dashboardScope = $role->dashboard_scope ?? 'propios';
+        // Obtener el alcance del dashboard segun todos los roles del usuario
+        $dashboardScope = $this->resolveDashboardScope($user, $user->roles, $roleNames);
         
         // Si el alcance es global, secretaria o unidad, usar el dashboard ejecutivo
-        if (in_array($dashboardScope, ['global', 'secretaria', 'unidad'])) {
+        if (in_array($dashboardScope, ['global', 'secretaria', 'unidad'], true)) {
             return $this->dashboardEjecutivo($user, $dashboardScope);
         }
 
@@ -256,6 +257,28 @@ class DashboardController extends Controller
                 ->where('leida', false)->count(),
         ];
 
+        // ── Señales adicionales para Jefes de Unidad ───────────────────────
+        $documentosEstado = collect();
+        $etapasActivas = collect();
+
+        if ($scope === 'unidad' && $uniId) {
+            $documentosEstado = DB::table('proceso_etapa_archivos as pea')
+                ->join('procesos as p', 'p.id', '=', 'pea.proceso_id')
+                ->where('p.unidad_origen_id', $uniId)
+                ->select('pea.estado', DB::raw('count(*) as total'))
+                ->groupBy('pea.estado')
+                ->orderBy('pea.estado')
+                ->get();
+
+            $etapasActivas = $scoped()
+                ->join('etapas as e', 'e.id', '=', 'procesos.etapa_actual_id')
+                ->select('e.nombre', 'e.area_role', DB::raw('count(*) as total'))
+                ->groupBy('e.id', 'e.nombre', 'e.area_role')
+                ->orderByDesc('total')
+                ->limit(6)
+                ->get();
+        }
+
         // ── Procesos recientes ──────────────────────────────────────────────
         $procesosRecientes = $scoped()
             ->leftJoin('workflows as w', 'w.id', '=', 'procesos.workflow_id')
@@ -319,8 +342,45 @@ class DashboardController extends Controller
             'alertasAltas', 'alertasTotal',
             'tendencia', 'porArea', 'porEstadoRaw', 'porModalidad',
             'alertasRiesgos', 'procesosRecientes',
-            'listaLateral', 'listaLateralTipo'
+            'listaLateral', 'listaLateralTipo',
+            'documentosEstado', 'etapasActivas'
         ));
+    }
+
+    private function resolveDashboardScope($user, $roles, array $roleNames): string
+    {
+        $priority = ['propios' => 0, 'unidad' => 1, 'secretaria' => 2, 'global' => 3];
+        $scope = 'propios';
+
+        foreach ($roles as $role) {
+            $roleScope = $role->dashboard_scope ?? null;
+            if (!is_string($roleScope) || !isset($priority[$roleScope])) {
+                continue;
+            }
+            if ($priority[$roleScope] > $priority[$scope]) {
+                $scope = $roleScope;
+            }
+        }
+
+        if ($scope === 'propios') {
+            if (!empty(array_intersect($roleNames, ['admin', 'admin_general', 'gobernador']))) {
+                $scope = 'global';
+            } elseif (!empty(array_intersect($roleNames, ['secretario', 'admin_secretaria']))) {
+                $scope = 'secretaria';
+            } elseif (in_array('jefe_unidad', $roleNames, true)) {
+                $scope = 'unidad';
+            }
+        }
+
+        if ($scope === 'secretaria' && empty($user->secretaria_id)) {
+            return 'propios';
+        }
+
+        if ($scope === 'unidad' && empty($user->unidad_id)) {
+            return 'propios';
+        }
+
+        return $scope;
     }
 
     /**

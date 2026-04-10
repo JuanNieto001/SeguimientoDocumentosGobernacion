@@ -32,6 +32,12 @@ cd frontend
 npm run dev
 ```
 
+## Dashboards por rol
+
+- Panel de Control (ejecutivo): roles con dashboard_scope global/secretaria/unidad (admin, admin_general, gobernador, secretario, jefe_unidad).
+- Dashboard personal: roles de area documentos (compras, talento_humano, rentas, contabilidad, inversiones_publicas, presupuesto, radicacion) y otros.
+- Si un usuario tiene varios roles, se usa el alcance mas alto: global > secretaria > unidad > propios.
+
 ## Estructura organizada
 
 Carpetas principales:
