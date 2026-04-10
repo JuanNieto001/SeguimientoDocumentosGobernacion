@@ -72,6 +72,7 @@
                 @endisset
             </div>
             <div class="flex items-center gap-2">
+                <div class="relative w-11 h-11 shrink-0" data-marsetiv-anchor aria-hidden="true" style="pointer-events:none"></div>
                 @php
                     $authUser = auth()->user();
                     $areaUsuario = match(true) {

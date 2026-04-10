@@ -443,18 +443,12 @@
 <div x-data="agenteEstiven()"
      x-cloak
     x-ref="widgetRoot"
-    class="fixed z-50"
+    class="fixed z-50 estiven-widget"
     x-bind:style="'left:' + posX + 'px; top:' + posY + 'px;'">
 
     {{-- ── Panel desplegable ── --}}
-    <div x-show="open"
+     <div x-show="open"
             x-ref="panel"
-         x-transition:enter="transition ease-out duration-250"
-         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
-         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
             class="absolute rounded-2xl overflow-hidden flex flex-col estiven-panel"
             x-bind:style="panelStyle">
 
@@ -700,69 +694,103 @@
     </div>
 
     {{-- ── Botón flotante (sin tooltip para evitar saltos) ── --}}
-        <button @click="toggleOpenFromFab()"
-                x-ref="fab"
-                @pointerdown="startDrag($event)"
-                class="estiven-fab relative flex items-center justify-center transition-all duration-300 focus:outline-none"
-                title="Marsetiv bot">
+    <button @click="toggleOpenFromFab()"
+            x-ref="fab"
+            @pointerdown="startDrag($event)"
+            class="estiven-fab relative flex items-center justify-center transition-all duration-300 focus:outline-none"
+            x-bind:aria-label="open ? 'Cerrar Marsetiv bot' : 'Abrir Marsetiv bot'"
+            title="Marsetiv bot">
 
-            {{-- Estado cerrado: carita --}}
-            <div x-show="!open" x-transition class="w-14 h-14 rounded-full flex items-center justify-center shadow-xl estiven-fab-face"
-                 style="background: linear-gradient(145deg, #FBBF24 0%, #F59E0B 100%); box-shadow: 0 8px 25px rgba(245,158,11,.4);">
-                <svg class="w-9 h-9" viewBox="0 0 100 100" fill="none">
-                    <!-- Cara base -->
-                    <circle cx="50" cy="50" r="46" fill="#FBBF24"/>
-                    <circle cx="50" cy="50" r="46" fill="url(#faceGrad)"/>
-                    <!-- Ojos -->
-                    <ellipse cx="35" cy="40" rx="5.5" ry="7" fill="#1e293b"/>
-                    <ellipse cx="65" cy="40" rx="5.5" ry="7" fill="#1e293b"/>
-                    <!-- Brillo ojos -->
-                    <circle cx="37.5" cy="37.5" r="2.5" fill="white"/>
-                    <circle cx="67.5" cy="37.5" r="2.5" fill="white"/>
-                    <!-- Sonrisa grande -->
-                    <path d="M 30 58 Q 50 78 70 58" stroke="#92400e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-                    <!-- Mejillas -->
-                    <circle cx="23" cy="55" r="6" fill="#F97316" opacity="0.25"/>
-                    <circle cx="77" cy="55" r="6" fill="#F97316" opacity="0.25"/>
-                    <!-- Headset -->
-                    <path d="M 12 42 Q 12 12 50 8 Q 88 12 88 42" stroke="#166534" stroke-width="6" fill="none" stroke-linecap="round"/>
-                    <rect x="6" y="37" width="12" height="16" rx="5" fill="#166534"/>
-                    <rect x="82" y="37" width="12" height="16" rx="5" fill="#166534"/>
-                    <line x1="12" y1="53" x2="12" y2="63" stroke="#166534" stroke-width="3.5" stroke-linecap="round"/>
-                    <circle cx="12" cy="65" r="4" fill="#15803d"/>
-                    <defs>
-                        <radialGradient id="faceGrad" cx="40%" cy="35%">
-                            <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.6"/>
-                            <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
-                        </radialGradient>
-                    </defs>
-                </svg>
-            </div>
+        {{-- Estado cerrado: mini --}}
+        <span x-show="!open" class="estiven-fab-mini estiven-fab-face" aria-hidden="true">
+            <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
+                <!-- Cara base -->
+                <circle cx="50" cy="50" r="46" fill="#FBBF24"/>
+                <circle cx="50" cy="50" r="46" fill="url(#faceGrad)"/>
+                <!-- Ojos -->
+                <ellipse cx="35" cy="40" rx="5.5" ry="7" fill="#1e293b"/>
+                <ellipse cx="65" cy="40" rx="5.5" ry="7" fill="#1e293b"/>
+                <!-- Brillo ojos -->
+                <circle cx="37.5" cy="37.5" r="2.5" fill="white"/>
+                <circle cx="67.5" cy="37.5" r="2.5" fill="white"/>
+                <!-- Sonrisa grande -->
+                <path d="M 30 58 Q 50 78 70 58" stroke="#92400e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                <!-- Mejillas -->
+                <circle cx="23" cy="55" r="6" fill="#F97316" opacity="0.25"/>
+                <circle cx="77" cy="55" r="6" fill="#F97316" opacity="0.25"/>
+                <!-- Headset -->
+                <path d="M 12 42 Q 12 12 50 8 Q 88 12 88 42" stroke="#166534" stroke-width="6" fill="none" stroke-linecap="round"/>
+                <rect x="6" y="37" width="12" height="16" rx="5" fill="#166534"/>
+                <rect x="82" y="37" width="12" height="16" rx="5" fill="#166534"/>
+                <line x1="12" y1="53" x2="12" y2="63" stroke="#166534" stroke-width="3.5" stroke-linecap="round"/>
+                <circle cx="12" cy="65" r="4" fill="#15803d"/>
+                <defs>
+                    <radialGradient id="faceGrad" cx="40%" cy="35%">
+                        <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+            </svg>
+        </span>
 
-            {{-- Estado abierto: X --}}
-            <div x-show="open" x-transition class="w-14 h-14 rounded-full flex items-center justify-center shadow-xl"
-                 style="background: linear-gradient(135deg, #15803d, #052e16); box-shadow: 0 8px 25px rgba(21,128,61,.4);">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </div>
+        {{-- Estado abierto: X --}}
+        <span x-show="open" class="estiven-fab-mini estiven-fab-close" aria-hidden="true">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </span>
 
-            {{-- Indicador de actividad --}}
-            <span x-show="!open" class="absolute top-0 right-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center estiven-pulse"
-                  style="border: 2.5px solid white; box-shadow: 0 2px 4px rgba(0,0,0,.15);">
-                <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-            </span>
-        </button>
+        {{-- Indicador de actividad --}}
+        <span x-show="!open" class="estiven-pulse estiven-fab-status">
+            <span class="estiven-fab-status-dot"></span>
+        </span>
+    </button>
 </div>
 
 <style>
     [x-cloak] { display: none !important; }
 
+    .estiven-fab { padding: 0; }
+
+    .estiven-fab-mini {
+        width: 44px;
+        height: 44px;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,.2);
+        background: linear-gradient(145deg, #FBBF24 0%, #F59E0B 100%);
+    }
+
+    .estiven-fab-close {
+        background: linear-gradient(135deg, #15803d, #052e16);
+    }
+
+    .estiven-fab-status {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        width: 14px;
+        height: 14px;
+        border-radius: 9999px;
+        background: #22c55e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,.15);
+    }
+
+    .estiven-fab-status-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 9999px;
+        background: #ffffff;
+    }
+
     .estiven-fab-face {
         transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-    }
-    .estiven-fab-face:hover {
-        transform: scale(1.03);
     }
 
     .estiven-pulse {
@@ -814,12 +842,9 @@
     }
 
     .estiven-panel {
-        animation: estiven-panel-in .25s ease-out;
+        animation: none;
     }
-    @keyframes estiven-panel-in {
-        from { opacity: 0; transform: translateY(10px) scale(.97); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
+
 </style>
 
 <script>
@@ -849,14 +874,28 @@ function agenteEstiven() {
         helpEnviado: false,
         helpError: '',
         storageKey: 'marsetiv_widget_position_v1',
+        anchorSelector: '[data-marsetiv-anchor]',
+        get anchorEl() {
+            return document.querySelector(this.anchorSelector);
+        },
+        get isAnchored() {
+            const anchor = this.anchorEl;
+            if (!anchor) return false;
+            const rect = anchor.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        },
         get panelStyle() {
-            return `width: 380px; max-height: 530px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 25px 60px -12px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.03); left: ${this.panelLeft}px; top: ${this.panelTop}px;`;
+            return `width: 320px; max-height: 420px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 25px 50px -12px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.03); left: ${this.panelLeft}px; top: ${this.panelTop}px;`;
         },
 
         init() {
             this.$nextTick(() => {
                 this.restorePosition();
                 this.resizeHandler = () => {
+                    if (this.syncToAnchor()) {
+                        this.updatePanelPlacement();
+                        return;
+                    }
                     this.clampToViewport();
                     this.updatePanelPlacement();
                 };
@@ -892,7 +931,21 @@ function agenteEstiven() {
             }
         },
 
+        syncToAnchor() {
+            const anchor = this.anchorEl;
+            if (!anchor) return false;
+            const rect = anchor.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) return false;
+            const fab = this.$refs.fab;
+            const fabW = fab?.offsetWidth || 44;
+            const fabH = fab?.offsetHeight || 44;
+            this.posX = rect.left + (rect.width - fabW) / 2;
+            this.posY = rect.top + (rect.height - fabH) / 2;
+            return true;
+        },
+
         restorePosition() {
+            if (this.syncToAnchor()) return;
             try {
                 const raw = localStorage.getItem(this.storageKey);
                 if (raw) {
@@ -912,6 +965,7 @@ function agenteEstiven() {
         },
 
         persistPosition() {
+            if (this.isAnchored) return;
             try {
                 localStorage.setItem(this.storageKey, JSON.stringify({ x: this.posX, y: this.posY }));
             } catch (_) {
@@ -920,20 +974,25 @@ function agenteEstiven() {
         },
 
         setInitialPosition() {
+            if (this.syncToAnchor()) {
+                this.updatePanelPlacement();
+                return;
+            }
             const margin = 20;
             const fab = this.$refs.fab;
-            const fabW = fab?.offsetWidth || 56;
-            const fabH = fab?.offsetHeight || 56;
+            const fabW = fab?.offsetWidth || 44;
+            const fabH = fab?.offsetHeight || 44;
             this.posX = Math.max(margin, window.innerWidth - fabW - margin);
             this.posY = Math.max(margin, window.innerHeight - fabH - margin);
             this.updatePanelPlacement();
         },
 
         clampToViewport() {
+            if (this.syncToAnchor()) return;
             const margin = 12;
             const fab = this.$refs.fab;
-            const fabW = fab?.offsetWidth || 56;
-            const fabH = fab?.offsetHeight || 56;
+            const fabW = fab?.offsetWidth || 44;
+            const fabH = fab?.offsetHeight || 44;
             const maxX = Math.max(margin, window.innerWidth - fabW - margin);
             const maxY = Math.max(margin, window.innerHeight - fabH - margin);
             this.posX = Math.min(Math.max(margin, this.posX), maxX);
@@ -943,10 +1002,10 @@ function agenteEstiven() {
         updatePanelPlacement() {
             const margin = 12;
             const gap = 10;
-            const panelWidth = 380;
-            const panelHeight = Math.min(this.$refs.panel?.offsetHeight || 530, 530);
-            const fabW = this.$refs.fab?.offsetWidth || 56;
-            const fabH = this.$refs.fab?.offsetHeight || 56;
+            const panelWidth = 320;
+            const panelHeight = Math.min(this.$refs.panel?.offsetHeight || 420, 420);
+            const fabW = this.$refs.fab?.offsetWidth || 44;
+            const fabH = this.$refs.fab?.offsetHeight || 44;
 
             let absoluteLeft = this.posX - (panelWidth - fabW);
             absoluteLeft = Math.min(
@@ -960,7 +1019,9 @@ function agenteEstiven() {
             const canOpenAbove = aboveTop >= margin;
 
             let absoluteTop;
-            if (!canOpenBelow && canOpenAbove) {
+            if (this.isAnchored) {
+                absoluteTop = Math.min(belowTop, Math.max(margin, window.innerHeight - margin - panelHeight));
+            } else if (!canOpenBelow && canOpenAbove) {
                 absoluteTop = aboveTop;
             } else {
                 absoluteTop = canOpenBelow
@@ -973,6 +1034,7 @@ function agenteEstiven() {
         },
 
         startDrag(event) {
+            if (this.isAnchored) return;
             if (event.target.closest('input, textarea, select, a, [data-no-drag]')) return;
             if (event.button !== undefined && event.button !== 0) return;
 
