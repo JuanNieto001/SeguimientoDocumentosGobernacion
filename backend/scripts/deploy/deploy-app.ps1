@@ -13,52 +13,58 @@ function Get-PhpCommand {
 
 $php = Get-PhpCommand
 
-Write-Host '[1/10] Instalando dependencias PHP (produccion)...' -ForegroundColor Cyan
+Write-Host '[1/12] Instalando dependencias PHP (produccion)...' -ForegroundColor Cyan
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
-Write-Host '[2/10] Instalando dependencias Node...' -ForegroundColor Cyan
+Write-Host '[2/12] Instalando dependencias Node...' -ForegroundColor Cyan
 if (Test-Path '..\frontend\package-lock.json') {
     npm.cmd --prefix ..\frontend ci --no-audit --no-fund
 } else {
     npm.cmd --prefix ..\frontend install --no-audit --no-fund
 }
 
-Write-Host '[3/10] Compilando assets frontend...' -ForegroundColor Cyan
+Write-Host '[3/12] Compilando assets frontend...' -ForegroundColor Cyan
 npm.cmd --prefix ..\frontend run build
 
-Write-Host '[4/10] Preparando .env...' -ForegroundColor Cyan
+Write-Host '[4/12] Preparando .env...' -ForegroundColor Cyan
 if (-not (Test-Path '.env')) {
     Copy-Item '.env.example' '.env'
     Write-Host '  - .env creado desde .env.example' -ForegroundColor Yellow
 }
 
-Write-Host '[5/10] Generando APP_KEY si hace falta...' -ForegroundColor Cyan
+Write-Host '[5/12] Generando APP_KEY si hace falta...' -ForegroundColor Cyan
 $envContent = Get-Content '.env' -Raw
 if ($envContent -notmatch 'APP_KEY=base64:') {
     & $php artisan key:generate --force
 }
 
-Write-Host '[6/10] Ejecutando migraciones...' -ForegroundColor Cyan
+Write-Host '[6/12] Ejecutando migraciones...' -ForegroundColor Cyan
 & $php artisan migrate --force
 
-Write-Host '[7/10] Sincronizando roles y permisos...' -ForegroundColor Cyan
+Write-Host '[7/12] Sincronizando roles y permisos...' -ForegroundColor Cyan
 & $php artisan db:seed --class=RolesAndPermissionsSeeder --force
 
-Write-Host '[8/10] Verificando link de storage...' -ForegroundColor Cyan
+Write-Host '[8/12] Creando secretarias y unidades base...' -ForegroundColor Cyan
+& $php artisan db:seed --class=SecretariasUnidadesSeeder --force
+
+Write-Host '[9/12] Inicializando motor de flujos (CD-PN)...' -ForegroundColor Cyan
+& $php artisan db:seed --class=MotorFlujosBootstrapSeeder --force
+
+Write-Host '[10/12] Verificando link de storage...' -ForegroundColor Cyan
 try {
     & $php artisan storage:link
 } catch {
     Write-Host '  - storage:link omitido (ya existe o no aplica)' -ForegroundColor Yellow
 }
 
-Write-Host '[9/10] Limpiando y optimizando cache segura...' -ForegroundColor Cyan
+Write-Host '[11/12] Limpiando y optimizando cache segura...' -ForegroundColor Cyan
 & $php artisan config:clear
 & $php artisan cache:clear
 & $php artisan view:clear
 & $php artisan config:cache
 & $php artisan view:cache
 
-Write-Host '[10/10] Intentando cache de rutas (opcional)...' -ForegroundColor Cyan
+Write-Host '[12/12] Intentando cache de rutas (opcional)...' -ForegroundColor Cyan
 try {
     & $php artisan route:list *> $null
     & $php artisan route:cache

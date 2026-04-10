@@ -18,23 +18,34 @@ class MotorFlujosSeeder extends Seeder
 {
     public function run(): void
     {
+        $driver = DB::getDriverName();
         $now = Carbon::now();
 
         // ═══════════════════════════════════════════════════════════════
         // 0) LIMPIAR TABLAS DEL MOTOR (permite re-ejecutar sin error)
         // ═══════════════════════════════════════════════════════════════
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('flujo_instancia_docs')->truncate();
-        DB::table('flujo_instancia_pasos')->truncate();
-        DB::table('flujo_instancias')->truncate();
-        DB::table('flujo_paso_responsables')->truncate();
-        DB::table('flujo_paso_documentos')->truncate();
-        DB::table('flujo_paso_condiciones')->truncate();
-        DB::table('flujo_pasos')->truncate();
-        DB::table('flujo_versiones')->truncate();
-        DB::table('flujos')->truncate();
-        DB::table('catalogo_pasos')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        } elseif ($driver === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = OFF;');
+        }
+
+        $this->wipeTable('flujo_instancia_docs', $driver);
+        $this->wipeTable('flujo_instancia_pasos', $driver);
+        $this->wipeTable('flujo_instancias', $driver);
+        $this->wipeTable('flujo_paso_responsables', $driver);
+        $this->wipeTable('flujo_paso_documentos', $driver);
+        $this->wipeTable('flujo_paso_condiciones', $driver);
+        $this->wipeTable('flujo_pasos', $driver);
+        $this->wipeTable('flujo_versiones', $driver);
+        $this->wipeTable('flujos', $driver);
+        $this->wipeTable('catalogo_pasos', $driver);
+
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        } elseif ($driver === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = ON;');
+        }
         $this->command->info('🧹 Tablas del motor de flujos limpiadas.');
 
         // ═══════════════════════════════════════════════════════════════
@@ -74,11 +85,19 @@ class MotorFlujosSeeder extends Seeder
         $pasoIds = DB::table('catalogo_pasos')->pluck('id', 'codigo');
 
         // Obtener ID de secretaría de Planeación para asociar el flujo
-        $secPlaneacion = DB::table('secretarias')->where('nombre', 'like', '%Planeación%')->value('id');
+        $secPlaneacion = DB::table('secretarias')
+            ->where('nombre', 'like', '%Planeación%')
+            ->orWhere('nombre', 'like', '%Planeacion%')
+            ->value('id');
 
         if (!$secPlaneacion) {
-            $secPlaneacion = DB::table('secretarias')->first()?->id ?? 1;
-            $this->command->warn('⚠️  No se encontró la Secretaría de Planeación. Usando ID genérico.');
+            $secPlaneacion = DB::table('secretarias')->insertGetId([
+                'nombre'     => 'Secretaría de Planeación',
+                'activo'     => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+            $this->command->warn('⚠️  No se encontró la Secretaría de Planeación. Se creó una por defecto.');
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -255,5 +274,16 @@ class MotorFlujosSeeder extends Seeder
         $this->command->info('  • Catálogo: ' . count($catalogoPasos) . ' pasos reutilizables');
         $this->command->info('  • Flujo CD-PN: 10 pasos');
         $this->command->info('══════════════════════════════════════════════════');
+    }
+
+    private function wipeTable(string $table, string $driver): void
+    {
+        if ($driver === 'sqlite') {
+            DB::table($table)->delete();
+            DB::statement("DELETE FROM sqlite_sequence WHERE name='{$table}'");
+            return;
+        }
+
+        DB::table($table)->truncate();
     }
 }
