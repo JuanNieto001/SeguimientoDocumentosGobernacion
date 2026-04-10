@@ -14,9 +14,27 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+
+        $filtroPeriodo = $request->input('periodo', 'mes');
+        $filtroPeriodo = $filtroPeriodo === 'anio' ? 'anio' : 'mes';
+        $filtroAnio = (int) $request->input('anio', now()->year);
+        $filtroMes = (int) $request->input('mes', now()->month);
+
+        $filtroAnio = $filtroAnio > 0 ? $filtroAnio : (int) now()->year;
+        $filtroMes = ($filtroMes >= 1 && $filtroMes <= 12) ? $filtroMes : (int) now()->month;
+
+        if ($filtroPeriodo === 'anio') {
+            $inicioPeriodo = Carbon::create($filtroAnio, 1, 1)->startOfYear();
+            $finPeriodo = Carbon::create($filtroAnio, 12, 31)->endOfYear();
+            $periodoLabel = (string) $filtroAnio;
+        } else {
+            $inicioPeriodo = Carbon::create($filtroAnio, $filtroMes, 1)->startOfMonth();
+            $finPeriodo = Carbon::create($filtroAnio, $filtroMes, 1)->endOfMonth();
+            $periodoLabel = $inicioPeriodo->translatedFormat('F Y');
+        }
         
         // Obtener el alcance del rol del usuario
         $role = $user->roles()->first();
@@ -33,11 +51,17 @@ class DashboardController extends Controller
 
         // Cargar solicitudes de documentos pendientes/subidos para estos roles
         $solicitudesPendientes = collect();
+        $solicitudesPendientesArea = collect();
+        $kpisDocumentos = null;
         if ($userRolesDoc->isNotEmpty()) {
+            $rolesDoc = $userRolesDoc->values()->toArray();
+
             $solicitudesPendientes = DB::table('proceso_documentos_solicitados as pds')
                 ->join('procesos', 'procesos.id', '=', 'pds.proceso_id')
                 ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id')
-                ->whereIn('pds.area_responsable_rol', $userRolesDoc->values()->toArray())
+                ->whereIn('pds.area_responsable_rol', $rolesDoc)
+                ->where('pds.subido_por', $user->id)
+                ->whereBetween('pds.subido_at', [$inicioPeriodo, $finPeriodo])
                 ->select(
                     'procesos.id as proceso_id',
                     'procesos.codigo as proceso_codigo',
@@ -50,6 +74,36 @@ class DashboardController extends Controller
                 ->groupBy('procesos.id', 'procesos.codigo', 'procesos.objeto', 'etapas.nombre')
                 ->orderByDesc('procesos.id')
                 ->get();
+
+            $solicitudesPendientesArea = DB::table('proceso_documentos_solicitados as pds')
+                ->join('procesos', 'procesos.id', '=', 'pds.proceso_id')
+                ->leftJoin('etapas', 'etapas.id', '=', 'procesos.etapa_actual_id')
+                ->whereIn('pds.area_responsable_rol', $rolesDoc)
+                ->whereBetween('pds.created_at', [$inicioPeriodo, $finPeriodo])
+                ->select(
+                    'procesos.id as proceso_id',
+                    'procesos.codigo as proceso_codigo',
+                    'procesos.objeto as proceso_objeto',
+                    'etapas.nombre as etapa_nombre',
+                    DB::raw('COUNT(*) as total_docs'),
+                    DB::raw('SUM(CASE WHEN pds.estado = "subido" THEN 1 ELSE 0 END) as docs_subidos'),
+                    DB::raw('SUM(CASE WHEN pds.estado = "pendiente" AND pds.puede_subir = 1 THEN 1 ELSE 0 END) as docs_pendientes')
+                )
+                ->groupBy('procesos.id', 'procesos.codigo', 'procesos.objeto', 'etapas.nombre')
+                ->havingRaw('SUM(CASE WHEN pds.estado = "pendiente" AND pds.puede_subir = 1 THEN 1 ELSE 0 END) > 0')
+                ->orderByDesc('procesos.id')
+                ->get();
+
+            $kpisDocumentos = DB::table('proceso_documentos_solicitados as pds')
+                ->leftJoin('proceso_etapa_archivos as pea', 'pea.id', '=', 'pds.archivo_id')
+                ->whereIn('pds.area_responsable_rol', $rolesDoc)
+                ->where('pds.subido_por', $user->id)
+                ->whereBetween('pds.subido_at', [$inicioPeriodo, $finPeriodo])
+                ->select(
+                    DB::raw('COALESCE(SUM(CASE WHEN pea.estado = "aprobado" THEN 1 ELSE 0 END), 0) as aprobados'),
+                    DB::raw('COALESCE(SUM(CASE WHEN pea.estado = "rechazado" THEN 1 ELSE 0 END), 0) as rechazados')
+                )
+                ->first();
         }
 
         $base = DB::table('procesos')
@@ -80,9 +134,19 @@ class DashboardController extends Controller
         $enCurso = $all->where('estado', 'EN_CURSO')->values();
         $finalizados = $all->where('estado', 'FINALIZADO')->values();
 
-        $metricas = $this->computeMetricas($user, $userRolesDoc);
+        $metricas = $this->computeMetricas($user, $userRolesDoc, $inicioPeriodo, $finPeriodo, $filtroPeriodo, $periodoLabel);
 
-        return view('dashboard', compact('enCurso', 'finalizados', 'solicitudesPendientes', 'metricas'));
+        return view('dashboard', compact(
+            'enCurso',
+            'finalizados',
+            'solicitudesPendientes',
+            'solicitudesPendientesArea',
+            'metricas',
+            'kpisDocumentos',
+            'filtroPeriodo',
+            'filtroMes',
+            'filtroAnio'
+        ));
     }
 
     /**
@@ -262,118 +326,121 @@ class DashboardController extends Controller
     /**
      * Métricas mensuales personalizadas según el rol del usuario (roles de área)
      */
-    private function computeMetricas($user, $userRolesDoc)
+    private function computeMetricas($user, $userRolesDoc, Carbon $inicioPeriodo, Carbon $finPeriodo, string $filtroPeriodo, string $periodoLabel)
     {
-        $inicioMes = now()->startOfMonth();
-        $finMes    = now()->endOfMonth();
+        $periodoTexto = $filtroPeriodo === 'anio' ? 'este año' : 'este mes';
 
         // ── Áreas de documentos (compras, talento_humano, rentas, etc.) ───────
         if ($userRolesDoc->isNotEmpty()) {
             $roles = $userRolesDoc->values()->toArray();
 
-            $asignadosMes = DB::table('proceso_documentos_solicitados as pds')
+            $asignadosPeriodo = DB::table('proceso_documentos_solicitados as pds')
                 ->join('procesos', 'procesos.id', '=', 'pds.proceso_id')
                 ->whereIn('pds.area_responsable_rol', $roles)
-                ->whereBetween('pds.created_at', [$inicioMes, $finMes])
+                ->whereBetween('pds.created_at', [$inicioPeriodo, $finPeriodo])
                 ->distinct('pds.proceso_id')->count('pds.proceso_id');
 
-            $subidosMes = DB::table('proceso_documentos_solicitados')
+            $subidosPeriodo = DB::table('proceso_documentos_solicitados')
                 ->whereIn('area_responsable_rol', $roles)
                 ->where('estado', 'subido')
-                ->whereBetween('subido_at', [$inicioMes, $finMes])
+                ->whereBetween('subido_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $pendientesActual = DB::table('proceso_documentos_solicitados')
+            $pendientesPeriodo = DB::table('proceso_documentos_solicitados')
                 ->whereIn('area_responsable_rol', $roles)
                 ->where('estado', 'pendiente')
+                ->whereBetween('created_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $totalHistorico = DB::table('proceso_documentos_solicitados')
+            $totalPeriodo = DB::table('proceso_documentos_solicitados')
                 ->whereIn('area_responsable_rol', $roles)
+                ->whereBetween('created_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
             return [
                 'tipo' => 'area_doc',
-                'mes'  => now()->translatedFormat('F Y'),
+                'mes'  => $periodoLabel,
                 'tarjetas' => [
-                    ['icono' => '📂', 'valor' => $asignadosMes,    'label' => 'Procesos asignados este mes', 'color' => 'blue'],
-                    ['icono' => '✅', 'valor' => $subidosMes,       'label' => 'Documentos subidos este mes',  'color' => 'green'],
-                    ['icono' => '⏳', 'valor' => $pendientesActual,  'label' => 'Documentos pendientes',        'color' => 'yellow'],
-                    ['icono' => '📊', 'valor' => $totalHistorico,    'label' => 'Total histórico asignados',    'color' => 'gray'],
+                    ['icono' => '📂', 'valor' => $asignadosPeriodo,  'label' => "Procesos asignados {$periodoTexto}", 'color' => 'blue'],
+                    ['icono' => '✅', 'valor' => $subidosPeriodo,    'label' => "Documentos subidos {$periodoTexto}",  'color' => 'green'],
+                    ['icono' => '⏳', 'valor' => $pendientesPeriodo, 'label' => "Documentos pendientes {$periodoTexto}", 'color' => 'yellow'],
+                    ['icono' => '📊', 'valor' => $totalPeriodo,      'label' => "Total documentos {$periodoTexto}",    'color' => 'gray'],
                 ],
             ];
         }
 
         // ── Unidad Solicitante ─────────────────────────────────────────────────
         if ($user->hasRole('unidad_solicitante')) {
-            $creadosMes = DB::table('procesos')
+            $creadosPeriodo = DB::table('procesos')
                 ->where('created_by', $user->id)
-                ->whereBetween('created_at', [$inicioMes, $finMes])
+                ->whereBetween('created_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $finalizadosMes = DB::table('procesos')
+            $finalizadosPeriodo = DB::table('procesos')
                 ->where('created_by', $user->id)
                 ->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])
-                ->whereBetween('updated_at', [$inicioMes, $finMes])
+                ->whereBetween('updated_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $rechazadosMes = DB::table('procesos')
+            $rechazadosPeriodo = DB::table('procesos')
                 ->where('created_by', $user->id)
                 ->where('estado', 'RECHAZADO')
-                ->whereBetween('updated_at', [$inicioMes, $finMes])
+                ->whereBetween('updated_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $enCursoActual = DB::table('procesos')
+            $enCursoPeriodo = DB::table('procesos')
                 ->where('created_by', $user->id)
                 ->where('estado', 'EN_CURSO')
+                ->whereBetween('updated_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
             return [
                 'tipo' => 'unidad_solicitante',
-                'mes'  => now()->translatedFormat('F Y'),
+                'mes'  => $periodoLabel,
                 'tarjetas' => [
-                    ['icono' => '📋', 'valor' => $creadosMes,      'label' => 'Solicitudes creadas este mes',  'color' => 'blue'],
-                    ['icono' => '🔄', 'valor' => $enCursoActual,    'label' => 'Procesos activos actualmente',  'color' => 'yellow'],
-                    ['icono' => '✅', 'valor' => $finalizadosMes,    'label' => 'Finalizados este mes',          'color' => 'green'],
-                    ['icono' => '❌', 'valor' => $rechazadosMes,     'label' => 'Rechazados este mes',           'color' => 'red'],
+                    ['icono' => '📋', 'valor' => $creadosPeriodo,   'label' => "Solicitudes creadas {$periodoTexto}",  'color' => 'blue'],
+                    ['icono' => '🔄', 'valor' => $enCursoPeriodo,   'label' => "Procesos activos {$periodoTexto}",     'color' => 'yellow'],
+                    ['icono' => '✅', 'valor' => $finalizadosPeriodo, 'label' => "Finalizados {$periodoTexto}",        'color' => 'green'],
+                    ['icono' => '❌', 'valor' => $rechazadosPeriodo,  'label' => "Rechazados {$periodoTexto}",         'color' => 'red'],
                 ],
             ];
         }
 
         // ── Planeación ────────────────────────────────────────────────────────
         if ($user->hasRole('planeacion')) {
-            $recibidosMes = DB::table('proceso_etapas as pe')
+            $recibidosPeriodo = DB::table('proceso_etapas as pe')
                 ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
                 ->where('e.area_role', 'planeacion')
                 ->where('pe.recibido', true)
-                ->whereBetween('pe.recibido_at', [$inicioMes, $finMes])
+                ->whereBetween('pe.recibido_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $enviadosMes = DB::table('proceso_etapas as pe')
+            $enviadosPeriodo = DB::table('proceso_etapas as pe')
                 ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
                 ->where('e.area_role', 'planeacion')
                 ->where('pe.enviado', true)
-                ->whereBetween('pe.enviado_at', [$inicioMes, $finMes])
+                ->whereBetween('pe.enviado_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $rechazadosMes = DB::table('procesos')
+            $rechazadosPeriodo = DB::table('procesos')
                 ->where('estado', 'RECHAZADO')
-                ->whereBetween('updated_at', [$inicioMes, $finMes])
+                ->whereBetween('updated_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $enPlaneacion = DB::table('procesos')
+            $enPlaneacionPeriodo = DB::table('procesos')
                 ->where('area_actual_role', 'planeacion')
                 ->where('estado', 'EN_CURSO')
+                ->whereBetween('updated_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
             return [
                 'tipo' => 'planeacion',
-                'mes'  => now()->translatedFormat('F Y'),
+                'mes'  => $periodoLabel,
                 'tarjetas' => [
-                    ['icono' => '📥', 'valor' => $recibidosMes,  'label' => 'Recibidos este mes',           'color' => 'blue'],
-                    ['icono' => '📤', 'valor' => $enviadosMes,   'label' => 'Enviados a áreas este mes',    'color' => 'green'],
-                    ['icono' => '🔄', 'valor' => $enPlaneacion,  'label' => 'En tu bandeja ahora',          'color' => 'yellow'],
-                    ['icono' => '❌', 'valor' => $rechazadosMes, 'label' => 'Rechazados este mes (sistema)', 'color' => 'red'],
+                    ['icono' => '📥', 'valor' => $recibidosPeriodo,  'label' => "Recibidos {$periodoTexto}",           'color' => 'blue'],
+                    ['icono' => '📤', 'valor' => $enviadosPeriodo,   'label' => "Enviados a áreas {$periodoTexto}",    'color' => 'green'],
+                    ['icono' => '🔄', 'valor' => $enPlaneacionPeriodo, 'label' => "En tu bandeja {$periodoTexto}",      'color' => 'yellow'],
+                    ['icono' => '❌', 'valor' => $rechazadosPeriodo, 'label' => "Rechazados {$periodoTexto}",          'color' => 'red'],
                 ],
             ];
         }
@@ -382,46 +449,47 @@ class DashboardController extends Controller
         $rolesArea = ['hacienda', 'juridica', 'secop'];
         $miRolArea = collect($rolesArea)->first(fn($r) => $user->hasRole($r));
         if ($miRolArea) {
-            $recibidosMes = DB::table('proceso_etapas as pe')
+            $recibidosPeriodo = DB::table('proceso_etapas as pe')
                 ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
                 ->where('e.area_role', $miRolArea)
                 ->where('pe.recibido', true)
-                ->whereBetween('pe.recibido_at', [$inicioMes, $finMes])
+                ->whereBetween('pe.recibido_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $enviadosMes = DB::table('proceso_etapas as pe')
+            $enviadosPeriodo = DB::table('proceso_etapas as pe')
                 ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
                 ->where('e.area_role', $miRolArea)
                 ->where('pe.enviado', true)
-                ->whereBetween('pe.enviado_at', [$inicioMes, $finMes])
+                ->whereBetween('pe.enviado_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $enBandeja = DB::table('procesos')
+            $enBandejaPeriodo = DB::table('procesos')
                 ->where('area_actual_role', $miRolArea)
                 ->where('estado', 'EN_CURSO')
+                ->whereBetween('updated_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
-            $rechazadosMes = DB::table('proceso_etapas as pe')
+            $rechazadosPeriodo = DB::table('proceso_etapas as pe')
                 ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
                 ->join('procesos as p', 'p.id', '=', 'pe.proceso_id')
                 ->where('e.area_role', $miRolArea)
                 ->where('p.estado', 'RECHAZADO')
-                ->whereBetween('p.updated_at', [$inicioMes, $finMes])
+                ->whereBetween('p.updated_at', [$inicioPeriodo, $finPeriodo])
                 ->count();
 
             return [
                 'tipo' => $miRolArea,
-                'mes'  => now()->translatedFormat('F Y'),
+                'mes'  => $periodoLabel,
                 'tarjetas' => [
-                    ['icono' => '📥', 'valor' => $recibidosMes, 'label' => 'Recibidos este mes',   'color' => 'blue'],
-                    ['icono' => '📤', 'valor' => $enviadosMes,  'label' => 'Enviados este mes',    'color' => 'green'],
-                    ['icono' => '🔄', 'valor' => $enBandeja,    'label' => 'En tu bandeja ahora',  'color' => 'yellow'],
-                    ['icono' => '❌', 'valor' => $rechazadosMes,'label' => 'Rechazados este mes',  'color' => 'red'],
+                    ['icono' => '📥', 'valor' => $recibidosPeriodo, 'label' => "Recibidos {$periodoTexto}",   'color' => 'blue'],
+                    ['icono' => '📤', 'valor' => $enviadosPeriodo,  'label' => "Enviados {$periodoTexto}",    'color' => 'green'],
+                    ['icono' => '🔄', 'valor' => $enBandejaPeriodo, 'label' => "En tu bandeja {$periodoTexto}",  'color' => 'yellow'],
+                    ['icono' => '❌', 'valor' => $rechazadosPeriodo,'label' => "Rechazados {$periodoTexto}",  'color' => 'red'],
                 ],
             ];
         }
 
-        return ['tipo' => 'generic', 'mes' => now()->translatedFormat('F Y'), 'tarjetas' => []];
+        return ['tipo' => 'generic', 'mes' => $periodoLabel, 'tarjetas' => []];
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
