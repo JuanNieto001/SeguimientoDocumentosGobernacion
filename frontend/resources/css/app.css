@@ -75,6 +75,20 @@
     }
 }
 
+@layer components {
+    .breadcrumb-row {
+        line-height: 1;
+    }
+
+    .breadcrumb-row > * {
+        line-height: 1;
+    }
+
+    .breadcrumb-code {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* RESPONSIVE GLOBAL - Mobile First, Afecta TODO el sistema */
 /* ═══════════════════════════════════════════════════════════════════════════ */

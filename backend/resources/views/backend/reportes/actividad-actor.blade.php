@@ -2,9 +2,9 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <div class="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                <div class="breadcrumb-row text-xs text-gray-400 mb-1 leading-none">
                     <a href="{{ route('reportes.index') }}" class="hover:text-gray-700">Reportes</a>
-                    <span>/</span>
+                    <span class="mx-1">/</span>
                     <span class="text-gray-700 font-medium">Actividad por actor</span>
                 </div>
                 <h1 class="text-lg font-bold text-gray-900 leading-none">Actividad por actor</h1>

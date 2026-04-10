@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <div class="flex items-center gap-2 text-xs text-gray-400 mb-0.5">
+                <div class="breadcrumb-row text-xs text-gray-400 mb-0.5 leading-none">
                     <a href="{{ route('juridica.index') }}" class="hover:text-blue-700 transition-colors">Jurídica</a>
-                    <span>/</span>
-                    <span class="text-gray-600 font-medium">{{ $proceso->codigo }}</span>
+                    <span class="mx-1">/</span>
+                    <span class="breadcrumb-code text-gray-600 font-medium">{{ $proceso->codigo }}</span>
                 </div>
                 <h1 class="text-lg font-bold text-gray-900">Detalle del proceso — Jurídica</h1>
             </div>

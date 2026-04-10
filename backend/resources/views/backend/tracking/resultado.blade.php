@@ -30,6 +30,7 @@
             $secretaria = optional($proceso->secretariaOrigen)->nombre ?? null;
             $unidad     = optional($proceso->unidadOrigen)->nombre ?? null;
             $initials   = strtoupper(substr($creador->name ?? 'S', 0, 1)).(strlen($creador->name ?? '') > 1 ? strtoupper(substr(explode(' ', $creador->name ?? 'S')[1] ?? $creador->name ?? 'S', 0, 1)) : '');
+            $puedeVerTimeline = auth()->user()->hasAnyRole(['admin','admin_general','admin_secretaria']);
         @endphp
 
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #bbf7d0">
@@ -75,7 +76,7 @@
                     </div>
                 </div>
                 {{-- Mini etapas --}}
-                @if(optional($proceso->workflow)->etapas && $proceso->workflow->etapas->count() > 0)
+                @if($puedeVerTimeline && optional($proceso->workflow)->etapas && $proceso->workflow->etapas->count() > 0)
                 <div class="flex items-center mt-2 gap-0.5">
                     @foreach($proceso->workflow->etapas->sortBy('orden') as $etapa)
                     @php
@@ -163,6 +164,7 @@
             </div>
         </div>
 
+        @if($puedeVerTimeline)
         {{-- ╔══════════════════════════════════════════════════════╗ --}}
         {{-- ║  HISTORIAL COMPLETO                                 ║ --}}
         {{-- ╚══════════════════════════════════════════════════════╝ --}}
@@ -370,6 +372,7 @@
             </div>
             @endif
         </div>
+        @endif
 
     </div>
 </x-app-layout>

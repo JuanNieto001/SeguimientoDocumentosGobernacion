@@ -6,12 +6,12 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </a>
                 <div>
-                    <div class="flex items-center gap-2 text-xs text-gray-400 mb-0.5">
+                    <div class="breadcrumb-row text-xs text-gray-400 mb-0.5 leading-none">
                         <a href="{{ route('procesos.index') }}" class="hover:text-green-700 transition-colors">Procesos</a>
-                        <span>/</span>
-                        <span class="font-mono font-semibold text-gray-600">{{ $proceso->codigo }}</span>
+                        <span class="mx-1">/</span>
+                        <span class="breadcrumb-code font-semibold text-gray-600">{{ $proceso->codigo }}</span>
                     </div>
-                    <h1 class="text-lg font-bold text-gray-900 leading-none">Expediente del proceso</h1>
+                    <h1 class="text-lg font-bold text-gray-900 leading-tight">Expediente del proceso</h1>
                 </div>
             </div>
             @php
@@ -21,6 +21,7 @@
                     'RECHAZADO'  => ['bg'=>'#fee2e2','text'=>'#b91c1c','label'=>'Rechazado'],
                 ];
                 $ec = $estadoConfig[$proceso->estado] ?? ['bg'=>'#f1f5f9','text'=>'#475569','label'=>$proceso->estado];
+                $puedeVerTimeline = auth()->user()->hasAnyRole(['admin','admin_general','admin_secretaria']);
             @endphp
             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
                   style="background:{{ $ec['bg'] }};color:{{ $ec['text'] }}">
@@ -136,6 +137,7 @@
                 </div>
 
                 {{-- ── Timeline de etapas ── --}}
+                @if($puedeVerTimeline)
                 <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">
                     <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color:#f1f5f9">
                         <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
@@ -263,6 +265,7 @@
                         @endforeach
                     </div>
                 </div>
+                @endif
 
             </div>
 

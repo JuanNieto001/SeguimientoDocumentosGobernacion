@@ -3,6 +3,8 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     @endpush
 
+    @php $puedeVerTimeline = auth()->user()->hasAnyRole(['admin','admin_general','admin_secretaria']); @endphp
+
     <x-slot name="header">
         <div>
             <h1 class="text-lg font-bold text-gray-900 leading-none">Mi Dashboard</h1>
@@ -12,7 +14,7 @@
 
     <div class="p-6 space-y-5">
         @if(!$plantilla)
-            @if(($timeline ?? collect())->isNotEmpty())
+            @if($puedeVerTimeline && ($timeline ?? collect())->isNotEmpty())
                 <div class="bg-white rounded-2xl p-5" style="border:1px solid #e2e8f0">
                     <h2 class="text-sm font-bold text-gray-800">Linea de tiempo de procesos</h2>
                     <p class="text-xs text-gray-400 mt-1">No tienes dashboard asignado. Aqui puedes seguir los procesos relacionados contigo.</p>

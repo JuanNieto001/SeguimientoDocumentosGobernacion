@@ -1,12 +1,13 @@
 @php use Illuminate\Support\Facades\DB; @endphp
+@php $puedeVerTimeline = auth()->user()->hasAnyRole(['admin','admin_general','admin_secretaria']); @endphp
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <div class="flex items-center gap-2 text-xs text-gray-400 mb-0.5">
+                <div class="breadcrumb-row text-xs text-gray-400 mb-0.5 leading-none">
                     <a href="{{ route('unidad.index') }}" class="hover:text-green-700 transition-colors">Unidad Solicitante</a>
-                    <span>/</span>
-                    <span class="text-gray-600 font-medium">{{ $proceso->codigo }}</span>
+                    <span class="mx-1">/</span>
+                    <span class="breadcrumb-code text-gray-600 font-medium">{{ $proceso->codigo }}</span>
                 </div>
                 <h1 class="text-lg font-bold text-gray-900">Detalle del proceso</h1>
             </div>
@@ -117,7 +118,7 @@
         @endif
 
         {{-- Timeline de etapas --}}
-        @if($etapas->count() > 0)
+        @if($puedeVerTimeline && $etapas->count() > 0)
         <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">📋 Etapas del flujo ({{ $etapas->count() }})</h3>

@@ -2,9 +2,9 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <div class="flex items-center gap-2 text-xs text-gray-400 mb-0.5">
+                <div class="breadcrumb-row text-xs text-gray-400 mb-0.5 leading-none">
                     <a href="{{ route('unidad.index') }}" class="hover:text-green-700 transition-colors">Unidad Solicitante</a>
-                    <span>/</span>
+                    <span class="mx-1">/</span>
                     <span class="text-gray-600 font-medium">Nuevo proceso</span>
                 </div>
                 <h1 class="text-lg font-bold text-gray-900">Crear nuevo proceso de contratación</h1>

@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <div class="flex items-center gap-2 text-xs text-gray-400 mb-0.5">
+                <div class="breadcrumb-row text-xs text-gray-400 mb-0.5 leading-none">
                     <a href="{{ route('secop.consulta') }}" class="hover:text-purple-600 transition-colors">Consulta SECOP II</a>
-                    <span>/</span>
-                    <span class="text-gray-600 font-medium">{{ $contrato['referencia_del_contrato'] ?? $contrato['id_contrato'] ?? 'Detalle' }}</span>
+                    <span class="mx-1">/</span>
+                    <span class="breadcrumb-code text-gray-600 font-medium">{{ $contrato['referencia_del_contrato'] ?? $contrato['id_contrato'] ?? 'Detalle' }}</span>
                 </div>
                 <h1 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
