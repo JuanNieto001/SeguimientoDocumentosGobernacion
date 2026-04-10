@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-4">
             <div>
                 <div class="breadcrumb-row text-xs text-gray-400 mb-0.5 leading-none">
                     <a href="{{ route('juridica.index') }}" class="hover:text-green-700 transition-colors">Jurídica</a>
@@ -80,7 +80,7 @@
         </div>
 
         {{-- Decisión --}}
-        <div class="bg-white rounded-2xl border overflow-hidden max-w-5xl w-full mx-auto" style="border-color:#e2e8f0">
+        <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:#e2e8f0">
             <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                 <h3 class="text-sm font-semibold text-gray-700">Decisión Jurídica</h3>
             </div>

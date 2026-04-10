@@ -267,6 +267,30 @@
                 </div>
                 @endif
 
+                @if(!$puedeVerTimeline && $auditoria->count() > 0)
+                <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">
+                    <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Historial de acciones</p>
+                    </div>
+                    <div class="divide-y max-h-96 overflow-y-auto" style="divide-color:#f8fafc">
+                        @foreach($auditoria as $log)
+                        <div class="px-4 py-3">
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5" style="background:#6b7280">
+                                    {{ strtoupper(substr($log->user_name ?? 'S', 0, 1)) }}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs font-semibold text-gray-700">{{ $log->user_name ?? 'Sistema' }}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5 break-words">{{ $log->descripcion ?? $log->accion }}</p>
+                                    <p class="text-xs text-gray-300 mt-0.5">{{ \Carbon\Carbon::parse($log->created_at)->format('d/m/Y H:i') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
             </div>
 
             {{-- Columna derecha: Accesos rápidos + Auditoría --}}
@@ -365,7 +389,7 @@
                 @endif
 
                 {{-- Auditoría --}}
-                @if($auditoria->count() > 0)
+                @if($puedeVerTimeline && $auditoria->count() > 0)
                 <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #e2e8f0">
                     <div class="px-5 py-4 border-b" style="border-color:#f1f5f9">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Historial de acciones</p>
