@@ -20,6 +20,8 @@ sudo bash backend/scripts/deploy/bootstrap-ubuntu.sh
 - Copiar `.env.example` a `.env` (si no existe)
 - Ajustar DB, APP_URL, MAIL, etc.
 
+Nota: si ejecutas el deploy automatico y no existe `.env`, el script lo crea desde `.env.example` y genera `APP_KEY`. Aun asi, revisa y ajusta las variables antes de usar en produccion.
+
 Ejemplo minimo:
 
 ```env
