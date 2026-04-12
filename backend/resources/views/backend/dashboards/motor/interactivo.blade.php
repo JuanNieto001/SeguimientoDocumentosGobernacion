@@ -7,8 +7,8 @@
                 </svg>
             </a>
             <div>
-                <h1 class="text-lg font-bold text-gray-900 leading-none">Motor de Dashboards</h1>
-                <p class="text-xs text-gray-400 mt-0.5">Constructor interactivo de dashboards por secretaria, rol y usuario</p>
+                <h1 class="text-lg font-bold text-gray-900 leading-none">Dashboard</h1>
+                <p class="text-xs text-gray-400 mt-0.5">Solo admin: configura vistas por rol, secretaria, unidad y usuario.</p>
             </div>
         </div>
     </x-slot>

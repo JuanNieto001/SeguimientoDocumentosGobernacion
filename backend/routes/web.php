@@ -13,6 +13,7 @@ use App\Http\Controllers\Area\JuridicaController;
 use App\Http\Controllers\Area\SecopController;
 use App\Http\Controllers\Area\SolicitudDocumentosController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardMotorController;
 use App\Http\Controllers\ProcesoController;
 use App\Http\Controllers\WorkflowController;
 use App\Http\Controllers\WorkflowFilesController;
@@ -66,6 +67,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/alertas/{alerta}/leer', [DashboardController::class, 'marcarAlertaLeida'])
         ->name('alertas.leer');
 });
+
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD ADMIN (motor de dashboards)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin/dashboard')
+    ->name('dashboards.motor.')
+    ->group(function () {
+        Route::get('/', [DashboardMotorController::class, 'index'])->name('index');
+        Route::post('/assign', [DashboardMotorController::class, 'guardarAsignaciones'])->name('assign');
+        Route::post('/assign-user', [DashboardMotorController::class, 'guardarAsignacionUsuario'])->name('assign-user');
+        Route::post('/assign-secretaria', [DashboardMotorController::class, 'guardarAsignacionSecretaria'])->name('assign-secretaria');
+        Route::post('/assign-unidad', [DashboardMotorController::class, 'guardarAsignacionUnidad'])->name('assign-unidad');
+    });
 
 /*
 |--------------------------------------------------------------------------

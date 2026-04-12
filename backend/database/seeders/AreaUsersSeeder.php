@@ -53,7 +53,7 @@ class AreaUsersSeeder extends Seeder
             [
                 'name'          => 'Jefe Unidad Sistemas',
                 'email'         => 'jefe.sistemas@demo.com',
-                'role'          => 'unidad_solicitante',
+                'roles'         => ['unidad_solicitante', 'jefe_unidad'],
                 'secretaria_id' => $secPlaneacion?->id,
                 'unidad_id'     => $uSistemas?->id,
             ],

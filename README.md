@@ -69,7 +69,7 @@ Archivos principales por carpeta:
 
 - `backend/artisan`, `backend/composer.json`, `backend/SETUP.md`
 - `frontend/package.json`, `frontend/vite.config.js`, `frontend/tailwind.config.js`
-- `README.md`, `README_PROYECTO.md`
+- `README.md`
 
 ## Scripts de mantenimiento
 
@@ -112,4 +112,3 @@ El flujo completo de deploy esta documentado en:
 - `backend/SETUP.md`
 - `backend/scripts/deploy/DEPLOY_SERVIDOR.md`
 - `backend/scripts/deploy/README.md`
-- `README_PROYECTO.md` (alias de este README)

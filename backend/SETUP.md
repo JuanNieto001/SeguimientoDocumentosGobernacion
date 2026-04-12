@@ -125,7 +125,7 @@ Otros usuarios (profesionales, revisores y consulta) estan definidos en Usuarios
 | SECOP | secop@demo.com | 12345 |
 | Radicacion | radicacion@demo.com | 12345 |
 
-Para probar el panel ejecutivo de jefe de unidad, asigna el rol `jefe_unidad` a un usuario con unidad_id.
+El usuario `jefe.sistemas@demo.com` ya queda con rol `jefe_unidad` y `unidad_solicitante` para probar el panel ejecutivo por unidad.
 
 ## 🧭 Dashboards por rol
 
