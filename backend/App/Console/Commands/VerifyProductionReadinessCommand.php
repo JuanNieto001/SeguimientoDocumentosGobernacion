@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 
@@ -125,9 +126,15 @@ class VerifyProductionReadinessCommand extends Command
         }
 
         // También verificar usuarios que deben cambiar contraseña hace más de 30 días
-        $oldPasswordChangeUsers = User::where('debe_cambiar_password', true)
-            ->where('created_at', '<', Carbon::now()->subDays(30))
-            ->count();
+        // Esta columna puede no existir en algunos entornos; evitamos fallo del comando.
+        $oldPasswordChangeUsers = 0;
+        if (Schema::hasColumn('users', 'debe_cambiar_password')) {
+            $oldPasswordChangeUsers = User::where('debe_cambiar_password', true)
+                ->where('created_at', '<', Carbon::now()->subDays(30))
+                ->count();
+        } else {
+            $this->addWarning('⚠️  Columna users.debe_cambiar_password no existe; se omite esta validación.');
+        }
 
         if ($weakPasswordCount > 0) {
             $this->addIssue("🔐 Encontrados {$weakPasswordCount} usuarios con contraseñas débiles", $usersWithWeakPasswords);
