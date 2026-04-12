@@ -20,12 +20,10 @@ use App\Http\Controllers\WorkflowFilesController;
 use App\Http\Controllers\PAAController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\ReportesController;
-use App\Http\Controllers\ModificacionContractualController;
 use App\Http\Controllers\Admin\LogsController;
 use App\Http\Controllers\Admin\AuthEventsController;
 use App\Http\Controllers\Admin\ResetPasswordAdminController;
 use App\Http\Controllers\TrackingController;
-use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\SecopConsultaController;
 use App\Http\Controllers\Admin\EstivenGuideController;
 use App\Http\Controllers\EstivenHelpController;
@@ -389,23 +387,6 @@ Route::middleware(['auth', 'role:admin|unidad_solicitante|gobernador'])
         Route::post('/contrato/{idContrato}/refrescar', [SecopConsultaController::class, 'refrescar'])->where('idContrato', '.*')->name('.refrescar');
     });
 
-/*
-|--------------------------------------------------------------------------
-| MODIFICACIONES CONTRACTUALES
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth'])->prefix('procesos')->name('modificaciones.')->group(function () {
-    Route::get('/{proceso}/modificaciones', [ModificacionContractualController::class, 'index'])->name('index');
-    Route::post('/{proceso}/modificaciones', [ModificacionContractualController::class, 'store'])->name('store');
-    Route::post('/{proceso}/modificaciones/{modificacion}/aprobar', [ModificacionContractualController::class, 'aprobar'])
-        ->name('aprobar')
-        ->middleware('role:admin|juridica');
-    Route::post('/{proceso}/modificaciones/{modificacion}/rechazar', [ModificacionContractualController::class, 'rechazar'])
-        ->name('rechazar')
-        ->middleware('role:admin|juridica');
-    Route::get('/{proceso}/modificaciones/{modificacion}/descargar', [ModificacionContractualController::class, 'descargar'])->name('descargar');
-});
-
 use App\Http\Controllers\ContractProcessController;
 use App\Http\Controllers\ProcessDocumentController;
 use App\Http\Controllers\ProcesoContratacionDirectaController;
@@ -533,16 +514,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking.index');
     Route::get('/tracking/buscar', [TrackingController::class, 'buscar'])->name('tracking.buscar');
     Route::post('/tracking/registrar', [TrackingController::class, 'registrar'])->name('tracking.registrar');
-});
-
-// RF-27: Supervisión e informes de pago
-Route::middleware('auth')->prefix('supervision')->name('supervision.')->group(function () {
-    Route::get('/{procesoId}', [SupervisionController::class, 'index'])->name('index');
-    Route::get('/{procesoId}/informe/crear', [SupervisionController::class, 'crearInforme'])->name('crear-informe');
-    Route::post('/{procesoId}/informe', [SupervisionController::class, 'guardarInforme'])->name('guardar-informe');
-    Route::get('/{procesoId}/pago/crear', [SupervisionController::class, 'crearPago'])->name('crear-pago');
-    Route::post('/{procesoId}/pago', [SupervisionController::class, 'guardarPago'])->name('guardar-pago');
-    Route::patch('/{procesoId}/pago/{pago}', [SupervisionController::class, 'actualizarPago'])->name('pago.actualizar');
 });
 
 require __DIR__.'/auth.php';

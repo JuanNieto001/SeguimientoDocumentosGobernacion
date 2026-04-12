@@ -85,8 +85,6 @@ class Proceso extends Model
         'requiere_rup',
         'plazo_minimo_dias',
         'cuantia_smmlv',
-        'valor_modificaciones',
-        'porcentaje_modificaciones',
         'garantias_presentadas',
         'garantias_detalle',
         'requisitos_habilitantes',
@@ -169,14 +167,6 @@ class Proceso extends Model
     public function alertas(): HasMany
     {
         return $this->hasMany(Alerta::class);
-    }
-
-    /**
-     * Relación: Un proceso tiene muchas modificaciones contractuales
-     */
-    public function modificaciones(): HasMany
-    {
-        return $this->hasMany(ModificacionContractual::class)->orderBy('fecha_modificacion');
     }
 
     /**
@@ -335,43 +325,5 @@ class Proceso extends Model
         });
     }
 
-    /**
-     * Calcular porcentaje de modificaciones usado
-     */
-    public function calcularPorcentajeModificaciones(): float
-    {
-        if (!$this->valor_estimado || $this->valor_estimado == 0) {
-            return 0;
-        }
-
-        $totalModificaciones = $this->modificaciones()
-            ->where('tipo', 'adicion')
-            ->where('estado', 'aprobado')
-            ->sum('valor_modificacion');
-
-        return ($totalModificaciones / $this->valor_estimado) * 100;
-    }
-
-    /**
-     * Verificar si puede recibir más modificaciones
-     */
-    public function puedeRecibirModificaciones(): bool
-    {
-        return $this->calcularPorcentajeModificaciones() < 50;
-    }
-
-    /**
-     * Obtener valor disponible para modificaciones
-     */
-    public function valorDisponibleModificaciones(): float
-    {
-        $limite = $this->valor_estimado * 0.5;
-        $usado = $this->modificaciones()
-            ->where('tipo', 'adicion')
-            ->where('estado', 'aprobado')
-            ->sum('valor_modificacion');
-
-        return max(0, $limite - $usado);
-    }
 }
 
