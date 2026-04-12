@@ -377,8 +377,8 @@ class PlaneacionController extends Controller
     {
         // Cargamos el proceso junto a la etapa actual para decidir la devolución.
         $proceso = Proceso::with('etapaActual')->findOrFail($id);
-        
-        // Validar que el proceso esté en el área de planeación
+
+        // Validar que el proceso esté en el área de planeación.
         if ($proceso->area_actual_role !== 'planeacion') {
             return redirect()->route('planeacion.index')
                 ->with('error', 'Este proceso ya no está en tu bandeja.');
@@ -392,7 +392,7 @@ class PlaneacionController extends Controller
         // Guardamos referencia explícita para no depender de lazy loading posterior.
         $etapaActual = $proceso->etapaActual;
 
-        // Buscar etapa anterior por el enlace del flujo (fallback por orden para flujos legacy)
+        // Buscar etapa anterior por el enlace del flujo (fallback por orden para flujos legacy).
         $etapaAnterior = DB::table('etapas')
             ->where('workflow_id', $proceso->workflow_id)
             ->where('next_etapa_id', $etapaActual->id)
@@ -415,8 +415,14 @@ class PlaneacionController extends Controller
         // Resolvemos un nombre de destino amigable para mensajes, alertas y auditoría.
         $responsableDestino = $this->resolverResponsableDestino($proceso, $etapaAnterior);
 
-        DB::transaction(function () use ($proceso, $validated, $etapaActual, $etapaAnterior, $responsableDestino) {
-            // Devolver proceso a la etapa anterior para reingreso de información/documentos
+        DB::transaction(function () use (
+            $proceso,
+            $validated,
+            $etapaActual,
+            $etapaAnterior,
+            $responsableDestino
+        ) {
+            // Devolver proceso a la etapa anterior para reingreso de información/documentos.
             DB::table('procesos')->where('id', $proceso->id)->update([
                 'etapa_actual_id' => $etapaAnterior->id,
                 'area_actual_role' => $etapaAnterior->area_role,
@@ -426,7 +432,7 @@ class PlaneacionController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Reabrir etapa anterior (si ya existe) o crear la instancia si faltaba
+            // Reabrir etapa anterior (si ya existe) o crear la instancia si faltaba.
             $procesoEtapaAnterior = DB::table('proceso_etapas')
                 ->where('proceso_id', $proceso->id)
                 ->where('etapa_id', $etapaAnterior->id)
@@ -451,7 +457,7 @@ class PlaneacionController extends Controller
                 ]);
             }
 
-            // Marcar etapa actual como no recibida para dejar trazabilidad consistente
+            // Marcar etapa actual como no recibida para dejar trazabilidad consistente.
             DB::table('proceso_etapas')
                 ->where('proceso_id', $proceso->id)
                 ->where('etapa_id', $etapaActual->id)
