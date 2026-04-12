@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/components/documento-preview-modal.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 {{-- 
     Componente de previsualización y control de versiones de documentos
     Uso: @include('components.documento-preview-modal')
@@ -438,3 +439,4 @@ function documentoPreview() {
     };
 }
 </script>
+

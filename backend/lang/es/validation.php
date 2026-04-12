@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/lang/es/validation.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 return [
     'accepted'             => 'El campo :attribute debe ser aceptado.',
@@ -73,3 +78,4 @@ return [
         'name'     => 'nombre',
     ],
 ];
+

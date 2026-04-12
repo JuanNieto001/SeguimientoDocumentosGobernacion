@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/components/input-error.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @props(['messages'])
 
 @if ($messages)
@@ -7,3 +8,4 @@
         @endforeach
     </ul>
 @endif
+

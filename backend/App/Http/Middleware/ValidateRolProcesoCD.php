@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Middleware/ValidateRolProcesoCD.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Middleware;
 
@@ -72,3 +77,4 @@ class ValidateRolProcesoCD
         return null;
     }
 }
+

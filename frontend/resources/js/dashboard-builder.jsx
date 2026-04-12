@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/dashboard-builder.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // dashboard-builder.jsx - Entry Point
 import { createRoot } from 'react-dom/client';
 import React from 'react';

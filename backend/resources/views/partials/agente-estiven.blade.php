@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/partials/agente-estiven.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 {{--
     Marsetiv bot – Asistente flotante de ayuda contextual.
     Se incluye dentro del layout principal (app.blade.php).
@@ -1154,3 +1155,4 @@ function agenteEstiven() {
 }
 </script>
 @endauth
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/DashboardRolesSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -87,3 +92,4 @@ class DashboardRolesSeeder extends Seeder
         );
     }
 }
+

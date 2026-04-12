@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Services/SecopDatosAbiertoService.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Services;
 
@@ -235,3 +240,4 @@ class SecopDatosAbiertoService
         return str_replace("'", "''", $value);
     }
 }
+

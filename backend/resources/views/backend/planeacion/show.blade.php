@@ -1,4 +1,5 @@
-﻿<x-app-layout>
+{{-- Archivo: backend/resources/views/backend/planeacion/show.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
+<x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <div>
@@ -398,3 +399,4 @@
 
     </div>
 </x-app-layout>
+

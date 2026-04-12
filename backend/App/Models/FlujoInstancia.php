@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/FlujoInstancia.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -248,3 +253,4 @@ class FlujoInstancia extends Model
         return $query->where('secretaria_id', $secretariaId);
     }
 }
+

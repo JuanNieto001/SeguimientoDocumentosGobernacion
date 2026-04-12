@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Support/RoleLabels.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Support;
 
@@ -66,3 +71,4 @@ class RoleLabels
         return self::LABELS;
     }
 }
+

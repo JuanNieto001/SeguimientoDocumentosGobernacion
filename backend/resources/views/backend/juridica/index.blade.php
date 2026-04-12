@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/juridica/index.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <div>
@@ -131,3 +132,4 @@
         </div>
     </div>
 </x-app-layout>
+

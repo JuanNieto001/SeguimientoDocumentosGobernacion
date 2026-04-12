@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/dashboard-v2/DashboardMotorV2.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 

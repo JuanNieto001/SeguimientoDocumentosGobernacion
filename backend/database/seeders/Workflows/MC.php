@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/Workflows/MC.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 return [
     'codigo' => 'MC',
@@ -171,3 +176,4 @@ return [
         ],
     ],
 ];
+

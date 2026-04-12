@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/PagoContrato.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -116,3 +121,4 @@ class PagoContrato extends Model
         return $this->fecha_estimada_pago < now()->toDateString();
     }
 }
+

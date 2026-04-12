@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/areas/unidad-crear.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
@@ -130,3 +131,4 @@
         </form>
     </div>
 </x-app-layout>
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Auth/PasswordController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Auth;
 
@@ -27,3 +32,4 @@ class PasswordController extends Controller
         return back()->with('status', 'password-updated');
     }
 }
+

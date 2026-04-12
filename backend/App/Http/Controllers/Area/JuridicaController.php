@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Area/JuridicaController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Area;
 
@@ -267,3 +272,4 @@ class JuridicaController extends Controller
         return view('areas.juridica-reportes', compact('estadisticas', 'fechaInicio', 'fechaFin'));
     }
 }
+

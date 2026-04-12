@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcesoCDDocumento.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -96,3 +101,4 @@ class ProcesoCDDocumento extends Model
         });
     }
 }
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Auth/PasswordResetLinkController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Auth;
 
@@ -93,3 +98,4 @@ class PasswordResetLinkController extends Controller
         return back()->with('status', '¡Enlace enviado! Revisa el correo ' . $correoDestino . ' para restablecer tu contraseña.');
     }
 }
+

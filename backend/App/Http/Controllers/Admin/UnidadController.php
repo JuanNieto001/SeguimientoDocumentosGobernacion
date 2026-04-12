@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Admin/UnidadController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Admin;
 
@@ -98,3 +103,4 @@ class UnidadController extends Controller
         return response()->json($unidades);
     }
 }
+

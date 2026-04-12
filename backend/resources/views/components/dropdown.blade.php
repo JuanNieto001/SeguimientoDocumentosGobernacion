@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/components/dropdown.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @props(['align' => 'right', 'width' => '48', 'contentClasses' => 'py-1 bg-white'])
 
 @php
@@ -33,3 +34,4 @@ $width = match ($width) {
         </div>
     </div>
 </div>
+

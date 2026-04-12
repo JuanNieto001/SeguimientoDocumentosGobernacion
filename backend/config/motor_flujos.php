@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/config/motor_flujos.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 return [
     /*
@@ -27,3 +32,4 @@ return [
     */
     'permission_ver_todas_secretarias' => env('MOTOR_FLUJOS_PERMISSION_VER_TODAS_SECRETARIAS', 'secretarias.ver_todas'),
 ];
+

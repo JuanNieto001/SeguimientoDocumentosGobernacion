@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/components/widgets/LineChart.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // components/widgets/LineChart.jsx
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';

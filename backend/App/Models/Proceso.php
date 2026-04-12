@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/Proceso.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -369,3 +374,4 @@ class Proceso extends Model
         return max(0, $limite - $usado);
     }
 }
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcesoEtapaArchivo.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -178,3 +183,4 @@ class ProcesoEtapaArchivo extends Model
         return $query->where('etapa_id', $etapaId);
     }
 }
+

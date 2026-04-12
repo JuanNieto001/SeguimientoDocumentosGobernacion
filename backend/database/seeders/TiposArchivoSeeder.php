@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/TiposArchivoSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -368,3 +373,4 @@ class TiposArchivoSeeder extends Seeder
         }
     }
 }
+

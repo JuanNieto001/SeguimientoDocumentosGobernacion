@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/MotorFlujosBootstrapSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -19,3 +24,4 @@ class MotorFlujosBootstrapSeeder extends Seeder
         DB::table('flujos')->where('codigo', 'CD_PN')->update(['activo' => true]);
     }
 }
+

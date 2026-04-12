@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Auth/EmailVerificationPromptController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Auth;
 
@@ -19,3 +24,4 @@ class EmailVerificationPromptController extends Controller
                     : view('auth.verify-email');
     }
 }
+

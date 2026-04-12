@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/factories/ContractProcessFactory.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Factories;
 
@@ -90,3 +95,4 @@ class ContractProcessFactory extends Factory
         ]);
     }
 }
+

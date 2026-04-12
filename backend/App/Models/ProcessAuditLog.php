@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcessAuditLog.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -115,3 +120,4 @@ class ProcessAuditLog extends Model
         return $query->where('created_at', '>=', now()->subDays($days));
     }
 }
+

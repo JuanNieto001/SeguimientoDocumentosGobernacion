@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Admin/AuthEventsController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Admin;
 
@@ -61,3 +66,4 @@ class AuthEventsController extends Controller
         return view('admin.auth-events', compact('eventos', 'stats', 'ipsSospechosas', 'tipos', 'usuarios'));
     }
 }
+

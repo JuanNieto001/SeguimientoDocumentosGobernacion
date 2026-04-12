@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcessNotification.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -195,3 +200,4 @@ class ProcessNotification extends Model
         return $query->where('created_at', '>=', now()->subDays($days));
     }
 }
+

@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/frontend/profile/partials/delete-user-form.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <section class="space-y-6">
     <header>
         <h2 class="text-lg font-medium text-gray-900">
@@ -53,3 +54,4 @@
         </form>
     </x-modal>
 </section>
+

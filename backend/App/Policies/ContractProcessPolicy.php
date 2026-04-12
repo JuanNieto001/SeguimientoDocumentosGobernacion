@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Policies/ContractProcessPolicy.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Policies;
 
@@ -217,3 +222,4 @@ class ContractProcessPolicy
         return $user->hasRole('Super Admin');
     }
 }
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/PAAController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -276,3 +281,4 @@ class PAAController extends Controller
         return response()->json(['incluido' => false, 'mensaje' => 'La necesidad NO está incluida en el PAA vigente.'], 404);
     }
 }
+

@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/components/ResponsiveComponents.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 import React, { useState } from 'react';
 
 /**
@@ -196,3 +201,4 @@ export function ResponsiveInput({ label, type = 'text', ...props }) {
 }
 
 export default ResponsiveContainer;
+

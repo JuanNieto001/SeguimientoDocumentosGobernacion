@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/EstivenGuideStep.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -18,3 +23,4 @@ class EstivenGuideStep extends Model
         return $this->belongsTo(EstivenGuide::class, 'estiven_guide_id');
     }
 }
+

@@ -1,4 +1,5 @@
-﻿<x-guest-layout>
+{{-- Archivo: backend/resources/views/frontend/auth/login.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
+<x-guest-layout>
     {{-- Card contenedor del formulario --}}
     <div class="bg-white rounded-2xl p-8" style="box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);border:1px solid #e2e8f0">
 

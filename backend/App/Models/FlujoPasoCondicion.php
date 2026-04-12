@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/FlujoPasoCondicion.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -89,3 +94,4 @@ class FlujoPasoCondicion extends Model
             && (float) $valor <= (float) $limites[1];
     }
 }
+

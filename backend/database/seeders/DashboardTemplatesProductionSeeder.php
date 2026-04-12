@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/DashboardTemplatesProductionSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 

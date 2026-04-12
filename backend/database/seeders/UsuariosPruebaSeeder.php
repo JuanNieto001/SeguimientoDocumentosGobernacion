@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/UsuariosPruebaSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -222,3 +227,4 @@ class UsuariosPruebaSeeder extends Seeder
         $this->command->info('   Contraseña para todos: Caldas2025*');
     }
 }
+

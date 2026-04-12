@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/frontend/auth/register.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-guest-layout>
     <form method="POST" action="{{ route('register') }}">
         @csrf
@@ -50,3 +51,4 @@
         </div>
     </form>
 </x-guest-layout>
+

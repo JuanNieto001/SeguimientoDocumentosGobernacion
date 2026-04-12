@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Console/Commands/VerifyProductionReadinessCommand.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Console\Commands;
 

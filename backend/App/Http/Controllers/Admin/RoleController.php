@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Admin/RoleController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Admin;
 
@@ -90,3 +95,4 @@ class RoleController extends Controller
             ->with('success', "Rol eliminado correctamente.");
     }
 }
+

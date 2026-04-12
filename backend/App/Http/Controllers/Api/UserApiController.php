@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Api/UserApiController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Api;
 
@@ -173,3 +178,4 @@ class UserApiController extends Controller
         return response()->json(['message' => 'Usuario eliminado correctamente.']);
     }
 }
+

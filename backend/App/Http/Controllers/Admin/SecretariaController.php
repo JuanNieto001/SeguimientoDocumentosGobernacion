@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Admin/SecretariaController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Admin;
 
@@ -70,3 +75,4 @@ class SecretariaController extends Controller
             ->with('success', 'Secretaría eliminada correctamente.');
     }
 }
+

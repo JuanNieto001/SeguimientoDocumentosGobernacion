@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/FlujoInstanciaPaso.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -99,3 +104,4 @@ class FlujoInstanciaPaso extends Model
         return $docsSubidos->count() >= $docsRequeridos->count();
     }
 }
+

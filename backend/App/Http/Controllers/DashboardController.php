@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/DashboardController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -703,3 +708,4 @@ class DashboardController extends Controller
         return $tendencia;
     }
 }
+

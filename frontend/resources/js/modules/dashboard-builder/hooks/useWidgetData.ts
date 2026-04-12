@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/hooks/useWidgetData.ts
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // hooks/useWidgetData.ts
 import { useState, useEffect } from 'react';
 import type { WidgetData, Widget } from '../types/dashboard';

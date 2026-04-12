@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/config/database.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Support\Str;
 
@@ -181,3 +186,4 @@ return [
     ],
 
 ];
+

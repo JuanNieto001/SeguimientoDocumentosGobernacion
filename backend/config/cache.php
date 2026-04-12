@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/config/cache.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Support\Str;
 
@@ -115,3 +120,4 @@ return [
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
 
 ];
+

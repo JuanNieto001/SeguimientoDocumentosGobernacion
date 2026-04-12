@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/DashboardRolAsignacion.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -27,3 +32,4 @@ class DashboardRolAsignacion extends Model
         return $this->belongsTo(DashboardPlantilla::class, 'dashboard_plantilla_id');
     }
 }
+

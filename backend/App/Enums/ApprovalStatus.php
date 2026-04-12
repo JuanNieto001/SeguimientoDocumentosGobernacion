@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Enums/ApprovalStatus.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Enums;
 
@@ -29,3 +34,4 @@ enum ApprovalStatus: string
         };
     }
 }
+

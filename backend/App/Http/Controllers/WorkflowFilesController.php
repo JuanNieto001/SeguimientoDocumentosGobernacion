@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/WorkflowFilesController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -556,10 +561,12 @@ class WorkflowFilesController extends Controller
      */
     public function reemplazar(Request $request, int $archivo)
     {
+        // Reglas base de subida para cualquier reemplazo.
         $rules = [
             'archivo' => ['required', 'file', 'max:10240'],
         ];
 
+        // Cargamos proceso/etapa para validaciones, auditoría y mensajería.
         $archivoAnterior = ProcesoEtapaArchivo::with(['proceso', 'etapa'])->findOrFail($archivo);
         
         // Puede reemplazar: admin, quien subió el archivo o creador del proceso
@@ -570,6 +577,7 @@ class WorkflowFilesController extends Controller
         // Verificar si el documento está bloqueado (siguiente área ya recibió)
         $bloqueado = $this->documentoBloqueado($archivoAnterior);
 
+        // Si está bloqueado, solo admin puede forzar reemplazo y debe justificarlo.
         if ($bloqueado) {
             if (!auth()->user()->hasRole('admin')) {
                 return back()->withErrors(['archivo' => 'Este documento está bloqueado porque la siguiente área ya lo recibió. Solo un administrador puede reemplazarlo.']);
@@ -578,9 +586,11 @@ class WorkflowFilesController extends Controller
             $rules['motivo_reemplazo'] = ['required', 'string', 'min:10'];
         }
 
+        // Validamos con reglas dinámicas (incluye motivo si aplica bloqueo).
         $request->validate($rules);
 
         return DB::transaction(function () use ($request, $archivoAnterior, $bloqueado) {
+            // Recuperamos el archivo binario validado.
             $file = $request->file('archivo');
 
             // Generar nombre único
@@ -593,6 +603,7 @@ class WorkflowFilesController extends Controller
             // Guardar nuevo archivo
             $file->storeAs('public/' . dirname($ruta), basename($ruta));
 
+            // Si hubo bloqueo o venía rechazado, vuelve a pendiente para revisión.
             $nuevoEstado = $bloqueado || $archivoAnterior->estado === 'rechazado'
                 ? 'pendiente'
                 : 'aprobado';
@@ -632,6 +643,7 @@ class WorkflowFilesController extends Controller
                 $descripcion
             );
 
+            // Mensaje final distinto según si fue reemplazo administrativo o estándar.
             $msg = $bloqueado
                 ? 'Archivo reemplazado por administrador. Queda en revisión.'
                 : 'Archivo reemplazado. Nueva versión en revisión';
@@ -677,16 +689,19 @@ class WorkflowFilesController extends Controller
      */
     private function reabrirSolicitudPorDocumentoRechazado(ProcesoEtapaArchivo $archivo, string $motivo): ?object
     {
+        // Buscamos la solicitud más reciente vinculada a este archivo.
         $solicitud = DB::table('proceso_documentos_solicitados')
             ->where('proceso_id', $archivo->proceso_id)
             ->where('archivo_id', $archivo->id)
             ->orderByDesc('id')
             ->first();
 
+        // Si no hay solicitud vinculada, no hay nada para reabrir.
         if (!$solicitud) {
             return null;
         }
 
+        // Se marca rechazado y se limpia vínculo del archivo para permitir recarga.
         DB::table('proceso_documentos_solicitados')
             ->where('id', $solicitud->id)
             ->update([
@@ -699,6 +714,7 @@ class WorkflowFilesController extends Controller
                 'updated_at' => now(),
             ]);
 
+        // Retornamos la solicitud reabierta para usarla en notificaciones externas.
         return $solicitud;
     }
 
@@ -737,17 +753,21 @@ class WorkflowFilesController extends Controller
      */
     private function devolverProcesoPorRechazoDocumento(ProcesoEtapaArchivo $archivo, string $observaciones): void
     {
+        // Etapa objetivo: la etapa donde se subió el documento rechazado.
         $proceso = $archivo->proceso;
         $etapaObjetivo = $archivo->etapa;
 
+        // Si faltan relaciones críticas, salimos en forma segura.
         if (!$proceso || !$etapaObjetivo) {
             return;
         }
 
+        // Evitamos trabajo duplicado si el proceso ya está en la etapa objetivo.
         if ((int) $proceso->etapa_actual_id === (int) $etapaObjetivo->id) {
             return;
         }
 
+        // Guardrail: nunca "devolvemos" a una etapa futura por error de datos.
         $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
         if ($etapaActual && isset($etapaActual->orden) && isset($etapaObjetivo->orden)) {
             if ((int) $etapaObjetivo->orden > (int) $etapaActual->orden) {
@@ -755,6 +775,7 @@ class WorkflowFilesController extends Controller
             }
         }
 
+        // Reubicamos el proceso en la etapa origen del documento rechazado.
         DB::table('procesos')->where('id', $proceso->id)->update([
             'etapa_actual_id' => $etapaObjetivo->id,
             'area_actual_role' => $etapaObjetivo->area_role,
@@ -762,6 +783,7 @@ class WorkflowFilesController extends Controller
             'updated_at' => now(),
         ]);
 
+        // Reabrimos la etapa objetivo para nuevo envío.
         DB::table('proceso_etapas')
             ->where('proceso_id', $proceso->id)
             ->where('etapa_id', $etapaObjetivo->id)
@@ -772,6 +794,7 @@ class WorkflowFilesController extends Controller
                 'updated_at' => now(),
             ]);
 
+        // Limpiamos recibido de la etapa actual previa para mantener consistencia.
         if ($etapaActual && (int) $etapaActual->id !== (int) $etapaObjetivo->id) {
             DB::table('proceso_etapas')
                 ->where('proceso_id', $proceso->id)
@@ -784,6 +807,7 @@ class WorkflowFilesController extends Controller
                 ]);
         }
 
+        // Auditoría: deja traza del rollback por rechazo documental.
         ProcesoAuditoria::registrar(
             $proceso->id,
             'proceso_devuelto_por_rechazo_doc',
@@ -793,6 +817,7 @@ class WorkflowFilesController extends Controller
             "Proceso devuelto a {$etapaObjetivo->nombre} por rechazo del documento {$archivo->nombre_original}."
         );
 
+        // Alerta al área responsable para recargar y reenviar el archivo.
         AlertaService::crearParaArea(
             proceso: $proceso,
             tipo: 'documento_rechazado',
@@ -814,6 +839,7 @@ class WorkflowFilesController extends Controller
      */
     public function preview(int $archivo)
     {
+        // Cargamos metadatos del archivo para construir la respuesta del modal.
         $archivo = ProcesoEtapaArchivo::with(['uploadedBy', 'etapa'])->findOrFail($archivo);
 
         // Autorización: reusar lógica de download
@@ -821,7 +847,10 @@ class WorkflowFilesController extends Controller
         abort_unless($proceso, 404);
         $this->authorizeViewFiles($proceso);
 
+        // "bloqueado" controla si la siguiente etapa ya recibió el documento.
         $bloqueado = $this->documentoBloqueado($archivo);
+
+        // "puede_reemplazar" aplica exactamente la misma regla del endpoint de reemplazo.
         $puedeReemplazar = $this->canUserReplaceArchivo($archivo)
             && (!$bloqueado || auth()->user()->hasRole('admin'));
 
@@ -934,20 +963,26 @@ class WorkflowFilesController extends Controller
      */
     private function canUserReplaceArchivo(ProcesoEtapaArchivo $archivo): bool
     {
+        // Usuario autenticado que intenta reemplazar.
         $user = auth()->user();
 
+        // Regla 1: admin siempre puede.
         if ($user->hasRole('admin')) {
             return true;
         }
 
+        // Regla 2: quien subió el archivo puede reemplazar su propia carga.
         if ((int) $archivo->uploaded_by === (int) $user->id) {
             return true;
         }
 
+        // Regla 3: creador del proceso también puede gestionar reemplazo.
         if ($archivo->proceso && (int) $archivo->proceso->created_by === (int) $user->id) {
             return true;
         }
 
+        // Cualquier otro usuario queda sin permiso de reemplazo.
         return false;
     }
 }
+

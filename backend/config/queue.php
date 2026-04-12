@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/config/queue.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 return [
 
@@ -127,3 +132,4 @@ return [
     ],
 
 ];
+

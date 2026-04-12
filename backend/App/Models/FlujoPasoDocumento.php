@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/FlujoPasoDocumento.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -44,3 +49,4 @@ class FlujoPasoDocumento extends Model
         return $this->belongsTo(FlujoPaso::class, 'flujo_paso_id');
     }
 }
+

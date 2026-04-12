@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/public/router.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 /**
  * Router script for PHP's built-in web server.
@@ -16,3 +21,4 @@ if ($uri !== '/' && file_exists(__DIR__ . $uri)) {
 
 // Otherwise, route everything through Laravel's front controller
 require_once __DIR__ . '/index.php';
+

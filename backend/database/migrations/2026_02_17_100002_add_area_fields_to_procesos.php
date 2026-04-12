@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/migrations/2026_02_17_100002_add_area_fields_to_procesos.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -133,4 +138,5 @@ return new class extends Migration
         });
     }
 };
+
 

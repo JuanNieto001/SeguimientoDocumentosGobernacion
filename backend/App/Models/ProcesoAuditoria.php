@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcesoAuditoria.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -124,3 +129,4 @@ class ProcesoAuditoria extends Model
         return $query->where('created_at', '>=', now()->subDay());
     }
 }
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/ContractProcessController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -310,3 +315,4 @@ class ContractProcessController extends Controller
             ->with('success', 'Proceso cancelado exitosamente');
     }
 }
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/ProcesoController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -400,6 +405,7 @@ class ProcesoController extends Controller
 
             // 7) ✅ Notificar al área responsable de la Etapa 1 (1 alerta por área)
             if ($segundaEtapa) {
+                // Convertimos el role técnico en etiqueta funcional para el mensaje.
                 $areaLabel = match($segundaEtapa->area_role) {
                     'unidad_solicitante' => 'Unidad Solicitante',
                     'planeacion'         => 'Planeación',
@@ -408,8 +414,11 @@ class ProcesoController extends Controller
                     'secop'              => 'SECOP',
                     default              => ucfirst($segundaEtapa->area_role),
                 };
+
+                // Cargamos modelo para usar servicio de alertas tipado por proceso.
                 $procesoModel = \App\Models\Proceso::find($procesoId);
                 if ($procesoModel) {
+                    // Notificación de bandeja al área que recibirá el proceso en su etapa inicial.
                     AlertaService::crearParaArea(
                         proceso: $procesoModel,
                         tipo: 'proceso_recibido',
@@ -638,3 +647,4 @@ class ProcesoController extends Controller
             return "$prefijo-$year-$numeroFmt";
         }
 }
+

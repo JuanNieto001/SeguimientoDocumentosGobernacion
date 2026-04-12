@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/components/widgets/WidgetRenderer.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // components/widgets/WidgetRenderer.jsx
 import React from 'react';
 import BarChartWidget from './BarChart.jsx';

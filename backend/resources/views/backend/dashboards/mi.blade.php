@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/dashboards/mi.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -97,3 +98,4 @@
         @endif
     </div>
 </x-app-layout>
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/factories/UserFactory.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Factories;
 
@@ -42,3 +47,4 @@ class UserFactory extends Factory
         ]);
     }
 }
+

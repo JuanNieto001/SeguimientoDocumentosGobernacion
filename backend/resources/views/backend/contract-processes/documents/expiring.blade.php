@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/contract-processes/documents/expiring.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <h1 class="text-lg font-bold text-gray-900">Documentos por Vencer</h1>
@@ -57,3 +58,4 @@
         </div>
     </div>
 </x-app-layout>
+

@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/dashboard-v2/components/filters/FiltrosPanel.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DateRangePicker from './DateRangePicker.jsx';
 import SecretariaSelector from './SecretariaSelector.jsx';

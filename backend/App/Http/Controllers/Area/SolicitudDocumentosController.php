@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Area/SolicitudDocumentosController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Area;
 
@@ -149,3 +154,4 @@ class SolicitudDocumentosController extends Controller
         return $nombres[$role] ?? ucfirst(str_replace('_', ' ', $role));
     }
 }
+

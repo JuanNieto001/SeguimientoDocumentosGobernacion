@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/WorkflowApp.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
     ReactFlow,
@@ -1559,3 +1564,4 @@ export default function WorkflowApp() {
         </div>
     );
 }
+

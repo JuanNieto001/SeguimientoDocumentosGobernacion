@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcessStep.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -97,3 +102,4 @@ class ProcessStep extends Model
         return $query->where('status', 'in_progress');
     }
 }
+

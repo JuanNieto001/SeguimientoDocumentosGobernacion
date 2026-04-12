@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/Alerta.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -130,3 +135,4 @@ class Alerta extends Model
         return $query->where('created_at', '>=', now()->subDays(2));
     }
 }
+

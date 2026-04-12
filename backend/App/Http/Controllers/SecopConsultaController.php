@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/SecopConsultaController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -58,3 +63,4 @@ class SecopConsultaController extends Controller
         return back()->with('success', 'Información actualizada desde SECOP II.');
     }
 }
+

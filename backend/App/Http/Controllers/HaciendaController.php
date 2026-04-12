@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/HaciendaController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -333,3 +338,4 @@ class HaciendaController extends Controller
         return view('hacienda.reportes', compact('stats', 'desde', 'hasta'));
     }
 }
+

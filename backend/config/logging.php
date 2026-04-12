@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/config/logging.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
@@ -130,3 +135,4 @@ return [
     ],
 
 ];
+

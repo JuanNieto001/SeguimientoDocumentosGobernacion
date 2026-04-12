@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Enums/ProcessType.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Enums;
 
@@ -35,3 +40,4 @@ enum ProcessType: string
         };
     }
 }
+

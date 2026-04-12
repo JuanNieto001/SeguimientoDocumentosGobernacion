@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/components/auth-session-status.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @props(['status'])
 
 @if ($status)
@@ -5,3 +6,4 @@
         {{ $status }}
     </div>
 @endif
+

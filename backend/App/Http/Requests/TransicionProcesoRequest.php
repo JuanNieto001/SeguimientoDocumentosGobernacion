@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Requests/TransicionProcesoRequest.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Requests;
 
@@ -39,3 +44,4 @@ class TransicionProcesoRequest extends FormRequest
         ];
     }
 }
+

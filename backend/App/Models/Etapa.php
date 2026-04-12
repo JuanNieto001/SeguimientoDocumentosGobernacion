@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/Etapa.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -129,3 +134,4 @@ class Etapa extends Model
         return $query->where('activa', true);
     }
 }
+

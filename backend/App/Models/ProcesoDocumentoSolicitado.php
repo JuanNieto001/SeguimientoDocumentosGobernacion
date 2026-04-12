@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcesoDocumentoSolicitado.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -135,3 +140,4 @@ class ProcesoDocumentoSolicitado extends Model
         return $this->estado === 'pendiente' && $this->puede_subir;
     }
 }
+

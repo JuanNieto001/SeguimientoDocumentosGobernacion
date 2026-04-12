@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Api/UnidadApiController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Api;
 
@@ -105,3 +110,4 @@ class UnidadApiController extends Controller
         return response()->json(['message' => 'Unidad eliminada correctamente.']);
     }
 }
+

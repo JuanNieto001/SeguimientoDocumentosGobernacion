@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcessApproval.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -154,3 +159,4 @@ class ProcessApproval extends Model
         return $query->where('approval_type', $type);
     }
 }
+

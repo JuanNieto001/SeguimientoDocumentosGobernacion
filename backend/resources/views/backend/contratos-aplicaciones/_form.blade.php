@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/contratos-aplicaciones/_form.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @csrf
 <div class="grid md:grid-cols-2 gap-4">
     <div class="md:col-span-2">
@@ -90,3 +91,4 @@
         </ul>
     </div>
 @endif
+

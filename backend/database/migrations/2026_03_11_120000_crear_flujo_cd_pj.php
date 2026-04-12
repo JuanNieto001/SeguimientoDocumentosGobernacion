@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/migrations/2026_03_11_120000_crear_flujo_cd_pj.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -589,3 +594,4 @@ return new class extends Migration
         ];
     }
 };
+

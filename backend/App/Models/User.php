@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/User.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -146,3 +151,4 @@ class User extends Authenticatable
         return $query->where('unidad_id', $unidadId);
     }
 }
+

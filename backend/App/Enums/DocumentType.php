@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Enums/DocumentType.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Enums;
 
@@ -236,3 +241,4 @@ enum DocumentType: string
         ]);
     }
 }
+

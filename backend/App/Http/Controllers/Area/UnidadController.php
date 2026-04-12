@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Area/UnidadController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Area;
 
@@ -616,3 +621,4 @@ class UnidadController extends Controller
         });
     }
 }
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/PlaneacionController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -293,3 +298,4 @@ class PlaneacionController extends Controller
         return view('planeacion.reportes', compact('stats', 'mes', 'anio'));
     }
 }
+

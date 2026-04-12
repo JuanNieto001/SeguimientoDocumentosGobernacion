@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/dashboard/reporte.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <h1 class="text-lg font-bold text-gray-900">Reporte General del Sistema</h1>
@@ -112,3 +113,4 @@
         @endif
     </div>
 </x-app-layout>
+

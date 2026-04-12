@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/migrations/2026_03_11_110000_unificar_flujo_cdpn.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -51,3 +56,4 @@ return new class extends Migration
         ]);
     }
 };
+

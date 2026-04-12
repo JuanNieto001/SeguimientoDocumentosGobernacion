@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/Unidad.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -61,3 +66,4 @@ class Unidad extends Model
         return $query->where('secretaria_id', $secretariaId);
     }
 }
+

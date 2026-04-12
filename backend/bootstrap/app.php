@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/bootstrap/app.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -52,3 +57,4 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->create();
+

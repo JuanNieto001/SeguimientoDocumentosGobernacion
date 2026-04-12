@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/admin/unidades/index.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
@@ -72,3 +73,4 @@
         <div class="mt-4">{{ $unidades->links() }}</div>
     </div>
 </x-app-layout>
+

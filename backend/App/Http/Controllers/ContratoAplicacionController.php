@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/ContratoAplicacionController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -114,3 +119,4 @@ class ContratoAplicacionController extends Controller
         return $data;
     }
 }
+

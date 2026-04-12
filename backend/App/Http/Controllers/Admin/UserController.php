@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Admin/UserController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Admin;
 
@@ -140,3 +145,4 @@ class UserController extends Controller
             ->with('success', 'Usuario eliminado correctamente.');
     }
 }
+

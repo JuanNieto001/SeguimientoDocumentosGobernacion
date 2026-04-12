@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/components/nav-link.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @props(['active'])
 
 @php
@@ -9,3 +10,4 @@ $classes = ($active ?? false)
 <a {{ $attributes->merge(['class' => $classes]) }}>
     {{ $slot }}
 </a>
+

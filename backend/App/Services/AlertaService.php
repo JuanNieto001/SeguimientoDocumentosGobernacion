@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Services/AlertaService.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Services;
 
@@ -342,21 +347,27 @@ class AlertaService
         array $metadata = [],
         ?string $accionUrl = null
     ): int {
+        // Usamos el guard configurado para evitar mezclar roles de otros guards.
         $guardName = config('auth.defaults.guard', 'web');
 
+        // Lista base de roles destino.
         $roles = [$areaRole];
+
+        // Alias funcional: planeacion y descentralizacion se tratan como la misma bandeja.
         if ($areaRole === 'planeacion') {
             $roles[] = 'descentralizacion';
         } elseif ($areaRole === 'descentralizacion') {
             $roles[] = 'planeacion';
         }
 
+        // Filtramos solo roles existentes en el guard activo para evitar excepciones.
         $rolesExistentes = Role::query()
             ->where('guard_name', $guardName)
             ->whereIn('name', $roles)
             ->pluck('name')
             ->all();
 
+        // Si no existe ningún rol válido, creamos alerta genérica por área.
         if (empty($rolesExistentes)) {
             Alerta::create([
                 'proceso_id' => $proceso->id,
@@ -372,6 +383,7 @@ class AlertaService
             return 1;
         }
 
+        // Obtenemos usuarios que realmente tengan roles válidos para notificación individual.
         $destinatarios = User::query()
             ->whereHas('roles', function ($query) use ($rolesExistentes, $guardName) {
                 $query->where('guard_name', $guardName)
@@ -379,6 +391,7 @@ class AlertaService
             })
             ->get();
 
+        // Si no hay usuarios destino, guardamos alerta de área como fallback de bandeja.
         if ($destinatarios->isEmpty()) {
             Alerta::create([
                 'proceso_id' => $proceso->id,
@@ -394,6 +407,7 @@ class AlertaService
             return 1;
         }
 
+        // Notificación individual por usuario para asegurar visibilidad personal.
         foreach ($destinatarios as $usuario) {
             Alerta::create([
                 'proceso_id' => $proceso->id,
@@ -409,6 +423,7 @@ class AlertaService
             ]);
         }
 
+        // Devolvemos cantidad de alertas emitidas para métricas y trazabilidad.
         return $destinatarios->count();
     }
 
@@ -471,3 +486,4 @@ class AlertaService
             ->get();
     }
 }
+

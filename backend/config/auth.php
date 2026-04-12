@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/config/auth.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 return [
 
@@ -113,3 +118,4 @@ return [
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
 ];
+

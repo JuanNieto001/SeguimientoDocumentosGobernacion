@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Admin/PermissionController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Admin;
 
@@ -57,3 +62,4 @@ class PermissionController extends Controller
             ->with('success', "Permiso eliminado correctamente.");
     }
 }
+

@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/admin/estiven-guides/index.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @php use App\Support\RoleLabels; @endphp
 <x-app-layout>
     <x-slot name="header">
@@ -112,3 +113,4 @@
         </div>
     </div>
 </x-app-layout>
+

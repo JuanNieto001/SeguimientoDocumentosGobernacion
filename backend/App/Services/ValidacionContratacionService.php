@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Services/ValidacionContratacionService.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Services;
 
@@ -271,3 +276,4 @@ class ValidacionContratacionService
         return $recomendaciones;
     }
 }
+

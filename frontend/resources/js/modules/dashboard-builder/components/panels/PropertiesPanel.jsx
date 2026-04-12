@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/components/panels/PropertiesPanel.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // components/panels/PropertiesPanel.jsx
 import React from 'react';
 import useDashboardStore from '../../store/dashboardStore.js';

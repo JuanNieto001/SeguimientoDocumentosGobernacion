@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/WorkflowController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -490,6 +495,7 @@ class WorkflowController extends Controller
                 'ip_address'         => request()->ip(),
             ]);
 
+            // Etiqueta visible para el usuario basada en el rol destino de la siguiente etapa.
             $areaLabel = match($nextEtapa->area_role) {
                 'unidad_solicitante' => 'Unidad Solicitante',
                 'planeacion'         => 'Planeación',
@@ -500,6 +506,7 @@ class WorkflowController extends Controller
             };
 
             // Notificar al área de la siguiente etapa (1 alerta por área)
+            // Cargamos el modelo Eloquent para la firma tipada del servicio de alertas.
             $procesoModel = \App\Models\Proceso::find($proceso->id);
             if ($procesoModel) {
                 AlertaService::crearParaArea(
@@ -590,6 +597,7 @@ class WorkflowController extends Controller
             // Buscar secretaría por nombre
             $secretaria = DB::table('secretarias')->where('nombre', 'like', '%' . $doc['secretaria_nombre'] . '%')->first();
 
+            // Creamos la solicitud documental para cada área responsable.
             $solicitudId = DB::table('proceso_documentos_solicitados')->insertGetId([
                 'proceso_id' => $proceso->id,
                 'etapa_id' => $etapa->id,
@@ -608,6 +616,7 @@ class WorkflowController extends Controller
 
             // Notificar al área responsable del documento
             if ($procesoModel) {
+                // Alerta por documento solicitado para que el área inicie carga.
                 AlertaService::crearParaArea(
                     proceso: $procesoModel,
                     tipo: 'documento_solicitado',
@@ -631,6 +640,7 @@ class WorkflowController extends Controller
         // Ahora insertar CDP que DEPENDE de Compatibilidad
         $secHacienda = DB::table('secretarias')->where('nombre', 'like', '%Hacienda%')->first();
 
+        // Insertamos CDP como solicitud dependiente de Compatibilidad del Gasto.
         DB::table('proceso_documentos_solicitados')->insert([
             'proceso_id' => $proceso->id,
             'etapa_id' => $etapa->id,
@@ -650,6 +660,7 @@ class WorkflowController extends Controller
 
         // Notificar a presupuesto sobre el CDP
         if ($procesoModel) {
+            // Mensaje explícito de dependencia para evitar confusión operativa.
             AlertaService::crearParaArea(
                 proceso: $procesoModel,
                 tipo: 'documento_solicitado',
@@ -675,3 +686,4 @@ class WorkflowController extends Controller
         );
     }
 }
+

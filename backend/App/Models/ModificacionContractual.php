@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ModificacionContractual.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -138,3 +143,4 @@ class ModificacionContractual extends Model
         return $query->where('estado', 'pendiente');
     }
 }
+

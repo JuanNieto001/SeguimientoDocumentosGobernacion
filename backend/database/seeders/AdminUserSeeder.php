@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/AdminUserSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -31,4 +36,5 @@ class AdminUserSeeder extends Seeder
         $admin2->assignRole('admin');
     }
 }
+
 

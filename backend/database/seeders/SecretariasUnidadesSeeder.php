@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/SecretariasUnidadesSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -140,3 +145,4 @@ class SecretariasUnidadesSeeder extends Seeder
         $this->command->info('✅ 15 Secretarías y sus unidades creadas correctamente.');
     }
 }
+

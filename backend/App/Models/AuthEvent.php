@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/AuthEvent.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -117,3 +122,4 @@ class AuthEvent extends Model
         };
     }
 }
+

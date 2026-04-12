@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/dashboard/show.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @extends('layouts.app')
 
 @section('title', $dashboard->name)

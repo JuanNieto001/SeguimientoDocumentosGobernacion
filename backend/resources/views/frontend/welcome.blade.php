@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/frontend/welcome.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -275,3 +276,4 @@
         @endif
     </body>
 </html>
+

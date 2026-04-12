@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/components/widgets/BarChart.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // components/widgets/BarChart.jsx
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';

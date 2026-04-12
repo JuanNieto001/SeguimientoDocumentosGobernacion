@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/migrations/2026_03_24_161100_repair_dashboard_asignacion_auditorias_constraints.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -36,3 +41,4 @@ return new class extends Migration
         // No-op para evitar errores en entornos donde constraints/indices puedan variar.
     }
 };
+

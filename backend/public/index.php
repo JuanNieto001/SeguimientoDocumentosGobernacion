@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/public/index.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
@@ -18,3 +23,4 @@ require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
 $app->handleRequest(Request::capture());
+

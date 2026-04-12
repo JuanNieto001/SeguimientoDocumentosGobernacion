@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcessDocument.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -288,3 +293,4 @@ class ProcessDocument extends Model
         return $query->where('document_type', $type);
     }
 }
+

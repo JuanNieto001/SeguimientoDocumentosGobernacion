@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/WorkflowCDPN9EtapasSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -15,3 +20,4 @@ class WorkflowCDPN9EtapasSeeder extends Seeder
         //
     }
 }
+

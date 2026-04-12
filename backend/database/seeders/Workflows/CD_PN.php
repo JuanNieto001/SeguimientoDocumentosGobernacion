@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/Workflows/CD_PN.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 return [
     'codigo' => 'CD_PN',
@@ -188,3 +193,4 @@ return [
         ],
     ],
 ];
+

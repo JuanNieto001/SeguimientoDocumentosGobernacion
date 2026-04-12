@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/View/Components/GuestLayout.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\View\Components;
 
@@ -15,3 +20,4 @@ class GuestLayout extends Component
         return view('layouts.guest');
     }
 }
+

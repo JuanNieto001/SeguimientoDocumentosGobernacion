@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Api/SecretariaApiController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Api;
 
@@ -103,3 +108,4 @@ class SecretariaApiController extends Controller
         return response()->json(['unidades' => $unidades]);
     }
 }
+

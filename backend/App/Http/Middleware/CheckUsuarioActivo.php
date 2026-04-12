@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Middleware/CheckUsuarioActivo.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Middleware;
 
@@ -39,3 +44,4 @@ class CheckUsuarioActivo
         return $next($request);
     }
 }
+

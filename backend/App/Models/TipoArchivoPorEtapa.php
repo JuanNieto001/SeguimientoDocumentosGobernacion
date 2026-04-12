@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/TipoArchivoPorEtapa.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -87,3 +92,4 @@ class TipoArchivoPorEtapa extends Model
         return $query->where('tipo', $tipo);
     }
 }
+

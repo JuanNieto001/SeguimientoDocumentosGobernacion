@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/Workflow.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -64,3 +69,4 @@ class Workflow extends Model
         return $query->where('activo', true);
     }
 }
+

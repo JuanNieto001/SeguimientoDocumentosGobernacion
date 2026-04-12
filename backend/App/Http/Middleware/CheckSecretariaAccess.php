@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Middleware/CheckSecretariaAccess.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Middleware;
 
@@ -64,3 +69,4 @@ class CheckSecretariaAccess
         abort(403, $message);
     }
 }
+

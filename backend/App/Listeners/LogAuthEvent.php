@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Listeners/LogAuthEvent.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Listeners;
 
@@ -74,3 +79,4 @@ class LogAuthEvent
         ];
     }
 }
+

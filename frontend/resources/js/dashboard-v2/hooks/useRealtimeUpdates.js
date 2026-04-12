@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/dashboard-v2/hooks/useRealtimeUpdates.js
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // hooks/useRealtimeUpdates.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 

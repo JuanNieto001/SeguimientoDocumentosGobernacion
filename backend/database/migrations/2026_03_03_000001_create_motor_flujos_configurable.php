@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/migrations/2026_03_03_000001_create_motor_flujos_configurable.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -381,3 +386,4 @@ return new class extends Migration
         Schema::dropIfExists('catalogo_pasos');
     }
 };
+

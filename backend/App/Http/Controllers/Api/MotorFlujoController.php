@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Api/MotorFlujoController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Api;
 
@@ -991,3 +996,4 @@ class MotorFlujoController extends Controller
         abort(403, 'No tiene autorización para operar este proceso.');
     }
 }
+

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/migrations/2026_02_19_000001_create_contract_processes_table.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -76,3 +81,4 @@ return new class extends Migration
         Schema::dropIfExists('contract_processes');
     }
 };
+

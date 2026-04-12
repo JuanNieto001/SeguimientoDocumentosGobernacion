@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/JuridicaController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -388,3 +393,4 @@ class JuridicaController extends Controller
         return view('juridica.reportes', compact('stats', 'desde', 'hasta'));
     }
 }
+

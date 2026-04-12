@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/Secretaria.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -54,3 +59,4 @@ class Secretaria extends Model
         return $query->where('activo', true);
     }
 }
+

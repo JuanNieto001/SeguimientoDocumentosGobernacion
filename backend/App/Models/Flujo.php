@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/Flujo.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -116,3 +121,4 @@ class Flujo extends Model
         return $query->where('tipo_contratacion', $tipo);
     }
 }
+

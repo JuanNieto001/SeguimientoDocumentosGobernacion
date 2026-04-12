@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/DatabaseSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -30,3 +35,4 @@ class DatabaseSeeder extends Seeder
 }
 
 }
+

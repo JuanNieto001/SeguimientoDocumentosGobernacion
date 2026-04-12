@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Area/PlaneacionController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Area;
 
@@ -18,28 +23,36 @@ class PlaneacionController extends Controller
      */
     private function resolverResponsableDestino(Proceso $proceso, object $etapaDestino): string
     {
+        // Normalizamos el rol para evitar nulls y simplificar las comparaciones.
         $areaRole = (string) ($etapaDestino->area_role ?? '');
 
+        // Caso especial: cuando devuelve a la unidad solicitante, mostramos un responsable humano.
         if ($areaRole === 'unidad_solicitante') {
+            // Priorizamos el nombre de la unidad porque representa mejor el destino operativo.
             $unidadNombre = DB::table('unidades')
                 ->where('id', $proceso->unidad_origen_id)
                 ->value('nombre');
 
+            // Si la unidad existe, devolvemos el formato pedido: "Jefe, <Unidad>".
             if ($unidadNombre) {
                 return "Jefe, {$unidadNombre}";
             }
 
+            // Fallback 1: usamos el nombre del creador del proceso si no hay unidad asociada.
             $creadorNombre = DB::table('users')
                 ->where('id', $proceso->created_by)
                 ->value('name');
 
+            // Si encontramos creador, devolvemos una etiqueta igualmente entendible para UI.
             if ($creadorNombre) {
                 return "Responsable, {$creadorNombre}";
             }
 
+            // Fallback final para mantener mensaje consistente aunque falten datos maestros.
             return 'Unidad solicitante';
         }
 
+        // Tabla de mapeo rol -> etiqueta amigable para los mensajes de negocio.
         $areaNombre = match ($areaRole) {
             'planeacion' => 'Descentralización',
             'hacienda' => 'Secretaría de Hacienda',
@@ -55,14 +68,17 @@ class PlaneacionController extends Controller
             default => null,
         };
 
+        // Si encontramos mapeo, lo retornamos directamente.
         if ($areaNombre) {
             return $areaNombre;
         }
 
+        // Fallback 2: usar el nombre de etapa cuando no existe etiqueta por rol.
         if (!empty($etapaDestino->nombre)) {
             return (string) $etapaDestino->nombre;
         }
 
+        // Fallback final defensivo.
         return 'área anterior';
     }
 
@@ -359,6 +375,7 @@ class PlaneacionController extends Controller
      */
     public function rechazar(Request $request, $id)
     {
+        // Cargamos el proceso junto a la etapa actual para decidir la devolución.
         $proceso = Proceso::with('etapaActual')->findOrFail($id);
         
         // Validar que el proceso esté en el área de planeación
@@ -367,10 +384,12 @@ class PlaneacionController extends Controller
                 ->with('error', 'Este proceso ya no está en tu bandeja.');
         }
 
+        // El motivo es obligatorio para garantizar trazabilidad del rechazo.
         $validated = $request->validate([
             'motivo_rechazo' => 'required|string|min:10|max:500',
         ]);
 
+        // Guardamos referencia explícita para no depender de lazy loading posterior.
         $etapaActual = $proceso->etapaActual;
 
         // Buscar etapa anterior por el enlace del flujo (fallback por orden para flujos legacy)
@@ -388,10 +407,12 @@ class PlaneacionController extends Controller
                 ->first();
         }
 
+        // Si no hay etapa anterior válida, detenemos el flujo con mensaje claro.
         if (!$etapaAnterior) {
             return redirect()->back()->with('error', 'No se pudo devolver el proceso a una etapa anterior.');
         }
 
+        // Resolvemos un nombre de destino amigable para mensajes, alertas y auditoría.
         $responsableDestino = $this->resolverResponsableDestino($proceso, $etapaAnterior);
 
         DB::transaction(function () use ($proceso, $validated, $etapaActual, $etapaAnterior, $responsableDestino) {
@@ -443,6 +464,7 @@ class PlaneacionController extends Controller
 
             $procesoActualizado = Proceso::find($proceso->id);
             if ($procesoActualizado) {
+                // Notificamos al área/actor destino que debe retomar el proceso devuelto.
                 AlertaService::crearParaArea(
                     proceso: $procesoActualizado,
                     tipo: 'proceso_devuelto',
@@ -460,6 +482,7 @@ class PlaneacionController extends Controller
                 );
             }
 
+            // Registramos auditoría con etapa técnica y responsable legible para trazabilidad completa.
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'rechazado_planeacion',
@@ -474,6 +497,7 @@ class PlaneacionController extends Controller
             );
         });
 
+        // Mensaje final orientado al usuario funcional, no al nombre técnico de etapa.
         return redirect()->route('planeacion.index')
             ->with('success', "Proceso rechazado con éxito y devuelto a {$responsableDestino}.");
     }
@@ -502,3 +526,4 @@ class PlaneacionController extends Controller
         return view('areas.planeacion-reportes', compact('estadisticas', 'fechaInicio', 'fechaFin'));
     }
 }
+

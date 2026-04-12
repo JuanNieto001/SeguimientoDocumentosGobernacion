@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/admin/roles/create.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-4">
@@ -107,3 +108,4 @@
     }
     </script>
 </x-app-layout>
+

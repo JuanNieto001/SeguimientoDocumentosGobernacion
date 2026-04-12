@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/layouts/app.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -83,6 +84,7 @@
                         $authUser->hasRole('radicacion') => 'radicacion',
                         $authUser->hasRole('compras') => 'compras',
                         $authUser->hasRole('talento_humano') => 'talento_humano',
+                        // Mapeo de alias funcional para compartir bandeja con Planeación.
                         $authUser->hasRole('descentralizacion') => 'planeacion',
                         $authUser->hasRole('planeacion') => 'planeacion',
                         $authUser->hasRole('hacienda') => 'hacienda',
@@ -150,3 +152,4 @@
 
 </body>
 </html>
+

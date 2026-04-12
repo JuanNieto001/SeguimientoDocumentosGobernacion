@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/DashboardBuilderPermissionSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -42,3 +47,4 @@ class DashboardBuilderPermissionSeeder extends Seeder
         $this->command->info('✅ Permiso asignado a ' . count($rolesConAcceso) . ' roles.');
     }
 }
+

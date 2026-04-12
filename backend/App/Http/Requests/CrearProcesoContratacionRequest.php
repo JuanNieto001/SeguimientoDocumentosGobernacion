@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Requests/CrearProcesoContratacionRequest.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Requests;
 
@@ -52,3 +57,4 @@ class CrearProcesoContratacionRequest extends FormRequest
         ];
     }
 }
+

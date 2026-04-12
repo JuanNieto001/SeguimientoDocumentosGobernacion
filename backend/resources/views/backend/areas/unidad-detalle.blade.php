@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/areas/unidad-detalle.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @php use Illuminate\Support\Facades\DB; @endphp
 @php $puedeVerTimeline = auth()->user()->hasAnyRole(['admin','admin_general','admin_secretaria']); @endphp
 <x-app-layout>
@@ -84,6 +85,7 @@
 
         {{-- Documento de Estudios Previos --}}
         @php
+            // Tomamos la última versión disponible para que el modal trabaje sobre el archivo vigente.
             $documentoEstudiosPrevios = DB::table('proceso_etapa_archivos')
                 ->where('proceso_id', $proceso->id)
                 ->where('tipo_archivo', 'estudios_previos')
@@ -106,6 +108,7 @@
                             </p>
                         </div>
                         <div class="flex gap-2">
+                                     {{-- Abre el modal unificado de preview/acciones (incluye reemplazo cuando aplica). --}}
                                      <button type="button"
                                          onclick="window.dispatchEvent(new CustomEvent('abrir-preview', { detail: {{ $documentoEstudiosPrevios->id }} }))"
                                          class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all">
@@ -280,3 +283,4 @@
 
     </div>
 </x-app-layout>
+

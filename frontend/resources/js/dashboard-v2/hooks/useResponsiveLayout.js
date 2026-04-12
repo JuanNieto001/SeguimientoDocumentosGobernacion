@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/dashboard-v2/hooks/useResponsiveLayout.js
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // hooks/useResponsiveLayout.js
 import { useState, useEffect, useCallback, useMemo } from 'react';
 

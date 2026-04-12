@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Requests/Auth/LoginRequest.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Requests\Auth;
 
@@ -83,3 +88,4 @@ class LoginRequest extends FormRequest
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
     }
 }
+

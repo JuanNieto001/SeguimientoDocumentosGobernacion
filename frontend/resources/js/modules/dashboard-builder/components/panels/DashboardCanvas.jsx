@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/components/panels/DashboardCanvas.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // components/panels/DashboardCanvas.jsx
 import React from 'react';
 import { Responsive } from 'react-grid-layout';

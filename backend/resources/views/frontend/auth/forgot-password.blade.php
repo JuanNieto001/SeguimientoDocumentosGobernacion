@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/frontend/auth/forgot-password.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-guest-layout>
     <div class="mb-5">
         <h2 class="text-lg font-semibold" style="color:#1e293b">¿Olvidaste tu contraseña?</h2>
@@ -62,3 +63,4 @@
         </div>
     </form>
 </x-guest-layout>
+

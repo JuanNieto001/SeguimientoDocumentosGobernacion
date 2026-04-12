@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/layouts/guest.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -61,3 +62,4 @@
 </div>
 </body>
 </html>
+

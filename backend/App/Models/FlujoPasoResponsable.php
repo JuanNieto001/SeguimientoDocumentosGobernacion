@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/FlujoPasoResponsable.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -48,3 +53,4 @@ class FlujoPasoResponsable extends Model
         return $this->belongsTo(Unidad::class, 'unidad_id');
     }
 }
+

@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/contratos-aplicaciones/create.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <h1 class="text-lg font-bold text-gray-900 leading-none">Nuevo contrato de aplicación</h1>
@@ -17,3 +18,4 @@
         </form>
     </div>
 </x-app-layout>
+

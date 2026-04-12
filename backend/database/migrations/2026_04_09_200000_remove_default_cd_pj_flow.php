@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/migrations/2026_04_09_200000_remove_default_cd_pj_flow.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -68,3 +73,4 @@ return new class extends Migration
         // No-op: el flujo CD_PJ se puede crear manualmente cuando se habilite.
     }
 };
+

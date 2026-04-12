@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/Area/SecopController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers\Area;
 
@@ -322,3 +327,4 @@ class SecopController extends Controller
         return view('areas.secop-reportes', compact('estadisticas', 'fechaInicio', 'fechaFin'));
     }
 }
+

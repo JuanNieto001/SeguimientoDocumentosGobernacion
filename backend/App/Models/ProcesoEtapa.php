@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/ProcesoEtapa.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -176,3 +181,4 @@ class ProcesoEtapa extends Model
         return round(($this->diasEnEtapa() / $this->etapa->dias_estimados) * 100, 2);
     }
 }
+

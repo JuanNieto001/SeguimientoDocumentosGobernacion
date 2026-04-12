@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/config/session.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 use Illuminate\Support\Str;
 
@@ -215,3 +220,4 @@ return [
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
 ];
+

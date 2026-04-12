@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/store/dashboardStore.js
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // store/dashboardStore.js
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';

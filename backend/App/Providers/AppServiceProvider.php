@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Providers/AppServiceProvider.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Providers;
 
@@ -67,4 +72,5 @@ class AppServiceProvider extends ServiceProvider
         }
     }
 }
+
 

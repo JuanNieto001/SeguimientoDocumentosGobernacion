@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/AreaUsersSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -238,3 +243,4 @@ class AreaUsersSeeder extends Seeder
         $this->command->info('✅ Usuarios específicos por dependencia creados correctamente.');
     }
 }
+

@@ -1,3 +1,8 @@
+/*
+ * Archivo: frontend/resources/css/app.css
+ * Proposito: Estilos documentados para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -1173,3 +1178,4 @@ table {
         viewport-fit: cover;
     }
 }
+

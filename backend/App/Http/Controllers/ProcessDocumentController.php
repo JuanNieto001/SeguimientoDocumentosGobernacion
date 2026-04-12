@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/ProcessDocumentController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -168,6 +173,8 @@ class ProcessDocumentController extends Controller
             'message' => "El documento '{$document->document_name}' fue rechazado: {$validated['notes']}",
         ]);
 
+        // Si el proceso avanzó más allá del documento rechazado, se devuelve a ese paso.
+        // Esto fuerza recarga/corrección antes de continuar con etapas posteriores.
         if ($contractProcess->current_step > $document->step_number) {
             $this->workflowEngine->returnToStep(
                 $contractProcess,
@@ -308,3 +315,4 @@ class ProcessDocumentController extends Controller
         return view('contract-processes.documents.expiring', compact('documents', 'days'));
     }
 }
+

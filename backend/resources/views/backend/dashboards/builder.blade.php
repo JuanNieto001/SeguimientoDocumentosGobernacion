@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/dashboards/builder.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 @extends('layouts.app')
 
 @section('title', 'Dashboard Builder')
@@ -147,3 +148,4 @@
 @viteReactRefresh
 @vite('resources/js/dashboard-builder.jsx')
 @endpush
+

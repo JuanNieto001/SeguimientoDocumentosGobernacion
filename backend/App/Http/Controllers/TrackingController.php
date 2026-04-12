@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/TrackingController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -196,3 +201,4 @@ class TrackingController extends Controller
         return back()->with('success_tracking', "{$tipoLabel} registrada correctamente para el proceso {$codigo}.");
     }
 }
+

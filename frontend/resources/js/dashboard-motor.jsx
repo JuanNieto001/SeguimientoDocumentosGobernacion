@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/dashboard-motor.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -1034,3 +1039,4 @@ const root = document.getElementById('dashboard-motor-app');
 if (root) {
     createRoot(root).render(<DashboardMotorApp />);
 }
+

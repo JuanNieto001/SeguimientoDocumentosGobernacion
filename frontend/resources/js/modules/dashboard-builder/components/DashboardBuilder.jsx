@@ -1,3 +1,8 @@
+/**
+ * Archivo: frontend/resources/js/modules/dashboard-builder/components/DashboardBuilder.jsx
+ * Proposito: Modulo frontend documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 // components/DashboardBuilder.jsx
 import React, { useEffect } from 'react';
 import { DndContext } from '@dnd-kit/core';

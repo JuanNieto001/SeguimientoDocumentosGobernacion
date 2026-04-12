@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/frontend/auth/reset-password.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-guest-layout>
     <form method="POST" action="{{ route('password.store') }}">
         @csrf
@@ -37,3 +38,4 @@
         </div>
     </form>
 </x-guest-layout>
+

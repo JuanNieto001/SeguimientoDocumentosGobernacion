@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/proceso-cd/create.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -159,3 +160,4 @@
         </div>
     </div>
 </x-app-layout>
+

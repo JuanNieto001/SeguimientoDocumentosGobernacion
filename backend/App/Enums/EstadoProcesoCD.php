@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Enums/EstadoProcesoCD.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Enums;
 
@@ -298,3 +303,4 @@ enum EstadoProcesoCD: string
         return array_filter(self::cases(), fn (self $e) => $e->etapa() === $etapa);
     }
 }
+

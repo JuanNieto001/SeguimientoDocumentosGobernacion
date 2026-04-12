@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/DashboardAsignacionAuditoria.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -44,3 +49,4 @@ class DashboardAsignacionAuditoria extends Model
         return $this->belongsTo(DashboardPlantilla::class, 'dashboard_plantilla_nueva_id');
     }
 }
+

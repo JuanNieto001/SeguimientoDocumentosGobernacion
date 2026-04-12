@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Http/Controllers/AlertaController.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Http\Controllers;
 
@@ -169,6 +174,7 @@ class AlertaController extends Controller
         if ($user->hasRole('radicacion')) return 'radicacion';
         if ($user->hasRole('compras')) return 'compras';
         if ($user->hasRole('talento_humano')) return 'talento_humano';
+        // Compatibilidad histórica: el rol descentralizacion opera sobre área planeacion.
         if ($user->hasRole('descentralizacion')) return 'planeacion';
         if ($user->hasRole('planeacion')) return 'planeacion';
         if ($user->hasRole('hacienda')) return 'hacienda';
@@ -212,3 +218,4 @@ class AlertaController extends Controller
         ]);
     }
 }
+

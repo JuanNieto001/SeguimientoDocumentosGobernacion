@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/InformeSupervision.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -104,3 +109,4 @@ class InformeSupervision extends Model
         };
     }
 }
+

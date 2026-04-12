@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Models/DashboardSecretariaAsignacion.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Models;
 
@@ -32,3 +37,4 @@ class DashboardSecretariaAsignacion extends Model
         return $this->belongsTo(DashboardPlantilla::class, 'dashboard_plantilla_id');
     }
 }
+

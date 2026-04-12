@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/App/Console/Commands/GenerarAlertasAutomaticas.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace App\Console\Commands;
 
@@ -39,3 +44,4 @@ class GenerarAlertasAutomaticas extends Command
         return Command::SUCCESS;
     }
 }
+

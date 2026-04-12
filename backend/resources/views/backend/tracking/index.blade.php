@@ -1,3 +1,4 @@
+{{-- Archivo: backend/resources/views/backend/tracking/index.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
         <div>
@@ -178,3 +179,4 @@
 
     </div>
 </x-app-layout>
+

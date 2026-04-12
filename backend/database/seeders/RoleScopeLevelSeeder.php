@@ -1,4 +1,9 @@
 <?php
+/**
+ * Archivo: backend/database/seeders/RoleScopeLevelSeeder.php
+ * Proposito: Codigo documentado para mantenimiento.
+ * @documentado-copilot 2026-04-11
+ */
 
 namespace Database\Seeders;
 
@@ -65,3 +70,4 @@ class RoleScopeLevelSeeder extends Seeder
         $this->command->info('✅ scope_level poblado en ' . count($scopeMap) . ' roles.');
     }
 }
+
