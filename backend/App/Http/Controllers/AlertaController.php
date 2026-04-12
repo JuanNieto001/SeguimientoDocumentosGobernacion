@@ -169,6 +169,7 @@ class AlertaController extends Controller
         if ($user->hasRole('radicacion')) return 'radicacion';
         if ($user->hasRole('compras')) return 'compras';
         if ($user->hasRole('talento_humano')) return 'talento_humano';
+        if ($user->hasRole('descentralizacion')) return 'planeacion';
         if ($user->hasRole('planeacion')) return 'planeacion';
         if ($user->hasRole('hacienda')) return 'hacienda';
         if ($user->hasRole('juridica')) return 'juridica';

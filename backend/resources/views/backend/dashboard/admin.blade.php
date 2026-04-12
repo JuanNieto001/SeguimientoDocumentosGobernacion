@@ -238,7 +238,7 @@
              'ic'=>'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
             ['id'=>'widget-kpi-creados-mes',   'v'=>$creadosMes,      'l'=>'Creados este mes', 's'=>ucfirst(now()->translatedFormat('F')), 'c'=>'#7c3aed','bg'=>'#faf5ff',
              'ic'=>'M12 4v16m8-8H4'],
-            ['id'=>'widget-kpi-alertas-criticas','v'=>$alertasAltas,  'l'=>'Alertas críticas', 's'=>'Alta prioridad',   'c'=>'#d97706','bg'=>'#fffbeb',
+            ['id'=>'widget-kpi-alertas-criticas','v'=>$alertasAltas,  'l'=>'Alertas altas', 's'=>'Alta prioridad',   'c'=>'#d97706','bg'=>'#fffbeb',
              'ic'=>'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'],
         ];
         @endphp
@@ -324,7 +324,7 @@
                                     <p>Riesgos y situaciones activas</p>
                                 </div>
                                 @if($alertasAltas > 0)
-                                <span class="badge-pill" style="background:#fef2f2;color:#dc2626;padding:1px 6px;font-size:8px">{{ $alertasAltas }} críticas</span>
+                                <span class="badge-pill" style="background:#fef2f2;color:#dc2626;padding:1px 6px;font-size:8px">{{ $alertasAltas }} alta prioridad</span>
                                 @endif
                             </div>
                             <div class="p-2">

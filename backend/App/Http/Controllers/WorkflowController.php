@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\ProcesoAuditoria;
 use App\Models\TrackingEvento;
+use App\Services\AlertaService;
 
 class WorkflowController extends Controller
 {
@@ -499,15 +500,21 @@ class WorkflowController extends Controller
             };
 
             // Notificar al área de la siguiente etapa (1 alerta por área)
-            \App\Models\Alerta::create([
-                'proceso_id'       => $proceso->id,
-                'tipo'             => 'proceso_recibido',
-                'titulo'           => 'Proceso en nueva etapa',
-                'mensaje'          => "El proceso {$proceso->codigo} avanzó a {$nextEtapa->nombre} ({$areaLabel})",
-                'prioridad'        => 'alta',
-                'area_responsable' => $nextEtapa->area_role,
-                'accion_url'       => route('procesos.show', $proceso->id),
-            ]);
+            $procesoModel = \App\Models\Proceso::find($proceso->id);
+            if ($procesoModel) {
+                AlertaService::crearParaArea(
+                    proceso: $procesoModel,
+                    tipo: 'proceso_recibido',
+                    titulo: 'Proceso en nueva etapa',
+                    mensaje: "El proceso {$proceso->codigo} avanzó a {$nextEtapa->nombre} ({$areaLabel})",
+                    areaRole: $nextEtapa->area_role,
+                    prioridad: 'alta',
+                    metadata: [
+                        'etapa_id' => $nextEtapa->id,
+                    ],
+                    accionUrl: route('procesos.show', $proceso->id)
+                );
+            }
 
             return back()->with('success', "Proceso enviado a: {$nextEtapa->nombre} → Área: {$areaLabel}.");
         });
@@ -521,6 +528,7 @@ class WorkflowController extends Controller
     {
         $etapa = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
         $user = auth()->user();
+        $procesoModel = \App\Models\Proceso::find($proceso->id);
 
         // Definir documentos a solicitar
         $documentos = [
@@ -598,16 +606,21 @@ class WorkflowController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Notificar al área responsable del documento (1 alerta por área)
-            \App\Models\Alerta::create([
-                'proceso_id'       => $proceso->id,
-                'tipo'             => 'documento_solicitado',
-                'titulo'           => 'Documento solicitado',
-                'mensaje'          => "Se solicita {$doc['nombre_documento']} para el proceso {$proceso->codigo}.",
-                'prioridad'        => 'alta',
-                'area_responsable' => $doc['area_responsable_rol'],
-                'accion_url'       => route('procesos.show', $proceso->id),
-            ]);
+            // Notificar al área responsable del documento
+            if ($procesoModel) {
+                AlertaService::crearParaArea(
+                    proceso: $procesoModel,
+                    tipo: 'documento_solicitado',
+                    titulo: 'Documento solicitado',
+                    mensaje: "Se solicita {$doc['nombre_documento']} para el proceso {$proceso->codigo}.",
+                    areaRole: $doc['area_responsable_rol'],
+                    prioridad: 'alta',
+                    metadata: [
+                        'tipo_documento' => $doc['tipo_documento'],
+                    ],
+                    accionUrl: route('procesos.show', $proceso->id)
+                );
+            }
 
             // Guardar ID de Compatibilidad para usarlo en CDP
             if (isset($doc['es_requerido_para_cdp']) && $doc['es_requerido_para_cdp']) {
@@ -635,16 +648,21 @@ class WorkflowController extends Controller
             'updated_at' => now(),
         ]);
 
-        // Notificar a presupuesto sobre el CDP (1 alerta por área)
-        \App\Models\Alerta::create([
-            'proceso_id'       => $proceso->id,
-            'tipo'             => 'documento_solicitado',
-            'titulo'           => 'CDP pendiente',
-            'mensaje'          => "Se solicita CDP para el proceso {$proceso->codigo}. Requiere primero Compatibilidad del Gasto.",
-            'prioridad'        => 'media',
-            'area_responsable' => 'presupuesto',
-            'accion_url'       => route('procesos.show', $proceso->id),
-        ]);
+        // Notificar a presupuesto sobre el CDP
+        if ($procesoModel) {
+            AlertaService::crearParaArea(
+                proceso: $procesoModel,
+                tipo: 'documento_solicitado',
+                titulo: 'CDP pendiente',
+                mensaje: "Se solicita CDP para el proceso {$proceso->codigo}. Requiere primero Compatibilidad del Gasto.",
+                areaRole: 'presupuesto',
+                prioridad: 'media',
+                metadata: [
+                    'tipo_documento' => 'cdp',
+                ],
+                accionUrl: route('procesos.show', $proceso->id)
+            );
+        }
 
         // Registrar auditoría
         ProcesoAuditoria::registrar(

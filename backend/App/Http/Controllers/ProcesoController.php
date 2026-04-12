@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\AlertaService;
 
 class ProcesoController extends Controller
 {
@@ -407,15 +408,21 @@ class ProcesoController extends Controller
                     'secop'              => 'SECOP',
                     default              => ucfirst($segundaEtapa->area_role),
                 };
-                \App\Models\Alerta::create([
-                    'proceso_id'       => $procesoId,
-                    'tipo'             => 'proceso_recibido',
-                    'titulo'           => 'Nuevo proceso asignado',
-                    'mensaje'          => "Nuevo proceso {$data['codigo']} recibido en {$areaLabel} - {$segundaEtapa->nombre}",
-                    'prioridad'        => 'alta',
-                    'area_responsable' => $segundaEtapa->area_role,
-                    'accion_url'       => route('procesos.show', $procesoId),
-                ]);
+                $procesoModel = \App\Models\Proceso::find($procesoId);
+                if ($procesoModel) {
+                    AlertaService::crearParaArea(
+                        proceso: $procesoModel,
+                        tipo: 'proceso_recibido',
+                        titulo: 'Nuevo proceso asignado',
+                        mensaje: "Nuevo proceso {$data['codigo']} recibido en {$areaLabel} - {$segundaEtapa->nombre}",
+                        areaRole: $segundaEtapa->area_role,
+                        prioridad: 'alta',
+                        metadata: [
+                            'etapa_id' => $segundaEtapa->id,
+                        ],
+                        accionUrl: route('procesos.show', $procesoId)
+                    );
+                }
             }
 
             // 8) Redirigir a "Mis Solicitudes" (/procesos)

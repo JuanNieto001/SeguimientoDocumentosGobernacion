@@ -9,9 +9,63 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Proceso;
 use App\Models\ProcesoAuditoria;
 use App\Models\PlanAnualAdquisicion;
+use App\Services\AlertaService;
 
 class PlaneacionController extends Controller
 {
+    /**
+     * Obtiene un texto amigable del responsable al que se devuelve el proceso.
+     */
+    private function resolverResponsableDestino(Proceso $proceso, object $etapaDestino): string
+    {
+        $areaRole = (string) ($etapaDestino->area_role ?? '');
+
+        if ($areaRole === 'unidad_solicitante') {
+            $unidadNombre = DB::table('unidades')
+                ->where('id', $proceso->unidad_origen_id)
+                ->value('nombre');
+
+            if ($unidadNombre) {
+                return "Jefe, {$unidadNombre}";
+            }
+
+            $creadorNombre = DB::table('users')
+                ->where('id', $proceso->created_by)
+                ->value('name');
+
+            if ($creadorNombre) {
+                return "Responsable, {$creadorNombre}";
+            }
+
+            return 'Unidad solicitante';
+        }
+
+        $areaNombre = match ($areaRole) {
+            'planeacion' => 'Descentralización',
+            'hacienda' => 'Secretaría de Hacienda',
+            'juridica' => 'Jurídica',
+            'secop' => 'SECOP',
+            'compras' => 'Unidad de Compras y Suministros',
+            'talento_humano' => 'Jefatura de Talento Humano',
+            'rentas' => 'Unidad de Rentas',
+            'contabilidad' => 'Unidad de Contabilidad',
+            'inversiones_publicas' => 'Unidad de Regalías e Inversiones Públicas',
+            'presupuesto' => 'Unidad de Presupuesto',
+            'radicacion' => 'Radicación y Correspondencia',
+            default => null,
+        };
+
+        if ($areaNombre) {
+            return $areaNombre;
+        }
+
+        if (!empty($etapaDestino->nombre)) {
+            return (string) $etapaDestino->nombre;
+        }
+
+        return 'área anterior';
+    }
+
     /**
      * Determina si el proceso debe usar solicitudes documentales paralelas en Etapa 1.
      * CD-PN mantiene este comportamiento tanto en workflow legacy como en flujo dinámico.
@@ -313,29 +367,115 @@ class PlaneacionController extends Controller
                 ->with('error', 'Este proceso ya no está en tu bandeja.');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'motivo_rechazo' => 'required|string|min:10|max:500',
         ]);
 
-        DB::transaction(function () use ($proceso, $request) {
-            // Devolver a etapa anterior o marcar como rechazado
-            $proceso->update([
-                'estado' => 'rechazado',
+        $etapaActual = $proceso->etapaActual;
+
+        // Buscar etapa anterior por el enlace del flujo (fallback por orden para flujos legacy)
+        $etapaAnterior = DB::table('etapas')
+            ->where('workflow_id', $proceso->workflow_id)
+            ->where('next_etapa_id', $etapaActual->id)
+            ->first();
+
+        if (!$etapaAnterior && isset($etapaActual->orden)) {
+            $etapaAnterior = DB::table('etapas')
+                ->where('workflow_id', $proceso->workflow_id)
+                ->where('orden', '<', $etapaActual->orden)
+                ->where('activa', 1)
+                ->orderByDesc('orden')
+                ->first();
+        }
+
+        if (!$etapaAnterior) {
+            return redirect()->back()->with('error', 'No se pudo devolver el proceso a una etapa anterior.');
+        }
+
+        $responsableDestino = $this->resolverResponsableDestino($proceso, $etapaAnterior);
+
+        DB::transaction(function () use ($proceso, $validated, $etapaActual, $etapaAnterior, $responsableDestino) {
+            // Devolver proceso a la etapa anterior para reingreso de información/documentos
+            DB::table('procesos')->where('id', $proceso->id)->update([
+                'etapa_actual_id' => $etapaAnterior->id,
+                'area_actual_role' => $etapaAnterior->area_role,
+                'estado' => 'EN_CURSO',
                 'rechazado_por_area' => 'planeacion',
-                'observaciones_rechazo' => $request->motivo_rechazo,
+                'observaciones_rechazo' => $validated['motivo_rechazo'],
+                'updated_at' => now(),
             ]);
+
+            // Reabrir etapa anterior (si ya existe) o crear la instancia si faltaba
+            $procesoEtapaAnterior = DB::table('proceso_etapas')
+                ->where('proceso_id', $proceso->id)
+                ->where('etapa_id', $etapaAnterior->id)
+                ->first();
+
+            if ($procesoEtapaAnterior) {
+                DB::table('proceso_etapas')
+                    ->where('id', $procesoEtapaAnterior->id)
+                    ->update([
+                        'enviado' => false,
+                        'enviado_por' => null,
+                        'enviado_at' => null,
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                DB::table('proceso_etapas')->insert([
+                    'proceso_id' => $proceso->id,
+                    'etapa_id' => $etapaAnterior->id,
+                    'recibido' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Marcar etapa actual como no recibida para dejar trazabilidad consistente
+            DB::table('proceso_etapas')
+                ->where('proceso_id', $proceso->id)
+                ->where('etapa_id', $etapaActual->id)
+                ->update([
+                    'recibido' => false,
+                    'recibido_por' => null,
+                    'recibido_at' => null,
+                    'updated_at' => now(),
+                ]);
+
+            $procesoActualizado = Proceso::find($proceso->id);
+            if ($procesoActualizado) {
+                AlertaService::crearParaArea(
+                    proceso: $procesoActualizado,
+                    tipo: 'proceso_devuelto',
+                    titulo: 'Proceso devuelto por rechazo',
+                    mensaje: "El proceso {$procesoActualizado->codigo} fue devuelto a {$responsableDestino}. Motivo: {$validated['motivo_rechazo']}",
+                    areaRole: $etapaAnterior->area_role,
+                    prioridad: 'alta',
+                    metadata: [
+                        'motivo_rechazo' => $validated['motivo_rechazo'],
+                        'etapa_origen' => $etapaActual->id,
+                        'etapa_destino' => $etapaAnterior->id,
+                        'responsable_destino' => $responsableDestino,
+                    ],
+                    accionUrl: route('procesos.show', $proceso->id)
+                );
+            }
 
             ProcesoAuditoria::registrar(
                 $proceso->id,
                 'rechazado_planeacion',
-                'planeacion',
-                $proceso->etapaActual->nombre ?? 'Rechazo Planeación',
-                null,
-                "Proceso rechazado por Planeación. Motivo: {$request->motivo_rechazo}"
+                "Proceso devuelto por Planeación a {$responsableDestino}",
+                $etapaActual->id,
+                ['area_origen' => 'planeacion'],
+                [
+                    'motivo' => $validated['motivo_rechazo'],
+                    'etapa_destino' => $etapaAnterior->nombre,
+                    'responsable_destino' => $responsableDestino,
+                ]
             );
         });
 
-        return redirect()->route('planeacion.index')->with('warning', 'Proceso rechazado. Se ha notificado al área solicitante');
+        return redirect()->route('planeacion.index')
+            ->with('success', "Proceso rechazado con éxito y devuelto a {$responsableDestino}.");
     }
 
     /**

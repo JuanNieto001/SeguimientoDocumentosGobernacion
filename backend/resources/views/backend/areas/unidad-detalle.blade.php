@@ -87,6 +87,8 @@
             $documentoEstudiosPrevios = DB::table('proceso_etapa_archivos')
                 ->where('proceso_id', $proceso->id)
                 ->where('tipo_archivo', 'estudios_previos')
+                ->orderByDesc('version')
+                ->orderByDesc('id')
                 ->first();
         @endphp
         @if($documentoEstudiosPrevios)
@@ -104,9 +106,11 @@
                             </p>
                         </div>
                         <div class="flex gap-2">
-                            <a href="{{ route('workflow.files.download', ['archivo' => $documentoEstudiosPrevios->id, 'inline' => 1]) }}"
-                               class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all"
-                               target="_blank">Ver</a>
+                                     <button type="button"
+                                         onclick="window.dispatchEvent(new CustomEvent('abrir-preview', { detail: {{ $documentoEstudiosPrevios->id }} }))"
+                                         class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all">
+                                         Ver / Acciones
+                                     </button>
                             <a href="{{ route('workflow.files.download', $documentoEstudiosPrevios->id) }}"
                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
                                target="_blank">Descargar</a>

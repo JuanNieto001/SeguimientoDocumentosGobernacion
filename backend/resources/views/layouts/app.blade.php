@@ -83,6 +83,7 @@
                         $authUser->hasRole('radicacion') => 'radicacion',
                         $authUser->hasRole('compras') => 'compras',
                         $authUser->hasRole('talento_humano') => 'talento_humano',
+                        $authUser->hasRole('descentralizacion') => 'planeacion',
                         $authUser->hasRole('planeacion') => 'planeacion',
                         $authUser->hasRole('hacienda') => 'hacienda',
                         $authUser->hasRole('juridica') => 'juridica',

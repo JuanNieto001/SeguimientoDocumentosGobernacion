@@ -7,12 +7,13 @@ use App\Enums\DocumentType;
 use App\Models\ContractProcess;
 use App\Models\ProcessDocument;
 use App\Models\ProcessAuditLog;
+use App\Services\WorkflowEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProcessDocumentController extends Controller
 {
-    public function __construct()
+    public function __construct(protected WorkflowEngine $workflowEngine)
     {
         $this->middleware('auth');
     }
@@ -166,6 +167,15 @@ class ProcessDocumentController extends Controller
             'title' => 'Documento Rechazado',
             'message' => "El documento '{$document->document_name}' fue rechazado: {$validated['notes']}",
         ]);
+
+        if ($contractProcess->current_step > $document->step_number) {
+            $this->workflowEngine->returnToStep(
+                $contractProcess,
+                $document->step_number,
+                $validated['notes'],
+                auth()->user()
+            );
+        }
 
         return back()->with('success', 'Documento rechazado');
     }

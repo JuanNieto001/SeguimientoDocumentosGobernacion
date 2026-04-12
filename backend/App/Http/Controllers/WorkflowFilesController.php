@@ -28,7 +28,7 @@ class WorkflowFilesController extends Controller
         $esSubidaSolicitud = DB::table('proceso_documentos_solicitados')
             ->where('proceso_id', $proceso->id)
             ->whereIn('area_responsable_rol', $userRoles)
-            ->whereIn('estado', ['pendiente', 'bloqueado'])
+            ->whereIn('estado', ['pendiente', 'bloqueado', 'rechazado', 'observado'])
             ->exists();
 
         // Si NO es una subida de solicitud, verificar que la etapa no haya sido enviada
@@ -152,11 +152,20 @@ class WorkflowFilesController extends Controller
                 'updated_at'       => now(),
             ]);
             
-            // ✅ NUEVO: Marcar solicitud como 'subido' si existe una pendiente para este tipo de documento
-            $solicitud = DB::table('proceso_documentos_solicitados')
+            // Marcar solicitud como 'subido' (acepta reaperturas por rechazo/observación)
+            $solicitudId = (int) $request->input('solicitud_id', 0);
+
+            $solicitudQuery = DB::table('proceso_documentos_solicitados')
                 ->where('proceso_id', $proceso->id)
-                ->where('tipo_documento', $tipoArchivo)
-                ->where('estado', 'pendiente')
+                ->where('tipo_documento', $tipoArchivo);
+
+            if ($solicitudId > 0) {
+                $solicitudQuery->where('id', $solicitudId);
+            }
+
+            $solicitud = $solicitudQuery
+                ->whereIn('estado', ['pendiente', 'rechazado', 'observado'])
+                ->orderByDesc('id')
                 ->first();
 
             if ($solicitud) {
@@ -167,6 +176,8 @@ class WorkflowFilesController extends Controller
                         'archivo_id' => $archivoId,
                         'subido_por' => auth()->id(),
                         'subido_at' => now(),
+                        'motivo_rechazo' => null,
+                        'observaciones' => null,
                         'updated_at' => now(),
                     ]);
 
@@ -474,40 +485,66 @@ class WorkflowFilesController extends Controller
         // Verificar permisos
         $this->authorizeAreaOrAdmin($archivo->proceso);
 
-        $archivo->update([
-            'estado' => 'rechazado',
-            'aprobado_por' => auth()->id(),
-            'aprobado_at' => now(),
-            'observaciones' => $request->input('observaciones'),
-        ]);
+        return DB::transaction(function () use ($archivo, $request) {
+            $archivo->update([
+                'estado' => 'rechazado',
+                'aprobado_por' => auth()->id(),
+                'aprobado_at' => now(),
+                'observaciones' => $request->input('observaciones'),
+            ]);
 
-        // Registrar auditoría
-        ProcesoAuditoria::registrar(
-            $archivo->proceso_id,
-            'documento_rechazado',
-            $archivo->etapa->area_responsable,
-            $archivo->etapa->nombre,
-            null,
-            "Documento rechazado: {$archivo->nombre_original}. Motivo: {$request->observaciones}"
-        );
+            $solicitudReabierta = $this->reabrirSolicitudPorDocumentoRechazado(
+                $archivo,
+                (string) $request->observaciones
+            );
 
-        // Crear alerta para el usuario que subió el archivo
-        AlertaService::crear(
-            proceso: $archivo->proceso,
-            tipo: 'documento_rechazado',
-            titulo: 'Documento rechazado',
-            mensaje: "Tu documento '{$archivo->nombre_original}' fue rechazado",
-            prioridad: 'alta',
-            area_responsable: 'unidad_solicitante',
-            user_id: $archivo->uploaded_by,
-            metadata: [
-                'archivo_id' => $archivo->id,
-                'archivo_nombre' => $archivo->nombre_original,
-                'observaciones' => $request->observaciones,
-            ]
-        );
+            // Registrar auditoría
+            ProcesoAuditoria::registrar(
+                $archivo->proceso_id,
+                'documento_rechazado',
+                $archivo->etapa->area_responsable,
+                $archivo->etapa->nombre,
+                null,
+                "Documento rechazado: {$archivo->nombre_original}. Motivo: {$request->observaciones}"
+            );
 
-        return redirect()->back()->with('success', 'Documento rechazado. Se ha notificado al responsable');
+            // Crear alerta para el usuario que subió el archivo
+            AlertaService::crear(
+                proceso: $archivo->proceso,
+                tipo: 'documento_rechazado',
+                titulo: 'Documento rechazado',
+                mensaje: "Tu documento '{$archivo->nombre_original}' fue rechazado",
+                prioridad: 'alta',
+                area_responsable: 'unidad_solicitante',
+                user_id: $archivo->uploaded_by,
+                metadata: [
+                    'archivo_id' => $archivo->id,
+                    'archivo_nombre' => $archivo->nombre_original,
+                    'observaciones' => $request->observaciones,
+                ]
+            );
+
+            if ($solicitudReabierta) {
+                AlertaService::crearParaArea(
+                    proceso: $archivo->proceso,
+                    tipo: 'documento_rechazado',
+                    titulo: 'Documento devuelto para corrección',
+                    mensaje: "Se rechazó '{$archivo->nombre_original}'. Tu área debe cargar una nueva versión.",
+                    areaRole: $solicitudReabierta->area_responsable_rol,
+                    prioridad: 'alta',
+                    metadata: [
+                        'solicitud_id' => $solicitudReabierta->id,
+                        'archivo_id' => $archivo->id,
+                        'observaciones' => $request->observaciones,
+                    ],
+                    accionUrl: route('solicitudes.detalle', $archivo->proceso_id)
+                );
+            }
+
+            $this->devolverProcesoPorRechazoDocumento($archivo, (string) $request->observaciones);
+
+            return redirect()->back()->with('success', 'Documento rechazado con éxito. Se notificó al responsable para recarga.');
+        });
     }
 
     /**
@@ -525,9 +562,9 @@ class WorkflowFilesController extends Controller
 
         $archivoAnterior = ProcesoEtapaArchivo::with(['proceso', 'etapa'])->findOrFail($archivo);
         
-        // Solo el usuario que subió el archivo puede reemplazarlo (o admin)
-        if ($archivoAnterior->uploaded_by !== auth()->id() && !auth()->user()->hasRole('admin')) {
-            abort(403, 'Solo puedes reemplazar tus propios archivos');
+        // Puede reemplazar: admin, quien subió el archivo o creador del proceso
+        if (!$this->canUserReplaceArchivo($archivoAnterior)) {
+            abort(403, 'No tienes permiso para reemplazar este archivo');
         }
 
         // Verificar si el documento está bloqueado (siguiente área ya recibió)
@@ -556,6 +593,10 @@ class WorkflowFilesController extends Controller
             // Guardar nuevo archivo
             $file->storeAs('public/' . dirname($ruta), basename($ruta));
 
+            $nuevoEstado = $bloqueado || $archivoAnterior->estado === 'rechazado'
+                ? 'pendiente'
+                : 'aprobado';
+
             // Crear nuevo registro
             $nuevoArchivo = ProcesoEtapaArchivo::create([
                 'proceso_id'       => $archivoAnterior->proceso_id,
@@ -569,7 +610,7 @@ class WorkflowFilesController extends Controller
                 'tamanio'          => $file->getSize(),
                 'uploaded_by'      => auth()->id(),
                 'uploaded_at'      => now(),
-                'estado'           => $bloqueado ? 'pendiente' : 'aprobado',
+                'estado'           => $nuevoEstado,
                 'version'          => $archivoAnterior->version + 1,
                 'archivo_anterior_id' => $archivoAnterior->id,
                 'motivo_reemplazo' => $request->input('motivo_reemplazo'),
@@ -632,6 +673,36 @@ class WorkflowFilesController extends Controller
     }
 
     /**
+     * Reabrir solicitud documental cuando su archivo fue rechazado.
+     */
+    private function reabrirSolicitudPorDocumentoRechazado(ProcesoEtapaArchivo $archivo, string $motivo): ?object
+    {
+        $solicitud = DB::table('proceso_documentos_solicitados')
+            ->where('proceso_id', $archivo->proceso_id)
+            ->where('archivo_id', $archivo->id)
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$solicitud) {
+            return null;
+        }
+
+        DB::table('proceso_documentos_solicitados')
+            ->where('id', $solicitud->id)
+            ->update([
+                'estado' => 'rechazado',
+                'archivo_id' => null,
+                'subido_por' => null,
+                'subido_at' => null,
+                'motivo_rechazo' => $motivo,
+                'observaciones' => $motivo,
+                'updated_at' => now(),
+            ]);
+
+        return $solicitud;
+    }
+
+    /**
      * Verificar si un documento está bloqueado (la siguiente área ya recibió)
      */
     private function documentoBloqueado(ProcesoEtapaArchivo $archivo): bool
@@ -662,6 +733,83 @@ class WorkflowFilesController extends Controller
     }
 
     /**
+     * Devolver el proceso a la etapa del documento rechazado
+     */
+    private function devolverProcesoPorRechazoDocumento(ProcesoEtapaArchivo $archivo, string $observaciones): void
+    {
+        $proceso = $archivo->proceso;
+        $etapaObjetivo = $archivo->etapa;
+
+        if (!$proceso || !$etapaObjetivo) {
+            return;
+        }
+
+        if ((int) $proceso->etapa_actual_id === (int) $etapaObjetivo->id) {
+            return;
+        }
+
+        $etapaActual = DB::table('etapas')->where('id', $proceso->etapa_actual_id)->first();
+        if ($etapaActual && isset($etapaActual->orden) && isset($etapaObjetivo->orden)) {
+            if ((int) $etapaObjetivo->orden > (int) $etapaActual->orden) {
+                return;
+            }
+        }
+
+        DB::table('procesos')->where('id', $proceso->id)->update([
+            'etapa_actual_id' => $etapaObjetivo->id,
+            'area_actual_role' => $etapaObjetivo->area_role,
+            'estado' => 'EN_CURSO',
+            'updated_at' => now(),
+        ]);
+
+        DB::table('proceso_etapas')
+            ->where('proceso_id', $proceso->id)
+            ->where('etapa_id', $etapaObjetivo->id)
+            ->update([
+                'enviado' => false,
+                'enviado_por' => null,
+                'enviado_at' => null,
+                'updated_at' => now(),
+            ]);
+
+        if ($etapaActual && (int) $etapaActual->id !== (int) $etapaObjetivo->id) {
+            DB::table('proceso_etapas')
+                ->where('proceso_id', $proceso->id)
+                ->where('etapa_id', $etapaActual->id)
+                ->update([
+                    'recibido' => false,
+                    'recibido_por' => null,
+                    'recibido_at' => null,
+                    'updated_at' => now(),
+                ]);
+        }
+
+        ProcesoAuditoria::registrar(
+            $proceso->id,
+            'proceso_devuelto_por_rechazo_doc',
+            'Sistema',
+            $etapaObjetivo->id,
+            null,
+            "Proceso devuelto a {$etapaObjetivo->nombre} por rechazo del documento {$archivo->nombre_original}."
+        );
+
+        AlertaService::crearParaArea(
+            proceso: $proceso,
+            tipo: 'documento_rechazado',
+            titulo: 'Documento rechazado - Proceso devuelto',
+            mensaje: "El proceso {$proceso->codigo} fue devuelto a {$etapaObjetivo->nombre} por rechazo del documento {$archivo->nombre_original}.",
+            areaRole: $etapaObjetivo->area_role,
+            prioridad: 'alta',
+            metadata: [
+                'archivo_id' => $archivo->id,
+                'observaciones' => $observaciones,
+                'etapa_devuelta' => $etapaObjetivo->id,
+            ],
+            accionUrl: route('procesos.show', $proceso->id)
+        );
+    }
+
+    /**
      * Preview: Devuelve datos del archivo para previsualización en modal
      */
     public function preview(int $archivo)
@@ -674,7 +822,8 @@ class WorkflowFilesController extends Controller
         $this->authorizeViewFiles($proceso);
 
         $bloqueado = $this->documentoBloqueado($archivo);
-        $puedeReemplazar = !$bloqueado || auth()->user()->hasRole('admin');
+        $puedeReemplazar = $this->canUserReplaceArchivo($archivo)
+            && (!$bloqueado || auth()->user()->hasRole('admin'));
 
         // Obtener historial de versiones
         $versiones = $this->obtenerCadenaVersiones($archivo);
@@ -778,5 +927,27 @@ class WorkflowFilesController extends Controller
         ];
 
         return in_array($mimeType, $previsualizables);
+    }
+
+    /**
+     * Determina si el usuario autenticado puede reemplazar un archivo.
+     */
+    private function canUserReplaceArchivo(ProcesoEtapaArchivo $archivo): bool
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        if ((int) $archivo->uploaded_by === (int) $user->id) {
+            return true;
+        }
+
+        if ($archivo->proceso && (int) $archivo->proceso->created_by === (int) $user->id) {
+            return true;
+        }
+
+        return false;
     }
 }

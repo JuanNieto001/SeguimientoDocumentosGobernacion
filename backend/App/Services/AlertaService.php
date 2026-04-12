@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Alerta;
 use App\Models\Proceso;
 use App\Models\ProcesoEtapaArchivo;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 
 class AlertaService
@@ -325,6 +327,89 @@ class AlertaService
             'leida' => false,
             'metadata' => $metadata
         ]);
+    }
+
+    /**
+     * Crear alertas para un area (por usuarios del rol o por area si no hay usuarios)
+     */
+    public static function crearParaArea(
+        Proceso $proceso,
+        string $tipo,
+        string $titulo,
+        string $mensaje,
+        string $areaRole,
+        string $prioridad = 'alta',
+        array $metadata = [],
+        ?string $accionUrl = null
+    ): int {
+        $guardName = config('auth.defaults.guard', 'web');
+
+        $roles = [$areaRole];
+        if ($areaRole === 'planeacion') {
+            $roles[] = 'descentralizacion';
+        } elseif ($areaRole === 'descentralizacion') {
+            $roles[] = 'planeacion';
+        }
+
+        $rolesExistentes = Role::query()
+            ->where('guard_name', $guardName)
+            ->whereIn('name', $roles)
+            ->pluck('name')
+            ->all();
+
+        if (empty($rolesExistentes)) {
+            Alerta::create([
+                'proceso_id' => $proceso->id,
+                'tipo' => $tipo,
+                'titulo' => $titulo,
+                'mensaje' => $mensaje,
+                'prioridad' => $prioridad,
+                'area_responsable' => $areaRole,
+                'accion_url' => $accionUrl,
+                'leida' => false,
+                'metadata' => $metadata,
+            ]);
+            return 1;
+        }
+
+        $destinatarios = User::query()
+            ->whereHas('roles', function ($query) use ($rolesExistentes, $guardName) {
+                $query->where('guard_name', $guardName)
+                    ->whereIn('name', $rolesExistentes);
+            })
+            ->get();
+
+        if ($destinatarios->isEmpty()) {
+            Alerta::create([
+                'proceso_id' => $proceso->id,
+                'tipo' => $tipo,
+                'titulo' => $titulo,
+                'mensaje' => $mensaje,
+                'prioridad' => $prioridad,
+                'area_responsable' => $areaRole,
+                'accion_url' => $accionUrl,
+                'leida' => false,
+                'metadata' => $metadata,
+            ]);
+            return 1;
+        }
+
+        foreach ($destinatarios as $usuario) {
+            Alerta::create([
+                'proceso_id' => $proceso->id,
+                'user_id' => $usuario->id,
+                'tipo' => $tipo,
+                'titulo' => $titulo,
+                'mensaje' => $mensaje,
+                'prioridad' => $prioridad,
+                'area_responsable' => $areaRole,
+                'accion_url' => $accionUrl,
+                'leida' => false,
+                'metadata' => $metadata,
+            ]);
+        }
+
+        return $destinatarios->count();
     }
 
     /**
