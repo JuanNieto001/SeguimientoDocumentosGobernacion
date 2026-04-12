@@ -8,11 +8,13 @@
 namespace App\Services;
 
 use App\Models\Alerta;
+use App\Models\ContratoAplicacion;
 use App\Models\Proceso;
 use App\Models\ProcesoEtapaArchivo;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class AlertaService
 {
@@ -25,6 +27,7 @@ class AlertaService
             'tiempo' => 0,
             'documentos' => 0,
             'responsabilidad' => 0,
+            'contratos' => 0,
             'total' => 0
         ];
 
@@ -36,6 +39,9 @@ class AlertaService
 
         // 3. Alertas de responsabilidad
         $alertasCreadas['responsabilidad'] += self::generarAlertasResponsabilidad();
+
+        // 4. Alertas para contratos de aplicaciones
+        $alertasCreadas['contratos'] += self::generarAlertasContratosAplicaciones();
 
         $alertasCreadas['total'] = array_sum(array_filter($alertasCreadas, 'is_int'));
 
@@ -309,6 +315,135 @@ class AlertaService
     }
 
     /**
+     * Alertas para contratos de aplicaciones próximos a vencer o vencidos.
+     */
+    private static function generarAlertasContratosAplicaciones(): int
+    {
+        $count = 0;
+        $today = now()->startOfDay();
+        $limit = now()->addDays(365)->toDateString();
+
+        $contratos = ContratoAplicacion::query()
+            ->where('activo', true)
+            ->whereNotNull('fecha_fin')
+            ->whereDate('fecha_fin', '<=', $limit)
+            ->orderBy('fecha_fin')
+            ->get();
+
+        if ($contratos->isEmpty()) {
+            return 0;
+        }
+
+        $destinatarios = self::obtenerDestinatariosPorRoles([
+            'admin',
+            'admin_general',
+            'admin_secretaria',
+            'gobernador',
+            'secretario',
+        ]);
+
+        foreach ($contratos as $contrato) {
+            if (!$contrato->fecha_fin) {
+                continue;
+            }
+
+            $diasRestantes = $today->diffInDays($contrato->fecha_fin->copy()->startOfDay(), false);
+            $vencido = $diasRestantes < 0;
+            $tipo = $vencido ? 'contrato_aplicacion_vencido' : 'contrato_aplicacion_por_vencer';
+
+            $prioridad = match (true) {
+                $vencido => 'alta',
+                $diasRestantes <= 15 => 'alta',
+                $diasRestantes <= 45 => 'media',
+                default => 'baja',
+            };
+
+            $titulo = $vencido
+                ? 'Contrato de aplicativo vencido'
+                : 'Contrato de aplicativo próximo a vencer';
+
+            $mensaje = $vencido
+                ? "El contrato '{$contrato->aplicacion}' vencio el {$contrato->fecha_fin->format('Y-m-d')} (hace " . abs($diasRestantes) . " dias)."
+                : "El contrato '{$contrato->aplicacion}' vence el {$contrato->fecha_fin->format('Y-m-d')} (en {$diasRestantes} dias).";
+
+            $accionUrl = '/contratos-aplicaciones/' . $contrato->id;
+
+            $metadata = [
+                'contrato_aplicacion_id' => $contrato->id,
+                'aplicacion' => $contrato->aplicacion,
+                'secop_proceso_id' => $contrato->secop_proceso_id,
+                'fecha_fin' => optional($contrato->fecha_fin)->toDateString(),
+                'dias_restantes' => $diasRestantes,
+            ];
+
+            if ($destinatarios->isEmpty()) {
+                $existe = Alerta::where('tipo', $tipo)
+                    ->whereNull('user_id')
+                    ->where('created_at', '>', now()->subDay())
+                    ->where('leida', false)
+                    ->get()
+                    ->filter(function ($alerta) use ($contrato) {
+                        $meta = $alerta->metadata ?? [];
+                        return isset($meta['contrato_aplicacion_id'])
+                            && (int) $meta['contrato_aplicacion_id'] === (int) $contrato->id;
+                    })
+                    ->isNotEmpty();
+
+                if ($existe) {
+                    continue;
+                }
+
+                Alerta::create([
+                    'tipo' => $tipo,
+                    'titulo' => $titulo,
+                    'mensaje' => $mensaje,
+                    'prioridad' => $prioridad,
+                    'area_responsable' => 'planeacion',
+                    'accion_url' => $accionUrl,
+                    'leida' => false,
+                    'metadata' => $metadata,
+                ]);
+                $count++;
+                continue;
+            }
+
+            foreach ($destinatarios as $destinatario) {
+                $existe = Alerta::where('tipo', $tipo)
+                    ->where('user_id', $destinatario->id)
+                    ->where('created_at', '>', now()->subDay())
+                    ->where('leida', false)
+                    ->get()
+                    ->filter(function ($alerta) use ($contrato) {
+                        $meta = $alerta->metadata ?? [];
+                        return isset($meta['contrato_aplicacion_id'])
+                            && (int) $meta['contrato_aplicacion_id'] === (int) $contrato->id;
+                    })
+                    ->isNotEmpty();
+
+                if ($existe) {
+                    continue;
+                }
+
+                Alerta::create([
+                    'user_id' => $destinatario->id,
+                    'tipo' => $tipo,
+                    'titulo' => $titulo,
+                    'mensaje' => $mensaje,
+                    'prioridad' => $prioridad,
+                    'area_responsable' => 'planeacion',
+                    'accion_url' => $accionUrl,
+                    'leida' => false,
+                    'metadata' => $metadata,
+                ]);
+
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
      * Crear una alerta
      */
     public static function crear(
@@ -483,6 +618,31 @@ class AlertaService
 
         return $query->orderBy('prioridad', 'desc')
             ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Usuarios destinatarios por lista de roles válidos del guard activo.
+     */
+    private static function obtenerDestinatariosPorRoles(array $roles): Collection
+    {
+        $guardName = config('auth.defaults.guard', 'web');
+
+        $rolesExistentes = Role::query()
+            ->where('guard_name', $guardName)
+            ->whereIn('name', $roles)
+            ->pluck('name')
+            ->all();
+
+        if (empty($rolesExistentes)) {
+            return collect();
+        }
+
+        return User::query()
+            ->whereHas('roles', function ($query) use ($rolesExistentes, $guardName) {
+                $query->where('guard_name', $guardName)
+                    ->whereIn('name', $rolesExistentes);
+            })
             ->get();
     }
 }

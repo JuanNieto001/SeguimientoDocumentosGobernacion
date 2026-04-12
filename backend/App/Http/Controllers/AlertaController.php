@@ -14,6 +14,33 @@ use App\Services\AlertaService;
 class AlertaController extends Controller
 {
     /**
+     * Abrir centro de alertas desde campanita: limpia punto rojo al primer clic.
+     */
+    public function abrirCentro()
+    {
+        $user = auth()->user();
+        $area = $this->obtenerAreaUsuario($user);
+
+        $query = Alerta::query()->where('leida', false);
+
+        if (!$user->hasRole('admin')) {
+            $query->where(function ($q) use ($user, $area) {
+                $q->where('user_id', $user->id);
+                if ($area) {
+                    $q->orWhere('area_responsable', $area);
+                }
+            });
+        }
+
+        $query->update([
+            'leida' => true,
+            'leida_at' => now(),
+        ]);
+
+        return redirect()->route('alertas.index');
+    }
+
+    /**
      * Lista de alertas (filtradas por área del usuario)
      */
     public function index(Request $request)
@@ -78,7 +105,7 @@ class AlertaController extends Controller
             'baja' => (clone $statsQuery)->where('leida', false)->where('prioridad', 'baja')->count(),
         ];
 
-        return view('alertas.index', compact('alertas', 'estadisticas', 'area'));
+        return view('backend.alertas.index', compact('alertas', 'estadisticas', 'area'));
     }
 
     /**

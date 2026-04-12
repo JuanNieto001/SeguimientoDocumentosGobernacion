@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" href="/images/gobernacion.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-vite-assets :entries="['resources/css/app.css', 'resources/js/app.js']" />
     <style>html,body{font-family:'Inter',sans-serif;}</style>
 </head>
 <body class="antialiased overflow-x-hidden lg:overflow-hidden" style="margin:0">

@@ -31,11 +31,18 @@ if not exist .env (
 )
 
 echo.
-echo [4/4] Generando key de Laravel...
+echo [4/5] Generando key de Laravel...
 php artisan key:generate
 
 echo.
+echo [5/5] Compilando assets frontend (Vite build)...
+call npm.cmd --prefix ..\frontend run build
+if errorlevel 1 (
+    echo ADVERTENCIA: Fallo la compilacion de assets. El sistema iniciara en modo seguro, pero revisa Node/NPM.
+)
+
+echo.
 echo ====================================================================
-echo  PROYECTO CONFIGURADO - Ahora ejecuta: INSTALAR_DASHBOARD.bat
+echo  PROYECTO CONFIGURADO - Ahora ejecuta: scripts\local\setup\iniciar_servidor.bat
 echo ====================================================================
 pause

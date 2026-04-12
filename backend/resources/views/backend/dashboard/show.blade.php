@@ -117,5 +117,5 @@
 
 @push('scripts')
 <!-- Dashboard Viewer React App - usar el mismo builder pero en modo readonly -->
-@vite(['resources/js/dashboard-builder.jsx'])
+<x-vite-assets :entries="['resources/js/dashboard-builder.jsx']" />
 @endpush

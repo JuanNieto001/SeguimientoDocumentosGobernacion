@@ -39,6 +39,7 @@ class GenerarAlertasAutomaticas extends Command
         $this->line("   - Alertas de tiempo: {$resultado['tiempo']}");
         $this->line("   - Alertas de documentos: {$resultado['documentos']}");
         $this->line("   - Alertas de responsabilidad: {$resultado['responsabilidad']}");
+        $this->line("   - Alertas de contratos: {$resultado['contratos']}");
         $this->line("   - TOTAL: {$resultado['total']}");
 
         return Command::SUCCESS;

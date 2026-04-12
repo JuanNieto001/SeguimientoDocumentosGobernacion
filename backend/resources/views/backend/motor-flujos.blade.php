@@ -18,6 +18,6 @@
     <div id="motor-flujos-app"></div>
 
     @viteReactRefresh
-    @vite('resources/js/motor-flujos.jsx')
+    <x-vite-assets entries="resources/js/motor-flujos.jsx" />
 </x-app-layout>
 

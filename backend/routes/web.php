@@ -64,8 +64,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard.reporte');
     Route::get('/dashboard/buscar', [DashboardController::class, 'buscar'])
         ->name('dashboard.buscar');
-    Route::post('/alertas/{alerta}/leer', [DashboardController::class, 'marcarAlertaLeida'])
-        ->name('alertas.leer');
 });
 
 /*
@@ -90,7 +88,18 @@ Route::middleware(['auth', 'role:admin'])
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin|admin_general|admin_secretaria|gobernador|secretario|jefe_unidad'])
-    ->resource('contratos-aplicaciones', ContratoAplicacionController::class);
+    ->group(function () {
+        Route::post('/contratos-aplicaciones/adicionar-secop', [ContratoAplicacionController::class, 'adicionarDesdeSecop'])
+            ->name('contratos-aplicaciones.adicionar-secop');
+        Route::post('/contratos-aplicaciones/sincronizar-secop', [ContratoAplicacionController::class, 'sincronizarSecop'])
+            ->name('contratos-aplicaciones.sincronizar-secop');
+        Route::post('/contratos-aplicaciones/{contratos_aplicacione}/sincronizar-secop', [ContratoAplicacionController::class, 'sincronizarContrato'])
+            ->name('contratos-aplicaciones.sincronizar-uno');
+        Route::patch('/contratos-aplicaciones/{contratos_aplicacione}/activo', [ContratoAplicacionController::class, 'actualizarActivo'])
+            ->name('contratos-aplicaciones.actualizar-activo');
+        Route::resource('contratos-aplicaciones', ContratoAplicacionController::class)
+            ->except(['create', 'store', 'edit', 'update']);
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -117,6 +126,7 @@ Route::middleware(['auth', 'role:admin|planeacion'])->prefix('paa')->name('paa.'
 */
 Route::middleware(['auth'])->prefix('alertas')->name('alertas.')->group(function () {
     Route::get('/', [AlertaController::class, 'index'])->name('index');
+    Route::get('/abrir', [AlertaController::class, 'abrirCentro'])->name('abrir');
     Route::post('/{alerta}/leer', [AlertaController::class, 'marcarLeida'])->name('leer');
     Route::post('/leer-todas', [AlertaController::class, 'marcarTodasLeidas'])->name('leer.todas');
     Route::delete('/{alerta}', [AlertaController::class, 'destroy'])->name('destroy');

@@ -66,14 +66,22 @@ php artisan storage:link
 ### 5. Compilar assets frontend
 
 ```bash
+npm --prefix ../frontend run build
+```
+
+Modo desarrollo (dejar abierto en otra terminal):
+
+```bash
 npm --prefix ../frontend run dev
 ```
 
 ### 6. Iniciar servidor
 
 ```bash
-php artisan serve
+scripts\local\setup\iniciar_servidor.bat
 ```
+
+Este script valida si existen assets Vite y, si faltan, intenta compilarlos automaticamente antes de levantar Laravel.
 
 Accede a: `http://localhost:8000`
 

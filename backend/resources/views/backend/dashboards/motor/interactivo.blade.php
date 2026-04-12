@@ -56,6 +56,6 @@
     </script>
 
     @viteReactRefresh
-    @vite('resources/js/dashboard-motor.jsx')
+    <x-vite-assets entries="resources/js/dashboard-motor.jsx" />
 </x-app-layout>
 

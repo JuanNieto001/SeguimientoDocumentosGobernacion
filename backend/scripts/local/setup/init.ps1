@@ -54,9 +54,12 @@ Write-Host "================================================" -ForegroundColor C
 Write-Host " Inicializando Sistema de Seguimiento" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
+$manifestPath = Join-Path (Get-Location) 'public\build\manifest.json'
+$hotFilePath = Join-Path (Get-Location) 'public\hot'
+$frontendPath = Join-Path (Get-Location) '..\frontend'
 
 # 1. Ejecutar migraciones
-Write-Host "[1/3] Ejecutando migraciones..." -ForegroundColor Yellow
+Write-Host "[1/5] Ejecutando migraciones..." -ForegroundColor Yellow
 & $php artisan migrate --force
 
 if ($LASTEXITCODE -ne 0) {
@@ -65,7 +68,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # 2. Ejecutar seeders
-Write-Host "[2/3] Ejecutando seeders (roles, usuarios, workflows)..." -ForegroundColor Yellow
+Write-Host "[2/5] Ejecutando seeders (roles, usuarios, workflows)..." -ForegroundColor Yellow
 & $php artisan db:seed --force
 
 if ($LASTEXITCODE -ne 0) {
@@ -74,11 +77,47 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # 3. Crear enlace simbólico para storage
-Write-Host "[3/3] Creando enlace simbólico para storage/public..." -ForegroundColor Yellow
+Write-Host "[3/5] Creando enlace simbólico para storage/public..." -ForegroundColor Yellow
 & $php artisan storage:link
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Advertencia: El enlace simbólico ya existe o hubo un error." -ForegroundColor Yellow
+}
+# 4. Compilar assets frontend si no existen
+Write-Host "[4/5] Verificando assets frontend (Vite manifest/hot)..." -ForegroundColor Yellow
+if ((Test-Path $manifestPath) -or (Test-Path $hotFilePath)) {
+    Write-Host "Assets detectados. No se requiere compilacion adicional." -ForegroundColor Green
+} else {
+    if (-not (Test-Path $frontendPath)) {
+        Write-Host "Advertencia: no se encontro la carpeta frontend. Continua en modo seguro sin assets compilados." -ForegroundColor Yellow
+    } else {
+        $npm = $null
+        if (Get-Command npm.cmd -ErrorAction SilentlyContinue) {
+            $npm = 'npm.cmd'
+        } elseif (Get-Command npm -ErrorAction SilentlyContinue) {
+            $npm = 'npm'
+        }
+
+        if (-not $npm) {
+            Write-Host "Advertencia: npm no esta disponible. Continua en modo seguro sin assets compilados." -ForegroundColor Yellow
+        } else {
+            Write-Host "Compilando frontend con vite build..." -ForegroundColor Cyan
+            & $npm --prefix ..\frontend run build
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Advertencia: fallo la compilacion del frontend. Revisa Node/NPM para evitar modo degradado." -ForegroundColor Yellow
+            } else {
+                Write-Host "Assets frontend compilados correctamente." -ForegroundColor Green
+            }
+        }
+    }
+}
+
+# 5. Limpiar caches para evitar residuos en el arranque
+Write-Host "[5/5] Limpiando cache de Laravel..." -ForegroundColor Yellow
+& $php artisan optimize:clear
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Advertencia: no se pudo limpiar cache completamente." -ForegroundColor Yellow
 }
 
 Write-Host ""
@@ -86,5 +125,5 @@ Write-Host "================================================" -ForegroundColor G
 Write-Host " ¡Inicialización completada exitosamente!" -ForegroundColor Green
 Write-Host "================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Puedes iniciar el servidor con: php artisan serve" -ForegroundColor Cyan
+Write-Host "Puedes iniciar el servidor con: .\scripts\local\setup\iniciar_servidor.bat" -ForegroundColor Cyan
 Write-Host ""

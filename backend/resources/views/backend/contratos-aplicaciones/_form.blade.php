@@ -3,8 +3,9 @@
 <div class="grid md:grid-cols-2 gap-4">
     <div class="md:col-span-2">
         <label class="text-xs font-semibold text-gray-600">Aplicación</label>
-        <input name="aplicacion" value="{{ old('aplicacion', $contrato->aplicacion) }}" required
+        <input name="aplicacion" value="{{ old('aplicacion', $contrato->aplicacion) }}"
                class="mt-1 w-full rounded-xl border px-3 py-2 text-sm" style="border-color:#e2e8f0">
+        <p class="mt-1 text-[11px] text-gray-400">Opcional si registras un ID de SECOP. Si lo dejas vacío, se usa el ID como nombre temporal.</p>
     </div>
 
     <div>
@@ -54,6 +55,7 @@
     <div>
         <label class="text-xs font-semibold text-gray-600">ID Proceso SECOP</label>
         <input name="secop_proceso_id" value="{{ old('secop_proceso_id', $contrato->secop_proceso_id) }}"
+               placeholder="CO1.PCCNTR.9209950"
                class="mt-1 w-full rounded-xl border px-3 py-2 text-sm" style="border-color:#e2e8f0">
     </div>
 

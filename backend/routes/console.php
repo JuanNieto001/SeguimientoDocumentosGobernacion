@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Programar generación de alertas automáticas cada hora
 Schedule::command('alertas:generar')->hourly();
+
+// Mantener contratos de aplicaciones sincronizados con SECOP
+Schedule::command('contratos-aplicaciones:sync-secop')->everySixHours();
