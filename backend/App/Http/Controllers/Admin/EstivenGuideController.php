@@ -52,6 +52,7 @@ class EstivenGuideController extends Controller
         $data = $request->validate([
             'role'           => 'required|string|max:50',
             'icon'           => 'required|string|max:10',
+            'icon_image'     => 'nullable|image|max:2048',
             'title'          => 'required|string|max:255',
             'orden'          => 'integer|min:0',
             'activo'         => 'boolean',
@@ -64,10 +65,18 @@ class EstivenGuideController extends Controller
         $guide = EstivenGuide::create([
             'role'   => $data['role'],
             'icon'   => $data['icon'],
+            'icon_image_path' => null,
             'title'  => $data['title'],
             'orden'  => $data['orden'] ?? 0,
             'activo' => $request->boolean('activo', true),
         ]);
+
+        $iconImage = $request->file('icon_image');
+        if ($iconImage) {
+            $guide->update([
+                'icon_image_path' => $iconImage->store("estiven-guides/icons/{$guide->id}", 'public'),
+            ]);
+        }
 
         foreach ($data['steps'] as $i => $step) {
             $imagePath = null;
@@ -107,6 +116,8 @@ class EstivenGuideController extends Controller
         $data = $request->validate([
             'role'           => 'required|string|max:50',
             'icon'           => 'required|string|max:10',
+            'icon_image'     => 'nullable|image|max:2048',
+            'remove_icon_image' => 'nullable|boolean',
             'title'          => 'required|string|max:255',
             'orden'          => 'integer|min:0',
             'activo'         => 'boolean',
@@ -119,13 +130,28 @@ class EstivenGuideController extends Controller
             'steps.*.remove_image' => 'nullable|boolean',
         ]);
 
+        $previousIconPath = $estivenGuide->icon_image_path;
+        $newIconPath = $previousIconPath;
+
+        $iconImage = $request->file('icon_image');
+        if ($iconImage) {
+            $newIconPath = $iconImage->store("estiven-guides/icons/{$estivenGuide->id}", 'public');
+        } elseif ($request->boolean('remove_icon_image')) {
+            $newIconPath = null;
+        }
+
         $estivenGuide->update([
             'role'   => $data['role'],
             'icon'   => $data['icon'],
+            'icon_image_path' => $newIconPath,
             'title'  => $data['title'],
             'orden'  => $data['orden'] ?? 0,
             'activo' => $request->boolean('activo', true),
         ]);
+
+        if ($previousIconPath && $previousIconPath !== $newIconPath) {
+            Storage::disk('public')->delete($previousIconPath);
+        }
 
         // Reemplazar pasos
         $previousImages = $estivenGuide->steps()
@@ -178,6 +204,8 @@ class EstivenGuideController extends Controller
 
     public function destroy(EstivenGuide $estivenGuide)
     {
+        $iconImage = $estivenGuide->icon_image_path;
+
         $images = $estivenGuide->steps()
             ->whereNotNull('image_path')
             ->pluck('image_path')
@@ -187,6 +215,10 @@ class EstivenGuideController extends Controller
 
         if (!empty($images)) {
             Storage::disk('public')->delete($images);
+        }
+
+        if ($iconImage) {
+            Storage::disk('public')->delete($iconImage);
         }
 
         return redirect()->route('admin.estiven-guides.index')

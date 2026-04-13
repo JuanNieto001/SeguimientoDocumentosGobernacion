@@ -20,6 +20,9 @@
     <div class="p-6" style="background:#f1f5f9;min-height:calc(100vh - 65px)">
         <div class="max-w-3xl mx-auto"
              x-data="{
+                iconPreview: {{ Js::from($guide?->icon_image_url) }},
+                iconFileName: '',
+                removeIconImage: false,
                 steps: {{ Js::from($guide ? $guide->steps->map(function($s) {
                     return [
                         'content' => $s->content,
@@ -27,6 +30,7 @@
                         'existing_image_path' => $s->image_path,
                         'existing_image_caption' => $s->image_caption,
                         'preview_url' => $s->image_url,
+                        'image_file_name' => $s->image_path ? 'Imagen actual cargada' : '',
                         'remove_image' => false,
                     ];
                 })->values() : [[
@@ -35,6 +39,7 @@
                     'existing_image_path' => '',
                     'existing_image_caption' => '',
                     'preview_url' => '',
+                    'image_file_name' => '',
                     'remove_image' => false,
                 ]]) }},
                 addStep() {
@@ -44,6 +49,7 @@
                         existing_image_path: '',
                         existing_image_caption: '',
                         preview_url: '',
+                        image_file_name: '',
                         remove_image: false,
                     });
                 },
@@ -61,7 +67,15 @@
                     const file = event.target.files?.[0];
                     if (!file) return;
                     this.steps[idx].preview_url = URL.createObjectURL(file);
+                    this.steps[idx].image_file_name = file.name;
                     this.steps[idx].remove_image = false;
+                },
+                onIconImageChange(event) {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    this.iconPreview = URL.createObjectURL(file);
+                    this.iconFileName = file.name;
+                    this.removeIconImage = false;
                 }
              }">
 
@@ -87,38 +101,117 @@
                 <div class="bg-white rounded-2xl p-6 space-y-5" style="border:1px solid #e2e8f0">
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Informaci&oacute;n de la gu&iacute;a</h2>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
+                    @php
+                        $iconCatalog = [
+                            '📋' => 'Lista / tareas',
+                            '🆕' => 'Nuevo / crear',
+                            '🔔' => 'Notificaciones',
+                            '👁️' => 'Ver / consulta',
+                            '📎' => 'Adjuntos / documentos',
+                            '🔄' => 'Flujo / seguimiento',
+                            '✅' => 'Aprobado / validado',
+                            '📅' => 'Calendario / PAA',
+                            '💰' => 'Financiero / presupuesto',
+                            '⚖️' => 'Jurídico / legal',
+                            '🌐' => 'SECOP / web',
+                            '👥' => 'Usuarios / roles',
+                            '⚙️' => 'Configuración',
+                            '📊' => 'Reportes / indicadores',
+                            '📦' => 'Repositorio / paquete',
+                            '🔒' => 'Seguridad / contraseña',
+                            '📧' => 'Ayuda / correo',
+                        ];
+                        $currentIcon = old('icon', $guide?->icon ?? '📋');
+                        $isCustomIcon = !array_key_exists($currentIcon, $iconCatalog);
+                    @endphp
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                        <div class="lg:col-span-6">
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">Rol destinatario</label>
                             <select name="role" required
-                                    class="w-full rounded-lg border-gray-300 text-sm focus:ring-green-500 focus:border-green-500">
+                                    class="w-full h-11 rounded-xl border-gray-300 text-sm focus:ring-green-500 focus:border-green-500">
                                 @foreach($roles as $key => $label)
                                     <option value="{{ $key }}" @selected(old('role', $guide?->role) === $key)>{{ $label }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-400 mt-1">Selecciona &quot;Com&uacute;n&quot; para que aplique a todos los roles.</p>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Icono (emoji)</label>
-                                <input type="text" name="icon" value="{{ old('icon', $guide?->icon ?? '📋') }}" required maxlength="10"
-                                       class="w-full rounded-lg border-gray-300 text-center text-2xl focus:ring-green-500 focus:border-green-500 py-2">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Orden</label>
-                                <input type="number" name="orden" value="{{ old('orden', $guide?->orden ?? 0) }}" min="0"
-                                       class="w-full rounded-lg border-gray-300 text-sm focus:ring-green-500 focus:border-green-500">
-                            </div>
-                            <div class="flex items-end pb-1">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="hidden" name="activo" value="0">
-                                    <input type="checkbox" name="activo" value="1"
-                                           @checked(old('activo', $guide?->activo ?? true))
-                                           class="rounded border-gray-300 text-green-600 focus:ring-green-500">
-                                    <span class="text-sm font-medium text-gray-700">Activa</span>
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Icono</label>
+                            <select name="icon" required
+                                    class="w-full h-11 rounded-xl border-gray-300 text-sm focus:ring-green-500 focus:border-green-500">
+                                @if($isCustomIcon)
+                                <option value="{{ $currentIcon }}" selected>
+                                    {{ $currentIcon }} - Personalizado actual
+                                </option>
+                                @endif
+                                @foreach($iconCatalog as $iconValue => $iconLabel)
+                                <option value="{{ $iconValue }}" @selected($currentIcon === $iconValue)>
+                                    {{ $iconValue }} - {{ $iconLabel }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Orden</label>
+                            <input type="number" name="orden" value="{{ old('orden', $guide?->orden ?? 0) }}" min="0"
+                                   class="w-full h-11 rounded-xl border-gray-300 text-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <div class="lg:col-span-2">
+                            <span class="block text-sm font-medium text-gray-700 mb-1.5">Estado</span>
+                            <label class="inline-flex items-center gap-2.5 cursor-pointer select-none h-11">
+                                <input type="hidden" name="activo" value="0">
+                                <input type="checkbox" name="activo" value="1"
+                                       @checked(old('activo', $guide?->activo ?? true))
+                                       class="peer sr-only">
+
+                                <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300 transition-colors peer-checked:bg-green-600">
+                                    <span class="h-5 w-5 rounded-full bg-white shadow transition-transform translate-x-0.5 peer-checked:translate-x-5"></span>
+                                </span>
+
+                                <span class="text-sm font-medium text-gray-700">Activa</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-400 -mt-1">Selecciona &quot;Com&uacute;n&quot; para que aplique a todos los roles. El icono se elige desde la lista.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Icono personalizado (opcional)</label>
+                            <div class="flex items-center gap-2 rounded-xl border border-gray-200 px-2 py-2" style="background:#f8fafc">
+                                <input id="icon_image_input" type="file" name="icon_image" accept="image/*" @change="onIconImageChange($event)" class="sr-only">
+                                <label for="icon_image_input"
+                                       class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 cursor-pointer hover:bg-white transition-colors"
+                                       style="border:1px solid #d1d5db;background:#fff;white-space:nowrap;">
+                                    Seleccionar archivo
                                 </label>
+                                <span class="min-w-0 flex-1 text-xs text-gray-500 truncate"
+                                      x-text="removeIconImage ? 'Se quitará al guardar' : (iconFileName || (iconPreview ? 'Imagen actual cargada' : 'Sin archivo seleccionado'))"></span>
                             </div>
+                            <p class="text-xs text-gray-400 mt-1">Si subes una imagen, reemplaza visualmente el emoji en la lista de guias y en Marsetiv.</p>
+
+                            <template x-if="iconPreview && !removeIconImage">
+                                <div class="mt-2.5 p-2 rounded-lg inline-flex" style="border:1px solid #e2e8f0;background:#f8fafc">
+                                    <img :src="iconPreview" alt="Icono personalizado" class="w-12 h-12 rounded-lg object-cover border border-gray-200">
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="md:pt-7">
+                            <label class="inline-flex items-center gap-2.5 text-xs text-gray-600 cursor-pointer select-none">
+                                <input type="checkbox" name="remove_icon_image" value="1" x-model="removeIconImage" class="sr-only">
+
+                                <span class="inline-flex h-5 w-9 items-center rounded-full transition-colors"
+                                      :style="removeIconImage ? 'background:#16a34a' : 'background:#d1d5db'">
+                                    <span class="h-4 w-4 rounded-full bg-white shadow transition-transform"
+                                          :class="removeIconImage ? 'translate-x-4' : 'translate-x-0.5'"></span>
+                                </span>
+
+                                <span>Quitar icono personalizado y usar emoji</span>
+                            </label>
                         </div>
                     </div>
 
@@ -169,11 +262,21 @@
 
                                     <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                                         <div>
-                                            <input type="file"
-                                                   :name="'steps[' + idx + '][image]'"
-                                                   accept="image/*"
-                                                   @change="onImageChange($event, idx)"
-                                                   class="w-full rounded-lg border-gray-300 text-xs focus:ring-green-500 focus:border-green-500">
+                                            <div class="flex items-center gap-2 rounded-lg border border-gray-200 px-2 py-2" style="background:#f8fafc">
+                                                <input type="file"
+                                                       :id="'step_image_' + idx"
+                                                       :name="'steps[' + idx + '][image]'"
+                                                       accept="image/*"
+                                                       @change="onImageChange($event, idx)"
+                                                       class="sr-only">
+                                                <label :for="'step_image_' + idx"
+                                                       class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 cursor-pointer hover:bg-white transition-colors"
+                                                       style="border:1px solid #d1d5db;background:#fff;white-space:nowrap;">
+                                                    Seleccionar archivo
+                                                </label>
+                                                <span class="min-w-0 flex-1 text-xs text-gray-500 truncate"
+                                                      x-text="step.remove_image ? 'Se quitará al guardar' : (step.image_file_name || (step.preview_url ? 'Imagen actual cargada' : 'Sin archivo seleccionado'))"></span>
+                                            </div>
                                         </div>
                                         <div>
                                             <input type="text"
@@ -191,13 +294,20 @@
                                         </div>
                                     </template>
 
-                                    <label class="mt-2 inline-flex items-center gap-2 text-xs text-gray-600">
+                                    <label class="mt-2 inline-flex items-center gap-2.5 text-xs text-gray-600 cursor-pointer select-none">
                                         <input type="checkbox"
                                                value="1"
                                                :name="'steps[' + idx + '][remove_image]'"
                                                x-model="step.remove_image"
-                                               class="rounded border-gray-300 text-green-600 focus:ring-green-500">
-                                        Quitar imagen de este paso
+                                               class="sr-only">
+
+                                        <span class="inline-flex h-5 w-9 items-center rounded-full transition-colors"
+                                              :style="step.remove_image ? 'background:#16a34a' : 'background:#d1d5db'">
+                                            <span class="h-4 w-4 rounded-full bg-white shadow transition-transform"
+                                                  :class="step.remove_image ? 'translate-x-4' : 'translate-x-0.5'"></span>
+                                        </span>
+
+                                        <span>Quitar imagen de este paso</span>
                                     </label>
                                 </div>
 

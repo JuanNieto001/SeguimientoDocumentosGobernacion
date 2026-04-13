@@ -534,8 +534,15 @@
                 <template x-for="(guide, idx) in guides" :key="idx">
                     <button @click="activeGuide = idx"
                             class="estiven-guide-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-[13px] transition-all group">
-                        <span class="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0 transition-transform group-hover:scale-110"
-                              style="background: #f0fdf4; border: 1px solid #dcfce7;" x-text="guide.icon"></span>
+                        <span class="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0 transition-transform group-hover:scale-110 overflow-hidden"
+                              style="background: #f0fdf4; border: 1px solid #dcfce7;">
+                            <template x-if="guide.icon_image_url">
+                                <img :src="guide.icon_image_url" alt="Icono guía" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!guide.icon_image_url">
+                                <span x-text="guide.icon"></span>
+                            </template>
+                        </span>
                         <span class="font-medium text-gray-700 group-hover:text-green-800 leading-snug flex-1" x-text="guide.title"></span>
                         <svg class="w-4 h-4 shrink-0 text-gray-300 group-hover:text-green-600 transition-all group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -571,9 +578,15 @@
                 </button>
 
                 <div class="flex items-center gap-2.5 mb-4 pb-3" style="border-bottom: 1px solid #f1f5f9;">
-                    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-lg"
-                          style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);"
-                          x-text="currentGuide?.icon"></span>
+                    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-lg overflow-hidden"
+                          style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                        <template x-if="currentGuide && currentGuide.icon_image_url">
+                            <img :src="currentGuide.icon_image_url" alt="Icono guía" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="!currentGuide || !currentGuide.icon_image_url">
+                            <span x-text="currentGuide?.icon"></span>
+                        </template>
+                    </span>
                     <h3 class="text-sm font-bold text-gray-800 leading-snug" x-text="currentGuide?.title"></h3>
                 </div>
 

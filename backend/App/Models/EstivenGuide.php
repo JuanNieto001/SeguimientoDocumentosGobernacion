@@ -9,10 +9,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class EstivenGuide extends Model
 {
-    protected $fillable = ['role', 'icon', 'title', 'orden', 'activo'];
+    protected $fillable = ['role', 'icon', 'icon_image_path', 'title', 'orden', 'activo'];
 
     protected $casts = [
         'activo' => 'boolean',
@@ -22,6 +23,15 @@ class EstivenGuide extends Model
     public function steps(): HasMany
     {
         return $this->hasMany(EstivenGuideStep::class)->orderBy('step_number');
+    }
+
+    public function getIconImageUrlAttribute(): ?string
+    {
+        if (!$this->icon_image_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->icon_image_path);
     }
 
     /**
@@ -44,6 +54,7 @@ class EstivenGuide extends Model
     {
         return [
             'icon'  => $this->icon,
+            'icon_image_url' => $this->icon_image_url,
             'title' => $this->title,
             'steps' => $this->steps->map(function (EstivenGuideStep $step) {
                 return [

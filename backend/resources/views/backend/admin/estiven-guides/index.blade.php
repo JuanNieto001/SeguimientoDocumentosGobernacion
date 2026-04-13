@@ -56,7 +56,11 @@
                     <tr style="border-bottom:1px solid #f1f5f9" class="hover:bg-gray-50 transition-colors">
                         <td class="px-5 py-4">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">{{ $guide->icon }}</span>
+                                @if($guide->icon_image_url)
+                                    <img src="{{ $guide->icon_image_url }}" alt="Icono guía" class="w-8 h-8 rounded-lg object-cover border border-gray-200">
+                                @else
+                                    <span class="text-xl">{{ $guide->icon }}</span>
+                                @endif
                                 <p class="font-semibold text-gray-800 leading-snug">{{ $guide->title }}</p>
                             </div>
                         </td>
