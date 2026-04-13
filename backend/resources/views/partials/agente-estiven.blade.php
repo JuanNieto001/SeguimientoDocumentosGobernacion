@@ -585,7 +585,13 @@
                                 <span x-text="sIdx + 1"></span>
                             </div>
                             <div class="flex-1 bg-gray-50 rounded-xl px-3.5 py-2.5" style="border: 1px solid #f1f5f9;">
-                                <p class="text-[13px] text-gray-600 leading-relaxed" x-html="step"></p>
+                                <p class="text-[13px] text-gray-600 leading-relaxed" x-html="typeof step === 'string' ? step : (step.content || '')"></p>
+                                <template x-if="typeof step === 'object' && step.image_url">
+                                    <figure class="mt-2.5">
+                                        <img :src="step.image_url" alt="Guia Marsetiv" class="max-h-48 rounded-lg border border-gray-200">
+                                        <figcaption x-show="step.image_caption" x-text="step.image_caption" class="text-[11px] text-gray-400 mt-1"></figcaption>
+                                    </figure>
+                                </template>
                             </div>
                         </div>
                     </template>

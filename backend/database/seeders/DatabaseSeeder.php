@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
         WorkflowSeeder::class,
         PAASeeder::class,
         TiposArchivoSeeder::class,
+        EstivenGuidesSeeder::class,
     ]);
 }
 

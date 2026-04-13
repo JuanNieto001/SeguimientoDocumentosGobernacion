@@ -4,7 +4,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-lg font-bold text-gray-900 leading-none">Gu&iacute;as de Estiven</h1>
+                <h1 class="text-lg font-bold text-gray-900 leading-none">Gu&iacute;as de Marsetiv</h1>
                 <p class="text-xs text-gray-400 mt-1">Administra las gu&iacute;as de ayuda de Marsetiv bot</p>
             </div>
             <a href="{{ route('admin.estiven-guides.create') }}"

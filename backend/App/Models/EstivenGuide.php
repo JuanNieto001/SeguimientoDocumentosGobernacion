@@ -45,7 +45,13 @@ class EstivenGuide extends Model
         return [
             'icon'  => $this->icon,
             'title' => $this->title,
-            'steps' => $this->steps->pluck('content')->toArray(),
+            'steps' => $this->steps->map(function (EstivenGuideStep $step) {
+                return [
+                    'content' => $step->content,
+                    'image_url' => $step->image_url,
+                    'image_caption' => $step->image_caption,
+                ];
+            })->toArray(),
         ];
     }
 }

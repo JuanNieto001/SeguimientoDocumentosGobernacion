@@ -9,9 +9,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EstivenGuide;
-use App\Models\EstivenGuideStep;
 use App\Support\RoleLabels;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class EstivenGuideController extends Controller
 {
@@ -57,6 +57,8 @@ class EstivenGuideController extends Controller
             'activo'         => 'boolean',
             'steps'          => 'required|array|min:1',
             'steps.*.content'=> 'required|string',
+            'steps.*.image'  => 'nullable|image|max:4096',
+            'steps.*.image_caption' => 'nullable|string|max:255',
         ]);
 
         $guide = EstivenGuide::create([
@@ -68,9 +70,17 @@ class EstivenGuideController extends Controller
         ]);
 
         foreach ($data['steps'] as $i => $step) {
+            $imagePath = null;
+            $imageFile = $request->file("steps.$i.image");
+            if ($imageFile) {
+                $imagePath = $imageFile->store("estiven-guides/{$guide->id}", 'public');
+            }
+
             $guide->steps()->create([
                 'step_number' => $i + 1,
                 'content'     => $step['content'],
+                'image_path'  => $imagePath,
+                'image_caption' => $step['image_caption'] ?? null,
             ]);
         }
 
@@ -102,6 +112,11 @@ class EstivenGuideController extends Controller
             'activo'         => 'boolean',
             'steps'          => 'required|array|min:1',
             'steps.*.content'=> 'required|string',
+            'steps.*.image'  => 'nullable|image|max:4096',
+            'steps.*.image_caption' => 'nullable|string|max:255',
+            'steps.*.existing_image_path' => 'nullable|string|max:500',
+            'steps.*.existing_image_caption' => 'nullable|string|max:255',
+            'steps.*.remove_image' => 'nullable|boolean',
         ]);
 
         $estivenGuide->update([
@@ -113,12 +128,48 @@ class EstivenGuideController extends Controller
         ]);
 
         // Reemplazar pasos
+        $previousImages = $estivenGuide->steps()
+            ->whereNotNull('image_path')
+            ->pluck('image_path')
+            ->all();
+
+        $usedImages = [];
+
         $estivenGuide->steps()->delete();
         foreach ($data['steps'] as $i => $step) {
+            $removeImage = (bool) ($step['remove_image'] ?? false);
+            $imageFile = $request->file("steps.$i.image");
+            $imagePath = null;
+
+            if ($imageFile) {
+                $imagePath = $imageFile->store("estiven-guides/{$estivenGuide->id}", 'public');
+            } elseif (!$removeImage && !empty($step['existing_image_path'])) {
+                $imagePath = $step['existing_image_path'];
+            }
+
+            if ($imagePath) {
+                $usedImages[] = $imagePath;
+            }
+
+            $caption = $step['image_caption'] ?? null;
+            if ((!$caption || trim((string) $caption) === '') && !empty($step['existing_image_caption'])) {
+                $caption = $step['existing_image_caption'];
+            }
+            if (!$imagePath) {
+                $caption = null;
+            }
+
             $estivenGuide->steps()->create([
                 'step_number' => $i + 1,
                 'content'     => $step['content'],
+                'image_path'  => $imagePath,
+                'image_caption' => $caption,
             ]);
+        }
+
+        $toDelete = array_diff($previousImages, $usedImages);
+        if (!empty($toDelete)) {
+            Storage::disk('public')->delete($toDelete);
         }
 
         return redirect()->route('admin.estiven-guides.index')
@@ -127,7 +178,16 @@ class EstivenGuideController extends Controller
 
     public function destroy(EstivenGuide $estivenGuide)
     {
+        $images = $estivenGuide->steps()
+            ->whereNotNull('image_path')
+            ->pluck('image_path')
+            ->all();
+
         $estivenGuide->delete();
+
+        if (!empty($images)) {
+            Storage::disk('public')->delete($images);
+        }
 
         return redirect()->route('admin.estiven-guides.index')
             ->with('success', 'Guía eliminada correctamente.');

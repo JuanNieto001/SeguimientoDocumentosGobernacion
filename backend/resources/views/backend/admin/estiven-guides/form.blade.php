@@ -8,7 +8,7 @@
             </a>
             <div>
                 <h1 class="text-lg font-bold text-gray-900 leading-none">
-                    {{ $guide ? 'Editar' : 'Nueva' }} Gu&iacute;a de Estiven
+                    {{ $guide ? 'Editar' : 'Nueva' }} Gu&iacute;a de Marsetiv
                 </h1>
                 <p class="text-xs text-gray-400 mt-1">
                     {{ $guide ? 'Modifica la guía y sus pasos' : 'Crea una nueva guía de ayuda para Marsetiv bot' }}
@@ -20,9 +20,32 @@
     <div class="p-6" style="background:#f1f5f9;min-height:calc(100vh - 65px)">
         <div class="max-w-3xl mx-auto"
              x-data="{
-                steps: {{ Js::from($guide ? $guide->steps->map(fn($s) => ['content' => $s->content])->values() : [['content' => '']]) }},
+                steps: {{ Js::from($guide ? $guide->steps->map(function($s) {
+                    return [
+                        'content' => $s->content,
+                        'image_caption' => $s->image_caption,
+                        'existing_image_path' => $s->image_path,
+                        'existing_image_caption' => $s->image_caption,
+                        'preview_url' => $s->image_url,
+                        'remove_image' => false,
+                    ];
+                })->values() : [[
+                    'content' => '',
+                    'image_caption' => '',
+                    'existing_image_path' => '',
+                    'existing_image_caption' => '',
+                    'preview_url' => '',
+                    'remove_image' => false,
+                ]]) }},
                 addStep() {
-                    this.steps.push({ content: '' });
+                    this.steps.push({
+                        content: '',
+                        image_caption: '',
+                        existing_image_path: '',
+                        existing_image_caption: '',
+                        preview_url: '',
+                        remove_image: false,
+                    });
                 },
                 removeStep(idx) {
                     if (this.steps.length > 1) this.steps.splice(idx, 1);
@@ -33,6 +56,12 @@
                     const tmp = this.steps[idx];
                     this.steps[idx] = this.steps[newIdx];
                     this.steps[newIdx] = tmp;
+                },
+                onImageChange(event, idx) {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    this.steps[idx].preview_url = URL.createObjectURL(file);
+                    this.steps[idx].remove_image = false;
                 }
              }">
 
@@ -49,6 +78,7 @@
 
             <form method="POST"
                   action="{{ $guide ? route('admin.estiven-guides.update', $guide) : route('admin.estiven-guides.store') }}"
+                enctype="multipart/form-data"
                   class="space-y-6">
                 @csrf
                 @if($guide) @method('PUT') @endif
@@ -111,7 +141,7 @@
                         </button>
                     </div>
 
-                    <p class="text-xs text-gray-400">Puedes usar HTML b&aacute;sico: &lt;strong&gt;negrita&lt;/strong&gt;, &lt;em&gt;cursiva&lt;/em&gt;</p>
+                    <p class="text-xs text-gray-400">Puedes usar HTML b&aacute;sico en texto y opcionalmente adjuntar imagen por paso.</p>
 
                     <div class="space-y-3">
                         <template x-for="(step, idx) in steps" :key="idx">
@@ -124,11 +154,51 @@
 
                                 {{-- Campo de contenido --}}
                                 <div class="flex-1">
+                                    <input type="hidden"
+                                           :name="'steps[' + idx + '][existing_image_path]'"
+                                           x-model="step.existing_image_path">
+                                    <input type="hidden"
+                                           :name="'steps[' + idx + '][existing_image_caption]'"
+                                           x-model="step.existing_image_caption">
+
                                     <textarea x-model="step.content"
                                               :name="'steps[' + idx + '][content]'"
                                               rows="2" required
                                               placeholder="Describe el paso..."
                                               class="w-full rounded-lg border-gray-300 text-sm focus:ring-green-500 focus:border-green-500 resize-none"></textarea>
+
+                                    <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <div>
+                                            <input type="file"
+                                                   :name="'steps[' + idx + '][image]'"
+                                                   accept="image/*"
+                                                   @change="onImageChange($event, idx)"
+                                                   class="w-full rounded-lg border-gray-300 text-xs focus:ring-green-500 focus:border-green-500">
+                                        </div>
+                                        <div>
+                                            <input type="text"
+                                                   x-model="step.image_caption"
+                                                   :name="'steps[' + idx + '][image_caption]'"
+                                                   maxlength="255"
+                                                   placeholder="Pie de imagen (opcional)"
+                                                   class="w-full rounded-lg border-gray-300 text-xs focus:ring-green-500 focus:border-green-500">
+                                        </div>
+                                    </div>
+
+                                    <template x-if="step.preview_url && !step.remove_image">
+                                        <div class="mt-2 p-2 rounded-lg" style="border:1px solid #e2e8f0;background:#f8fafc">
+                                            <img :src="step.preview_url" alt="Previsualizacion" class="max-h-40 rounded-md border border-gray-200">
+                                        </div>
+                                    </template>
+
+                                    <label class="mt-2 inline-flex items-center gap-2 text-xs text-gray-600">
+                                        <input type="checkbox"
+                                               value="1"
+                                               :name="'steps[' + idx + '][remove_image]'"
+                                               x-model="step.remove_image"
+                                               class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                                        Quitar imagen de este paso
+                                    </label>
                                 </div>
 
                                 {{-- Controles --}}
