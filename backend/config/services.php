@@ -47,5 +47,10 @@ return [
         'entidad_nit' => env('SECOP_ENTIDAD_NIT', '890801052'),
     ],
 
+    'paa_publico' => [
+        'base_url' => env('PAA_PUBLIC_BASE_URL', 'https://caldas.gov.co'),
+        'index_url' => env('PAA_PUBLIC_INDEX_URL', 'https://caldas.gov.co/secop-y-contrataciones'),
+    ],
+
 ];
 

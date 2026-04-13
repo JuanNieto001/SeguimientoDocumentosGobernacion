@@ -16,12 +16,20 @@
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="open" @click.outside="open=false" x-transition
-                         class="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border z-50 py-1" style="border-color:#e2e8f0">
+                         class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border z-50 py-1" style="border-color:#e2e8f0">
+                        @if($descargaOficialDisponible)
                         <a href="{{ route('paa.exportar.csv', ['anio' => $anio]) }}"
                            class="flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
                             <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            Exportar CSV (Excel)
+                            Descargar oficial (XLSX)
                         </a>
+                        @else
+                                                <span class="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 cursor-not-allowed"
+                                                            title="No publicado aun para {{ $anio }}">
+                            <svg class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"/></svg>
+                                                        No publicado aun para {{ $anio }}
+                        </span>
+                        @endif
                         <a href="{{ route('paa.exportar.pdf', ['anio' => $anio]) }}" target="_blank"
                            class="flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
                             <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -45,6 +53,13 @@
         <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d">
             <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
             {{ session('success') }}
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c">
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10A8 8 0 112 10a8 8 0 0116 0zm-8-4a1 1 0 00-.894.553l-3 6A1 1 0 007 14h6a1 1 0 00.894-1.447l-3-6A1 1 0 0010 6zm0 6a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/></svg>
+            {{ session('error') }}
         </div>
         @endif
 

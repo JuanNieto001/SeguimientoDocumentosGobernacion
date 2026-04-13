@@ -10,7 +10,9 @@ namespace App\Http\Controllers;
 use App\Models\PlanAnualAdquisicion;
 use App\Models\Proceso;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class PAAController extends Controller
 {
@@ -35,7 +37,7 @@ class PAAController extends Controller
 
     public function index(Request $request)
     {
-        $anio = (int) $request->get('anio', date('Y'));
+        $anio = $this->normalizarAnioPermitido((int) $request->get('anio', date('Y')));
 
         $query = PlanAnualAdquisicion::query()->where('anio', $anio);
 
@@ -56,10 +58,7 @@ class PAAController extends Controller
 
         $paas = $query->orderBy('trimestre_estimado')->orderBy('codigo_necesidad')->paginate(25)->withQueryString();
 
-        $anios = PlanAnualAdquisicion::select('anio')->distinct()->orderByDesc('anio')->pluck('anio');
-        if (!$anios->contains($anio)) {
-            $anios->prepend($anio);
-        }
+        $anios = collect($this->aniosPermitidos());
 
         $resumen = PlanAnualAdquisicion::where('anio', $anio)
             ->select(
@@ -71,10 +70,12 @@ class PAAController extends Controller
                 DB::raw("SUM(CASE WHEN estado='modificado' THEN 1 ELSE 0 END) as modificados")
             )->first();
 
+        $descargaOficialDisponible = $this->archivoOficialDisponible($anio);
+
         $modalidades = self::MODALIDADES;
         $trimestres  = self::TRIMESTRES;
 
-        return view('paa.index', compact('paas', 'anios', 'anio', 'resumen', 'modalidades', 'trimestres'));
+        return view('paa.index', compact('paas', 'anios', 'anio', 'resumen', 'modalidades', 'trimestres', 'descargaOficialDisponible'));
     }
 
     /* ------------------------------------------------------------------ */
@@ -194,47 +195,17 @@ class PAAController extends Controller
 
     public function exportarCSV(Request $request)
     {
-        $anio = (int) $request->get('anio', date('Y'));
+        $anio = $this->normalizarAnioPermitido((int) $request->get('anio', date('Y')));
 
-        $paas = PlanAnualAdquisicion::where('anio', $anio)
-            ->where('activo', true)
-            ->orderBy('trimestre_estimado')
-            ->orderBy('codigo_necesidad')
-            ->get();
+        try {
+            return $this->descargarPAAOficial($anio);
+        } catch (\Throwable $e) {
+            report($e);
 
-        $filename = "PAA_{$anio}_" . now()->format('Ymd_His') . ".csv";
-
-        $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ];
-
-        $columns = [
-            'Código Necesidad', 'Descripción', 'Dependencia Solicitante',
-            'Modalidad', 'Valor Estimado (COP)', 'Trimestre Estimado',
-            'Estado', 'Año',
-        ];
-
-        $callback = function () use ($paas, $columns) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8
-            fputcsv($file, $columns, ';');
-            foreach ($paas as $p) {
-                fputcsv($file, [
-                    $p->codigo_necesidad,
-                    $p->descripcion,
-                    $p->dependencia_solicitante,
-                    self::MODALIDADES[$p->modalidad_contratacion] ?? $p->modalidad_contratacion,
-                    number_format($p->valor_estimado, 2, '.', ''),
-                    self::TRIMESTRES[$p->trimestre_estimado] ?? $p->trimestre_estimado,
-                    ucfirst($p->estado),
-                    $p->anio,
-                ], ';');
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+            return redirect()
+                ->route('paa.index', ['anio' => $anio])
+                ->with('error', 'No fue posible descargar el archivo oficial del PAA en este momento.');
+        }
     }
 
     /* ------------------------------------------------------------------ */
@@ -243,7 +214,7 @@ class PAAController extends Controller
 
     public function exportarPDF(Request $request)
     {
-        $anio = (int) $request->get('anio', date('Y'));
+        $anio = $this->normalizarAnioPermitido((int) $request->get('anio', date('Y')));
 
         $paas = PlanAnualAdquisicion::where('anio', $anio)
             ->where('activo', true)
@@ -256,6 +227,233 @@ class PAAController extends Controller
         $resumen = ['total' => $paas->count(), 'valor_total' => $paas->sum('valor_estimado')];
 
         return view('paa.pdf', compact('paas', 'anio', 'modalidades', 'trimestres', 'resumen'));
+    }
+
+    private function aniosPermitidos(): array
+    {
+        $anioActual = (int) date('Y');
+
+        return [$anioActual, $anioActual + 1];
+    }
+
+    private function normalizarAnioPermitido(int $anio): int
+    {
+        $permitidos = $this->aniosPermitidos();
+
+        return in_array($anio, $permitidos, true) ? $anio : $permitidos[0];
+    }
+
+    private function descargarPAAOficial(int $anio)
+    {
+        $urlDescarga = $this->resolverUrlDescargaOficial($anio);
+
+        if (!$urlDescarga) {
+            throw new \RuntimeException("No se encontró archivo oficial para PAA {$anio}.");
+        }
+
+        $archivo = Http::timeout(90)
+            ->withHeaders([
+                'User-Agent' => 'SeguimientoDocumentosGobernacion/1.0',
+            ])
+            ->get($urlDescarga);
+
+        if (!$archivo->successful()) {
+            throw new \RuntimeException("La descarga oficial respondió con estado {$archivo->status()}.");
+        }
+
+        $nombreArchivo = $this->extraerNombreArchivo($archivo->header('Content-Disposition'));
+        if (empty($nombreArchivo)) {
+            $nombreArchivo = "PAA_{$anio}_oficial.xlsx";
+        }
+
+        $contentType = (string) $archivo->header(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+
+        return response($archivo->body(), 200, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'attachment; filename="' . $nombreArchivo . '"',
+        ]);
+    }
+
+    private function archivoOficialDisponible(int $anio): bool
+    {
+        $cacheKey = "paa_publico_disponible_{$anio}";
+
+        return Cache::remember($cacheKey, now()->addMinutes(20), function () use ($anio): bool {
+            try {
+                return $this->resolverUrlDescargaOficial($anio) !== null;
+            } catch (\Throwable $e) {
+                report($e);
+                return false;
+            }
+        });
+    }
+
+    private function resolverUrlDescargaOficial(int $anio): ?string
+    {
+        $indexUrl = (string) config('services.paa_publico.index_url', 'https://caldas.gov.co/secop-y-contrataciones');
+        $baseUrl = rtrim((string) config('services.paa_publico.base_url', 'https://caldas.gov.co'), '/');
+
+        $indexHtml = $this->obtenerHtml($indexUrl);
+        $paginaAnio = $this->resolverPaginaAnio($indexHtml, $baseUrl, $anio) ?? $indexUrl;
+        $htmlAnio = $this->obtenerHtml($paginaAnio);
+
+        return $this->resolverDescargaReciente($htmlAnio, $baseUrl, $anio);
+    }
+
+    private function obtenerHtml(string $url): string
+    {
+        $response = Http::timeout(45)
+            ->withHeaders([
+                'User-Agent' => 'SeguimientoDocumentosGobernacion/1.0',
+            ])
+            ->get($url);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException("No se pudo consultar {$url}. Estado {$response->status()}.");
+        }
+
+        return (string) $response->body();
+    }
+
+    private function resolverPaginaAnio(string $html, string $baseUrl, int $anio): ?string
+    {
+        $links = $this->extraerHrefs($html);
+
+        foreach ($links as $href) {
+            if (!preg_match('#/secop-y-contrataciones/\d+-[^\s"\']*' . $anio . '[^\s"\']*#i', $href)) {
+                continue;
+            }
+
+            return $this->absolutizarUrl($href, $baseUrl);
+        }
+
+        return null;
+    }
+
+    private function resolverDescargaReciente(string $html, string $baseUrl, int $anio): ?string
+    {
+        $links = $this->extraerHrefs($html);
+        $candidatos = [];
+
+        foreach ($links as $idx => $href) {
+            $url = $this->absolutizarUrl($href, $baseUrl);
+            if (!$url) {
+                continue;
+            }
+
+            $host = (string) parse_url($url, PHP_URL_HOST);
+            if ($host !== '' && !str_ends_with(strtolower($host), 'caldas.gov.co')) {
+                continue;
+            }
+
+            $path = strtolower((string) parse_url($url, PHP_URL_PATH));
+            $esDownload = preg_match('#/secop-y-contrataciones/.+/download$#i', $path) === 1;
+            $esArchivo = preg_match('#\.(xlsx|xls|csv)$#i', $path) === 1;
+            if (!$esDownload && !$esArchivo) {
+                continue;
+            }
+
+            $version = 0;
+            if (preg_match('/(?:^|[^\d])v(\d{1,3})(?:[^\d]|$)/i', $url, $m)) {
+                $version = (int) $m[1];
+            }
+
+            $extScore = 0;
+            if (preg_match('/\.(xlsx|xls|csv)$/i', $path, $mExt)) {
+                $ext = strtolower($mExt[1]);
+                $extScore = match ($ext) {
+                    'xlsx' => 3,
+                    'xls'  => 2,
+                    'csv'  => 1,
+                    default => 0,
+                };
+            }
+
+            $candidatos[] = [
+                'url' => $url,
+                'idx' => $idx,
+                'version' => $version,
+                'ext' => $extScore,
+                'anio' => str_contains(strtolower($url), (string) $anio),
+            ];
+        }
+
+        if (empty($candidatos)) {
+            return null;
+        }
+
+        $conAnio = array_values(array_filter($candidatos, fn ($c) => $c['anio']));
+        $pool = !empty($conAnio) ? $conAnio : $candidatos;
+
+        usort($pool, function (array $a, array $b): int {
+            return [$b['version'], $b['ext'], $b['idx']] <=> [$a['version'], $a['ext'], $a['idx']];
+        });
+
+        return $pool[0]['url'] ?? null;
+    }
+
+    private function extraerHrefs(string $html): array
+    {
+        preg_match_all('/href\s*=\s*(["\'])(.*?)\1/i', $html, $matches);
+
+        if (empty($matches[2])) {
+            return [];
+        }
+
+        return array_values(array_unique(array_map(static function (string $href): string {
+            return html_entity_decode(trim($href));
+        }, $matches[2])));
+    }
+
+    private function absolutizarUrl(string $url, string $baseUrl): ?string
+    {
+        $url = trim($url);
+        if ($url === '' || str_starts_with($url, '#') || str_starts_with(strtolower($url), 'javascript:')) {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $url)) {
+            return $url;
+        }
+
+        if (str_starts_with($url, '//')) {
+            return 'https:' . $url;
+        }
+
+        if (str_starts_with($url, '/')) {
+            return $baseUrl . $url;
+        }
+
+        return $baseUrl . '/' . ltrim($url, '/');
+    }
+
+    private function extraerNombreArchivo(?string $contentDisposition): ?string
+    {
+        if (empty($contentDisposition)) {
+            return null;
+        }
+
+        if (preg_match('/filename\*=UTF-8\'\'([^;]+)/i', $contentDisposition, $m)) {
+            $name = rawurldecode($m[1]);
+            return $this->normalizarNombreArchivo($name);
+        }
+
+        if (preg_match('/filename="?([^";]+)"?/i', $contentDisposition, $m)) {
+            return $this->normalizarNombreArchivo($m[1]);
+        }
+
+        return null;
+    }
+
+    private function normalizarNombreArchivo(string $filename): ?string
+    {
+        $filename = basename(trim($filename));
+        $filename = str_replace(["\r", "\n"], '', $filename);
+
+        return $filename !== '' ? $filename : null;
     }
 
     /* ------------------------------------------------------------------ */
