@@ -37,9 +37,21 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => (int) env('SESSION_LIFETIME', 30),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Maximum Concurrent Sessions Per User
+    |--------------------------------------------------------------------------
+    |
+    | Number of active sessions allowed at the same time for one user.
+    | Set to 0 to disable the limit.
+    |
+    */
+
+    'max_concurrent' => (int) env('SESSION_MAX_CONCURRENT', 3),
 
     /*
     |--------------------------------------------------------------------------

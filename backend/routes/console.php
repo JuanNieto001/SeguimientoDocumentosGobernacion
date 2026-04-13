@@ -13,3 +13,10 @@ Schedule::command('alertas:generar')->hourly();
 
 // Mantener contratos de aplicaciones sincronizados con SECOP
 Schedule::command('contratos-aplicaciones:sync-secop')->everySixHours();
+
+// Salud del sistema para métricas de disponibilidad
+Schedule::command('system:health-check')->everyFiveMinutes();
+
+// Respaldo y depuración automática
+Schedule::command('system:backup')->dailyAt('02:00');
+Schedule::command('system:backup-prune')->dailyAt('02:30');

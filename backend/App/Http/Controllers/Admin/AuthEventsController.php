@@ -37,6 +37,28 @@ class AuthEventsController extends Controller
             $query->whereDate('created_at', '<=', $request->hasta);
         }
 
+        if ($request->input('formato') === 'csv') {
+            $rows = (clone $query)->limit(10000)->get();
+
+            return response()->streamDownload(function () use ($rows) {
+                $handle = fopen('php://output', 'w');
+                fputcsv($handle, ['Fecha', 'Evento', 'Usuario', 'Email', 'IP', 'User Agent']);
+
+                foreach ($rows as $ev) {
+                    fputcsv($handle, [
+                        optional($ev->created_at)->format('Y-m-d H:i:s'),
+                        $ev->event_type,
+                        $ev->user?->name,
+                        $ev->email ?? $ev->user?->email,
+                        $ev->ip_address,
+                        $ev->user_agent,
+                    ]);
+                }
+
+                fclose($handle);
+            }, 'auth-events.csv');
+        }
+
         $eventos = $query->paginate(50)->withQueryString();
 
         // Stats rápidas últimas 24h
@@ -60,7 +82,11 @@ class AuthEventsController extends Controller
             ->limit(5)
             ->get();
 
-        $tipos = ['login_success', 'login_failed', 'logout', 'password_changed', 'password_reset', 'account_disabled'];
+        $tipos = AuthEvent::select('event_type')
+            ->distinct()
+            ->orderBy('event_type')
+            ->pluck('event_type')
+            ->values();
         $usuarios = User::orderBy('name')->get(['id', 'name', 'email']);
 
         return view('admin.auth-events', compact('eventos', 'stats', 'ipsSospechosas', 'tipos', 'usuarios'));

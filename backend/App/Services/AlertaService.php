@@ -94,6 +94,45 @@ class AlertaService
             }
         }
 
+        // A2. Certificados vencidos
+        $certificadosVencidos = ProcesoEtapaArchivo::where('estado', 'aprobado')
+            ->whereNotNull('fecha_vigencia')
+            ->whereDate('fecha_vigencia', '<', now()->toDateString())
+            ->with(['proceso', 'proceso.workflow'])
+            ->get();
+
+        foreach ($certificadosVencidos as $archivo) {
+            $diasVencido = (int) now()->diffInDays($archivo->fecha_vigencia, false) * -1;
+
+            $existe = Alerta::where('proceso_id', $archivo->proceso->id)
+                ->where('tipo', 'certificado_vencido')
+                ->where('leida', false)
+                ->get()
+                ->filter(function($alerta) use ($archivo) {
+                    $metadata = $alerta->metadata ?? [];
+                    return isset($metadata['archivo_id']) && $metadata['archivo_id'] == $archivo->id;
+                })
+                ->isNotEmpty();
+
+            if (!$existe) {
+                self::crear(
+                    proceso: $archivo->proceso,
+                    tipo: 'certificado_vencido',
+                    titulo: 'Certificado vencido',
+                    mensaje: "El certificado '{$archivo->nombre_original}' está vencido desde hace {$diasVencido} día(s)",
+                    prioridad: 'alta',
+                    area_responsable: $archivo->proceso->etapaActual->area_responsable ?? 'planeacion',
+                    metadata: [
+                        'archivo_id' => $archivo->id,
+                        'archivo_nombre' => $archivo->nombre_original,
+                        'fecha_vigencia' => $archivo->fecha_vigencia,
+                        'dias_vencido' => $diasVencido,
+                    ]
+                );
+                $count++;
+            }
+        }
+
         // B. Procesos con más tiempo del estimado en etapa
         $procesosEnEtapa = Proceso::whereIn('estado', ['en_tramite', 'en_revision'])
             ->with(['etapaActual', 'procesoEtapas' => function($q) {

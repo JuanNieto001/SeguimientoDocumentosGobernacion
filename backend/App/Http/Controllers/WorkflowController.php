@@ -329,6 +329,11 @@ class WorkflowController extends Controller
                 }
             }
 
+            $mensajeVigencias = $this->validarVigenciasDocumentales((int) $proceso->id, (int) $proceso->etapa_actual_id);
+            if ($mensajeVigencias !== null) {
+                return redirect()->back()->with('error', $mensajeVigencias);
+            }
+
             // ========== FIN VALIDACIONES ESPECÍFICAS ==========
 
             // ========== VALIDACIÓN ETAPA 1: DESCENTRALIZACIÓN - DOCUMENTOS PARALELOS ==========
@@ -525,6 +530,35 @@ class WorkflowController extends Controller
 
             return back()->with('success', "Proceso enviado a: {$nextEtapa->nombre} → Área: {$areaLabel}.");
         });
+    }
+
+    /**
+     * Bloquea el avance cuando hay documentos aprobados con vigencia vencida
+     * en la etapa actual del proceso.
+     */
+    private function validarVigenciasDocumentales(int $procesoId, int $etapaId): ?string
+    {
+        $vencidos = DB::table('proceso_etapa_archivos')
+            ->where('proceso_id', $procesoId)
+            ->where('etapa_id', $etapaId)
+            ->where('estado', 'aprobado')
+            ->whereNotNull('fecha_vigencia')
+            ->whereDate('fecha_vigencia', '<', now()->toDateString())
+            ->get(['nombre_original', 'fecha_vigencia']);
+
+        if ($vencidos->isEmpty()) {
+            return null;
+        }
+
+        $detalle = $vencidos
+            ->take(5)
+            ->map(function ($item) {
+                $fecha = \Illuminate\Support\Carbon::parse($item->fecha_vigencia)->format('d/m/Y');
+                return "{$item->nombre_original} (venció {$fecha})";
+            })
+            ->implode(', ');
+
+        return 'No puedes avanzar: hay certificados/documentos vencidos en la etapa actual. ' . $detalle;
     }
 
     /**

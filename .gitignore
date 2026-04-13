@@ -17,6 +17,7 @@
 /backend/public/hot
 /backend/public/storage
 /backend/storage/*.key
+/backend/storage/backups
 /backend/storage/pail
 /backend/vendor
 /playwright-report

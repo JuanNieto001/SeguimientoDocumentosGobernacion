@@ -294,6 +294,11 @@ Route::middleware(['auth', 'role:admin|admin_general'])
     ->group(function () {
 
         Route::resource('usuarios', UserController::class)->except(['show']);
+        Route::post('usuarios/{usuario}/cerrar-sesiones', [UserController::class, 'cerrarSesiones'])
+            ->name('usuarios.cerrar-sesiones');
+
+        // Alias documentado: /admin/users
+        Route::redirect('users', '/admin/usuarios')->name('users.index');
         Route::resource('roles', RoleController::class)->except(['show']);
         Route::resource('permisos', PermissionController::class)->except(['show']);
         Route::resource('secretarias', SecretariaController::class)->except(['show']);
@@ -537,6 +542,14 @@ Route::get('/admin/usuarios/{usuario}/reset-password', [ResetPasswordAdminContro
 Route::post('/admin/usuarios/{usuario}/reset-password', [ResetPasswordAdminController::class, 'generate'])
     ->middleware('auth')
     ->name('admin.reset-password.generate');
+
+// Alias documentado para rutas en inglés
+Route::get('/admin/users/{usuario}/reset-password', [ResetPasswordAdminController::class, 'show'])
+    ->middleware('auth')
+    ->name('admin.reset-password.show.users');
+Route::post('/admin/users/{usuario}/reset-password', [ResetPasswordAdminController::class, 'generate'])
+    ->middleware('auth')
+    ->name('admin.reset-password.generate.users');
 
 // RF-20: Rastreo físico de documentos por código (solo admin)
 Route::middleware(['auth', 'role:admin'])->group(function () {

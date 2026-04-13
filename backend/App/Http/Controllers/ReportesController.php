@@ -7,14 +7,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\Proceso;
 use App\Models\ProcesoAuditoria;
 use App\Models\ProcesoEtapaArchivo;
-use App\Models\Workflow;
-use App\Models\User;
-use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class ReportesController extends Controller
 {
@@ -101,11 +101,39 @@ class ReportesController extends Controller
         $formato = $request->input('formato', 'html');
 
         if ($formato === 'pdf') {
-            return $this->generarPDF('reportes.pdf.estado-general', compact('procesos', 'estadisticas', 'fechaInicio', 'fechaFin'));
+            return $this->generarPDF(
+                nombreBase: 'estado-general',
+                titulo: 'Estado General de Procesos',
+                columnas: ['Código', 'Objeto', 'Modalidad', 'Estado', 'Etapa Actual', 'Fecha Creación'],
+                filas: $procesos->map(fn($item) => [
+                    $item->codigo ?? '-',
+                    $item->objeto ?? '-',
+                    $item->workflow->nombre ?? '-',
+                    $item->estado ?? '-',
+                    $item->etapaActual->nombre ?? '-',
+                    optional($item->created_at)->format('d/m/Y H:i') ?? '-',
+                ])->all(),
+                contexto: [
+                    'Desde' => (string) $fechaInicio,
+                    'Hasta' => (string) $fechaFin,
+                    'Total procesos' => (string) $estadisticas['total'],
+                ]
+            );
         }
 
         if ($formato === 'excel') {
-            return $this->generarExcel('estado-general', $procesos, ['Código', 'Objeto', 'Modalidad', 'Estado', 'Etapa Actual', 'Fecha Creación']);
+            return $this->generarExcel(
+                'estado-general',
+                ['Código', 'Objeto', 'Modalidad', 'Estado', 'Etapa Actual', 'Fecha Creación'],
+                $procesos->map(fn($item) => [
+                    $item->codigo ?? '-',
+                    $item->objeto ?? '-',
+                    $item->workflow->nombre ?? '-',
+                    $item->estado ?? '-',
+                    $item->etapaActual->nombre ?? '-',
+                    optional($item->created_at)->format('d/m/Y H:i') ?? '-',
+                ])->all()
+            );
         }
 
         return view('reportes.estado-general', compact('procesos', 'estadisticas', 'fechaInicio', 'fechaFin'));
@@ -140,7 +168,39 @@ class ReportesController extends Controller
         $formato = $request->input('formato', 'html');
 
         if ($formato === 'pdf') {
-            return $this->generarPDF('reportes.pdf.por-dependencia', compact('porDependencia', 'estadisticas', 'fechaInicio', 'fechaFin'));
+            return $this->generarPDF(
+                nombreBase: 'por-dependencia',
+                titulo: 'Procesos por Dependencia',
+                columnas: ['Dependencia', 'Código', 'Objeto', 'Modalidad', 'Estado', 'Fecha Creación'],
+                filas: $procesos->map(fn($item) => [
+                    $item->creador->name ?? 'Sin Asignar',
+                    $item->codigo ?? '-',
+                    $item->objeto ?? '-',
+                    $item->workflow->nombre ?? '-',
+                    $item->estado ?? '-',
+                    optional($item->created_at)->format('d/m/Y H:i') ?? '-',
+                ])->all(),
+                contexto: [
+                    'Desde' => (string) $fechaInicio,
+                    'Hasta' => (string) $fechaFin,
+                    'Dependencias con actividad' => (string) count($estadisticas),
+                ]
+            );
+        }
+
+        if ($formato === 'excel') {
+            return $this->generarExcel(
+                'por-dependencia',
+                ['Dependencia', 'Código', 'Objeto', 'Modalidad', 'Estado', 'Fecha Creación'],
+                $procesos->map(fn($item) => [
+                    $item->creador->name ?? 'Sin Asignar',
+                    $item->codigo ?? '-',
+                    $item->objeto ?? '-',
+                    $item->workflow->nombre ?? '-',
+                    $item->estado ?? '-',
+                    optional($item->created_at)->format('d/m/Y H:i') ?? '-',
+                ])->all()
+            );
         }
 
         return view('reportes.por-dependencia', compact('porDependencia', 'estadisticas', 'fechaInicio', 'fechaFin'));
@@ -181,7 +241,39 @@ class ReportesController extends Controller
         $formato = $request->input('formato', 'html');
 
         if ($formato === 'pdf') {
-            return $this->generarPDF('reportes.pdf.actividad-actor', compact('auditorias', 'estadisticas', 'fechaInicio', 'fechaFin'));
+            return $this->generarPDF(
+                nombreBase: 'actividad-actor',
+                titulo: 'Actividad por Actor',
+                columnas: ['Fecha', 'Usuario', 'Email', 'Acción', 'Proceso', 'Descripción'],
+                filas: $auditorias->map(fn($item) => [
+                    optional($item->created_at)->format('d/m/Y H:i:s') ?? '-',
+                    $item->usuario?->name ?? 'Sistema',
+                    $item->usuario?->email ?? '-',
+                    $item->accion ?? '-',
+                    $item->proceso?->codigo ?? '-',
+                    $item->descripcion ?? '-',
+                ])->all(),
+                contexto: [
+                    'Desde' => (string) $fechaInicio,
+                    'Hasta' => (string) $fechaFin,
+                    'Eventos' => (string) $auditorias->count(),
+                ]
+            );
+        }
+
+        if ($formato === 'excel') {
+            return $this->generarExcel(
+                'actividad-actor',
+                ['Fecha', 'Usuario', 'Email', 'Acción', 'Proceso', 'Descripción'],
+                $auditorias->map(fn($item) => [
+                    optional($item->created_at)->format('d/m/Y H:i:s') ?? '-',
+                    $item->usuario?->name ?? 'Sistema',
+                    $item->usuario?->email ?? '-',
+                    $item->accion ?? '-',
+                    $item->proceso?->codigo ?? '-',
+                    $item->descripcion ?? '-',
+                ])->all()
+            );
         }
 
         return view('reportes.actividad-actor', compact('auditorias', 'estadisticas', 'fechaInicio', 'fechaFin'));
@@ -209,7 +301,22 @@ class ReportesController extends Controller
         $formato = $request->input('formato', 'html');
 
         if ($formato === 'pdf') {
-            return $this->generarPDF('reportes.pdf.auditoria', compact('proceso', 'auditorias', 'estadisticas'));
+            return $this->generarPDF(
+                nombreBase: 'auditoria-' . $proceso->codigo,
+                titulo: 'Auditoría de Proceso ' . $proceso->codigo,
+                columnas: ['Fecha', 'Usuario', 'Acción', 'Descripción'],
+                filas: $auditorias->map(fn($item) => [
+                    optional($item->created_at)->format('d/m/Y H:i:s') ?? '-',
+                    $item->usuario?->name ?? 'Sistema',
+                    $item->accion ?? '-',
+                    $item->descripcion ?? '-',
+                ])->all(),
+                contexto: [
+                    'Proceso' => $proceso->codigo,
+                    'Total eventos' => (string) $estadisticas['total_eventos'],
+                    'Usuarios involucrados' => (string) $estadisticas['usuarios_involucrados'],
+                ]
+            );
         }
 
         return view('reportes.auditoria', compact('proceso', 'auditorias', 'estadisticas'));
@@ -239,7 +346,44 @@ class ReportesController extends Controller
         $formato = $request->input('formato', 'html');
 
         if ($formato === 'pdf') {
-            return $this->generarPDF('reportes.pdf.certificados-vencer', compact('certificados', 'estadisticas', 'dias'));
+            return $this->generarPDF(
+                nombreBase: 'certificados-vencer',
+                titulo: 'Certificados Próximos a Vencer',
+                columnas: ['Proceso', 'Documento', 'Etapa', 'Estado', 'Fecha vigencia', 'Días restantes'],
+                filas: $certificados->map(function ($item) {
+                    $diasRestantes = now()->diffInDays($item->fecha_vigencia, false);
+                    return [
+                        $item->proceso?->codigo ?? '-',
+                        $item->nombre_original ?? '-',
+                        $item->etapa?->nombre ?? '-',
+                        $item->estado ?? '-',
+                        optional($item->fecha_vigencia)->format('d/m/Y') ?? '-',
+                        (string) $diasRestantes,
+                    ];
+                })->all(),
+                contexto: [
+                    'Ventana (días)' => (string) $dias,
+                    'Total certificados' => (string) $estadisticas['total'],
+                ]
+            );
+        }
+
+        if ($formato === 'excel') {
+            return $this->generarExcel(
+                'certificados-vencer',
+                ['Proceso', 'Documento', 'Etapa', 'Estado', 'Fecha vigencia', 'Días restantes'],
+                $certificados->map(function ($item) {
+                    $diasRestantes = now()->diffInDays($item->fecha_vigencia, false);
+                    return [
+                        $item->proceso?->codigo ?? '-',
+                        $item->nombre_original ?? '-',
+                        $item->etapa?->nombre ?? '-',
+                        $item->estado ?? '-',
+                        optional($item->fecha_vigencia)->format('d/m/Y') ?? '-',
+                        (string) $diasRestantes,
+                    ];
+                })->all()
+            );
         }
 
         return view('reportes.certificados-vencer', compact('certificados', 'estadisticas', 'dias'));
@@ -264,7 +408,9 @@ class ReportesController extends Controller
         });
 
         // Tiempo promedio por modalidad
-        $porModalidad = $procesosFinalizados->groupBy('workflow.nombre')->map(function($items) {
+        $porModalidad = $procesosFinalizados->groupBy(function ($proceso) {
+            return $proceso->workflow->nombre ?? 'Sin modalidad';
+        })->map(function($items) {
             return [
                 'cantidad' => $items->count(),
                 'promedio_dias' => round($items->avg(function($proceso) {
@@ -288,52 +434,190 @@ class ReportesController extends Controller
         $formato = $request->input('formato', 'html');
 
         if ($formato === 'pdf') {
-            return $this->generarPDF('reportes.pdf.eficiencia', compact('procesosFinalizados', 'estadisticas', 'fechaInicio', 'fechaFin'));
+            return $this->generarPDF(
+                nombreBase: 'eficiencia',
+                titulo: 'Eficiencia por Modalidad',
+                columnas: ['Modalidad', 'Cantidad', 'Promedio días', 'Mínimo días', 'Máximo días'],
+                filas: collect($porModalidad)->map(fn($item, $modalidad) => [
+                    (string) $modalidad,
+                    (string) $item['cantidad'],
+                    (string) $item['promedio_dias'],
+                    (string) $item['min_dias'],
+                    (string) $item['max_dias'],
+                ])->values()->all(),
+                contexto: [
+                    'Desde' => (string) $fechaInicio,
+                    'Hasta' => (string) $fechaFin,
+                    'Finalizados' => (string) $estadisticas['total_finalizados'],
+                    'Promedio general (días)' => (string) $estadisticas['promedio_general'],
+                ]
+            );
+        }
+
+        if ($formato === 'excel') {
+            return $this->generarExcel(
+                'eficiencia',
+                ['Modalidad', 'Cantidad', 'Promedio días', 'Mínimo días', 'Máximo días'],
+                collect($porModalidad)->map(fn($item, $modalidad) => [
+                    (string) $modalidad,
+                    (string) $item['cantidad'],
+                    (string) $item['promedio_dias'],
+                    (string) $item['min_dias'],
+                    (string) $item['max_dias'],
+                ])->values()->all()
+            );
         }
 
         return view('reportes.eficiencia', compact('procesosFinalizados', 'estadisticas', 'fechaInicio', 'fechaFin'));
     }
 
-    /**
-     * Generar PDF (placeholder - requiere barryvdh/laravel-dompdf)
-     */
-    private function generarPDF($view, $data)
+    private function generarPDF(string $nombreBase, string $titulo, array $columnas, array $filas, array $contexto = [])
     {
-        // TODO: Implementar cuando se instale barryvdh/laravel-dompdf
-        // $pdf = PDF::loadView($view, $data);
-        // return $pdf->download('reporte.pdf');
-        
-        // Por ahora, retornar vista HTML
-        return view($view, $data)->with('modo_pdf', true);
+        $html = view('reportes.pdf.tabla', [
+            'titulo' => $titulo,
+            'columnas' => $columnas,
+            'filas' => $filas,
+            'contexto' => $contexto,
+            'generadoEn' => now(),
+        ])->render();
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $this->nombreArchivo($nombreBase, 'pdf') . '"',
+        ]);
     }
 
-    /**
-     * Generar Excel (placeholder - requiere maatwebsite/excel)
-     */
-    private function generarExcel($nombre, $datos, $columnas)
+    private function generarExcel(string $nombreBase, array $columnas, array $filas)
     {
-        // TODO: Implementar cuando se instale maatwebsite/excel
-        // return Excel::download(new ReporteExport($datos, $columnas), "{$nombre}.xlsx");
-        
-        // Por ahora, retornar CSV simple
-        return response()->streamDownload(function() use ($datos, $columnas) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, $columnas);
-            
-            foreach ($datos as $item) {
-                $row = [
-                    $item->codigo ?? '-',
-                    $item->objeto ?? '-',
-                    $item->workflow->nombre ?? '-',
-                    $item->estado ?? '-',
-                    $item->etapaActual->nombre ?? '-',
-                    $item->created_at->format('d/m/Y') ?? '-',
-                ];
-                fputcsv($handle, $row);
+        $tmpRoot = storage_path('app/tmp');
+        File::ensureDirectoryExists($tmpRoot);
+
+        $workDir = $tmpRoot . DIRECTORY_SEPARATOR . 'xlsx_' . Str::uuid()->toString();
+        File::makeDirectory($workDir . DIRECTORY_SEPARATOR . '_rels', 0755, true);
+        File::makeDirectory($workDir . DIRECTORY_SEPARATOR . 'xl' . DIRECTORY_SEPARATOR . '_rels', 0755, true);
+        File::makeDirectory($workDir . DIRECTORY_SEPARATOR . 'xl' . DIRECTORY_SEPARATOR . 'worksheets', 0755, true);
+
+        $allRows = array_merge([$columnas], $filas);
+        $rowCount = count($allRows);
+        $colCount = max(count($columnas), 1);
+        $lastCol = $this->excelColumnName($colCount);
+        $dimension = 'A1:' . $lastCol . $rowCount;
+
+        $sheetRowsXml = '';
+        foreach ($allRows as $rowIndex => $row) {
+            $r = $rowIndex + 1;
+            $cells = '';
+
+            for ($i = 0; $i < $colCount; $i++) {
+                $cellRef = $this->excelColumnName($i + 1) . $r;
+                $value = $this->escapeXml((string) ($row[$i] ?? ''));
+                $cells .= '<c r="' . $cellRef . '" t="inlineStr"><is><t>' . $value . '</t></is></c>';
             }
-            
-            fclose($handle);
-        }, "{$nombre}.csv");
+
+            $sheetRowsXml .= '<row r="' . $r . '">' . $cells . '</row>';
+        }
+
+        File::put($workDir . DIRECTORY_SEPARATOR . '[Content_Types].xml',
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            . '<Default Extension="xml" ContentType="application/xml"/>'
+            . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            . '</Types>'
+        );
+
+        File::put($workDir . DIRECTORY_SEPARATOR . '_rels' . DIRECTORY_SEPARATOR . '.rels',
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            . '</Relationships>'
+        );
+
+        File::put($workDir . DIRECTORY_SEPARATOR . 'xl' . DIRECTORY_SEPARATOR . 'workbook.xml',
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            . '<sheets><sheet name="Reporte" sheetId="1" r:id="rId1"/></sheets>'
+            . '</workbook>'
+        );
+
+        File::put($workDir . DIRECTORY_SEPARATOR . 'xl' . DIRECTORY_SEPARATOR . '_rels' . DIRECTORY_SEPARATOR . 'workbook.xml.rels',
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            . '</Relationships>'
+        );
+
+        File::put($workDir . DIRECTORY_SEPARATOR . 'xl' . DIRECTORY_SEPARATOR . 'worksheets' . DIRECTORY_SEPARATOR . 'sheet1.xml',
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<dimension ref="' . $dimension . '"/>'
+            . '<sheetData>' . $sheetRowsXml . '</sheetData>'
+            . '</worksheet>'
+        );
+
+        $xlsxTempPath = $tmpRoot . DIRECTORY_SEPARATOR . 'reporte_' . Str::uuid()->toString() . '.xlsx';
+        $zip = new \ZipArchive();
+        if ($zip->open($xlsxTempPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            File::deleteDirectory($workDir);
+            abort(500, 'No fue posible generar el archivo XLSX.');
+        }
+
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($workDir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $file) {
+            /** @var \SplFileInfo $file */
+            if (!$file->isFile()) {
+                continue;
+            }
+
+            $absolutePath = $file->getRealPath();
+            $relativePath = str_replace($workDir . DIRECTORY_SEPARATOR, '', $absolutePath);
+            $relativePath = str_replace('\\', '/', $relativePath);
+            $zip->addFile($absolutePath, $relativePath);
+        }
+
+        $zip->close();
+        File::deleteDirectory($workDir);
+
+        return response()->download(
+            $xlsxTempPath,
+            $this->nombreArchivo($nombreBase, 'xlsx'),
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        )->deleteFileAfterSend(true);
+    }
+
+    private function nombreArchivo(string $base, string $extension): string
+    {
+        return $base . '_' . now()->format('Ymd_His') . '.' . $extension;
+    }
+
+    private function excelColumnName(int $index): string
+    {
+        $name = '';
+        while ($index > 0) {
+            $index--;
+            $name = chr(65 + ($index % 26)) . $name;
+            $index = intdiv($index, 26);
+        }
+        return $name;
+    }
+
+    private function escapeXml(string $value): string
+    {
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 }
 

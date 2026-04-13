@@ -10,6 +10,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Validation\Rules\Password;
 use App\Models\ContractProcess;
 use App\Policies\ContractProcessPolicy;
 
@@ -36,6 +37,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerViewLocations();
+
+        // Política base de contraseñas para todo el sistema.
+        Password::defaults(function () {
+            return Password::min(8)
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised();
+        });
 
         // Cuando se accede por host publico (IP o dominio), evitar que @vite use localhost:5173.
         if (! app()->runningInConsole()) {

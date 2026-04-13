@@ -85,6 +85,11 @@
                 <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold text-white" style="background:#14532d">
                     Filtrar
                 </button>
+                <a href="{{ route('admin.auth-events', array_merge(request()->query(), ['formato' => 'csv'])) }}"
+                   class="px-4 py-2 rounded-xl text-xs font-semibold border"
+                   style="border-color:#bbf7d0;color:#166534;background:#f0fdf4">
+                    Exportar CSV
+                </a>
                 @if(request()->hasAny(['event_type','user_id','ip','desde','hasta']))
                 <a href="{{ route('admin.auth-events') }}" class="px-4 py-2 rounded-xl text-xs font-semibold border" style="border-color:#e2e8f0;color:#6b7280">
                     Limpiar

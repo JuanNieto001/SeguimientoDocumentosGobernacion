@@ -8,11 +8,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuthEvent;
 use App\Models\User;
 use App\Models\Secretaria;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -72,7 +75,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'email'         => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'      => ['required', 'string', 'min:6'],
+            'password'      => ['required', 'string', Password::defaults()],
             'role'          => ['required', 'string', 'exists:roles,name'],
             'secretaria_id' => ['nullable', 'exists:secretarias,id'],
             'unidad_id'     => ['nullable', 'exists:unidades,id'],
@@ -88,6 +91,13 @@ class UserController extends Controller
         ]);
 
         $user->assignRole($data['role']);
+
+        AuthEvent::registrar('user_created', auth()->id(), auth()->user()->email, [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'role' => $data['role'],
+            'activo' => true,
+        ]);
 
         return redirect()->route('admin.usuarios.index')
             ->with('success', 'Usuario creado correctamente.');
@@ -108,12 +118,17 @@ class UserController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'email'         => ['required', 'email', 'max:255', 'unique:users,email,' . $usuario->id],
-            'password'      => ['nullable', 'string', 'min:6'],
+            'password'      => ['nullable', 'string', Password::defaults()],
             'role'          => ['required', 'string', 'exists:roles,name'],
             'secretaria_id' => ['nullable', 'exists:secretarias,id'],
             'unidad_id'     => ['nullable', 'exists:unidades,id'],
             'activo'        => ['nullable', 'boolean'],
         ]);
+
+        $oldRoleNames = $usuario->roles->pluck('name')->values()->all();
+        $oldActivo = (bool) $usuario->activo;
+        $oldName = $usuario->name;
+        $oldEmail = $usuario->email;
 
         $usuario->name = $data['name'];
         $usuario->email = $data['email'];
@@ -121,12 +136,62 @@ class UserController extends Controller
         $usuario->unidad_id = $data['unidad_id'] ?? null;
         $usuario->activo = $request->boolean('activo', $usuario->activo);
 
+        $passwordChanged = false;
         if (!empty($data['password'])) {
             $usuario->password = Hash::make($data['password']);
+            $passwordChanged = true;
         }
 
         $usuario->save();
         $usuario->syncRoles([$data['role']]);
+
+        $newRoleNames = $usuario->roles->pluck('name')->values()->all();
+
+        AuthEvent::registrar('user_updated', auth()->id(), auth()->user()->email, [
+            'target_user_id' => $usuario->id,
+            'target_email' => $usuario->email,
+            'before' => [
+                'name' => $oldName,
+                'email' => $oldEmail,
+                'activo' => $oldActivo,
+                'roles' => $oldRoleNames,
+            ],
+            'after' => [
+                'name' => $usuario->name,
+                'email' => $usuario->email,
+                'activo' => (bool) $usuario->activo,
+                'roles' => $newRoleNames,
+            ],
+        ]);
+
+        if ($oldRoleNames !== $newRoleNames) {
+            AuthEvent::registrar('roles_updated', auth()->id(), auth()->user()->email, [
+                'target_user_id' => $usuario->id,
+                'target_email' => $usuario->email,
+                'before_roles' => $oldRoleNames,
+                'after_roles' => $newRoleNames,
+            ]);
+        }
+
+        if ($oldActivo !== (bool) $usuario->activo) {
+            AuthEvent::registrar(
+                $usuario->activo ? 'user_activated' : 'user_deactivated',
+                auth()->id(),
+                auth()->user()->email,
+                [
+                    'target_user_id' => $usuario->id,
+                    'target_email' => $usuario->email,
+                ]
+            );
+        }
+
+        if ($passwordChanged) {
+            AuthEvent::registrar('password_changed', auth()->id(), auth()->user()->email, [
+                'target_user_id' => $usuario->id,
+                'target_email' => $usuario->email,
+                'trigger' => 'admin_panel',
+            ]);
+        }
 
         return redirect()->route('admin.usuarios.index')
             ->with('success', 'Usuario actualizado correctamente.');
@@ -139,10 +204,46 @@ class UserController extends Controller
                 ->with('success', 'No puedes eliminar tu propio usuario.');
         }
 
+        $targetUserId = $usuario->id;
+        $targetEmail = $usuario->email;
+
+        if (config('session.driver') === 'database') {
+            DB::table((string) config('session.table', 'sessions'))
+                ->where('user_id', $targetUserId)
+                ->delete();
+        }
+
         $usuario->delete();
+
+        AuthEvent::registrar('user_deleted', auth()->id(), auth()->user()->email, [
+            'target_user_id' => $targetUserId,
+            'target_email' => $targetEmail,
+        ]);
 
         return redirect()->route('admin.usuarios.index')
             ->with('success', 'Usuario eliminado correctamente.');
+    }
+
+    public function cerrarSesiones(User $usuario)
+    {
+        if (config('session.driver') !== 'database') {
+            return redirect()->route('admin.usuarios.index')
+                ->with('success', 'El cierre de sesiones forzado requiere SESSION_DRIVER=database.');
+        }
+
+        $cerradas = DB::table((string) config('session.table', 'sessions'))
+            ->where('user_id', $usuario->id)
+            ->delete();
+
+        AuthEvent::registrar('session_forced_logout', auth()->id(), auth()->user()->email, [
+            'target_user_id' => $usuario->id,
+            'target_email' => $usuario->email,
+            'sessions_closed' => (int) $cerradas,
+            'source' => 'admin_user_controller',
+        ]);
+
+        return redirect()->route('admin.usuarios.index')
+            ->with('success', "Se cerraron {$cerradas} sesión(es) activas del usuario {$usuario->email}.");
     }
 }
 

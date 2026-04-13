@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
         ]);
 
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckUsuarioActivo::class,
+        ]);
+
         // 🔐 Alias de middlewares para Spatie (OBLIGATORIO)
         $middleware->alias([
             'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,

@@ -49,7 +49,7 @@ class WorkflowFilesController extends Controller
         }
 
         $request->validate([
-            'archivo' => ['required', 'file', 'max:10240'], // 10MB máximo
+            'archivo' => ['required', 'file', 'mimes:pdf,docx,xlsx', 'max:10240'], // 10MB máximo
             'tipo_archivo' => ['required', 'string', 'in:' . implode(',', [
                 // ETAPA 0 - Definición Necesidad
                 'estudios_previos',
@@ -563,7 +563,7 @@ class WorkflowFilesController extends Controller
     {
         // Reglas base de subida para cualquier reemplazo.
         $rules = [
-            'archivo' => ['required', 'file', 'max:10240'],
+            'archivo' => ['required', 'file', 'mimes:pdf,docx,xlsx', 'max:10240'],
         ];
 
         // Cargamos proceso/etapa para validaciones, auditoría y mensajería.

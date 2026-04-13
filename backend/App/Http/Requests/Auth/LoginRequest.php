@@ -7,6 +7,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\AuthEvent;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -45,12 +46,30 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+        $decaySeconds = max((int) config('security.auth.lockout_seconds', 300), 60);
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            RateLimiter::hit($this->throttleKey(), $decaySeconds);
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        $user = Auth::user();
+        if ($user && ! (bool) $user->activo) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey(), $decaySeconds);
+
+            AuthEvent::registrar(
+                'account_disabled',
+                $user->id,
+                $user->email,
+                ['reason' => 'Intento de ingreso con cuenta inactiva']
+            );
+
+            throw ValidationException::withMessages([
+                'email' => 'Su cuenta está desactivada. Contacte al administrador del sistema.',
             ]);
         }
 
@@ -64,7 +83,9 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $maxAttempts = max((int) config('security.auth.max_login_attempts', 5), 1);
+
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
             return;
         }
 

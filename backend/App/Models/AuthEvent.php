@@ -94,6 +94,13 @@ class AuthEvent extends Model
             'password_reset' => 'Contraseña restablecida',
             'account_disabled' => 'Cuenta desactivada',
             'session_expired' => 'Sesión expirada',
+            'session_forced_logout' => 'Cierre forzado de sesión',
+            'user_created' => 'Usuario creado',
+            'user_updated' => 'Usuario actualizado',
+            'user_deleted' => 'Usuario eliminado',
+            'user_activated' => 'Usuario activado',
+            'user_deactivated' => 'Usuario desactivado',
+            'roles_updated' => 'Roles actualizados',
             default          => ucfirst(str_replace('_', ' ', $this->event_type)),
         };
     }
@@ -106,6 +113,11 @@ class AuthEvent extends Model
             'logout'         => '#2563eb',
             'password_changed', 'password_reset' => '#ca8a04',
             'account_disabled' => '#7c3aed',
+            'session_forced_logout' => '#b91c1c',
+            'user_created' => '#15803d',
+            'user_updated', 'roles_updated' => '#1d4ed8',
+            'user_deleted', 'user_deactivated' => '#b91c1c',
+            'user_activated' => '#166534',
             default          => '#64748b',
         };
     }
@@ -118,6 +130,10 @@ class AuthEvent extends Model
             'logout'         => '#dbeafe',
             'password_changed', 'password_reset' => '#fef9c3',
             'account_disabled' => '#ede9fe',
+            'session_forced_logout' => '#fee2e2',
+            'user_created', 'user_activated' => '#dcfce7',
+            'user_updated', 'roles_updated' => '#dbeafe',
+            'user_deleted', 'user_deactivated' => '#fee2e2',
             default          => '#f1f5f9',
         };
     }

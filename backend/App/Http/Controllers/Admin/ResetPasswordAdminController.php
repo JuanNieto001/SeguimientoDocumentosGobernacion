@@ -35,12 +35,14 @@ class ResetPasswordAdminController extends Controller
         abort_unless(auth()->user()->hasRole('admin'), 403);
         abort_if(auth()->id() === $usuario->id, 403, 'No puedes resetear tu propia contraseña desde aquí.');
 
-        // Generar contraseña temporal legible: 4 palabras cortas + número
+        // Generar contraseña temporal legible y robusta: palabras + número + símbolo.
         $palabras = ['Sol', 'Luna', 'Mar', 'Rio', 'Pez', 'Luz', 'Rey', 'Paz', 'Don', 'Ley'];
+        $simbolos = ['!', '@', '#', '$', '%'];
         $parteA = $palabras[array_rand($palabras)];
         $parteB = $palabras[array_rand($palabras)];
         $numero  = rand(10, 99);
-        $tempPassword = "{$parteA}{$parteB}{$numero}";
+        $simbolo = $simbolos[array_rand($simbolos)];
+        $tempPassword = "{$parteA}{$parteB}{$numero}{$simbolo}";
 
         $usuario->update([
             'password' => Hash::make($tempPassword),
