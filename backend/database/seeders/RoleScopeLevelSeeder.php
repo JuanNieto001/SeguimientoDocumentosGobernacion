@@ -39,6 +39,7 @@ class RoleScopeLevelSeeder extends Seeder
             
             // Roles específicos por unidad - scope unidad
             'unidad_solicitante'     => 'unidad',
+            'abogado_unidad'         => 'unidad',
             'hacienda'               => 'unidad',
             'juridica'               => 'unidad',
             'secop'                  => 'secretaria', // SECOP ve procesos de planeación

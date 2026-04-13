@@ -65,7 +65,7 @@ class AreaUsersSeeder extends Seeder
             [
                 'name'          => 'Abogado Unidad Sistemas',
                 'email'         => 'abogado.sistemas@demo.com',
-                'role'          => 'unidad_solicitante',
+                'roles'         => ['unidad_solicitante', 'abogado_unidad'],
                 'secretaria_id' => $secPlaneacion?->id,
                 'unidad_id'     => $uSistemas?->id,
             ],

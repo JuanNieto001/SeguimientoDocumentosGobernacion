@@ -154,6 +154,22 @@ class Proceso extends Model
     }
 
     /**
+     * Relación: Un proceso tiene archivos finales para SIA Observa
+     */
+    public function siaObservaArchivos(): HasMany
+    {
+        return $this->hasMany(ProcesoSiaObservaArchivo::class)->orderByDesc('created_at');
+    }
+
+    /**
+     * Relación: Un proceso tiene asignaciones de acceso para SIA Observa
+     */
+    public function siaObservaAccesos(): HasMany
+    {
+        return $this->hasMany(ProcesoSiaObservaAcceso::class)->orderByDesc('created_at');
+    }
+
+    /**
      * Relación: Un proceso tiene muchas auditorías
      */
     public function auditorias(): HasMany

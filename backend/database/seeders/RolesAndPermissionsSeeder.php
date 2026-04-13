@@ -119,6 +119,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'contratos_aplicaciones.editar',
             'contratos_aplicaciones.eliminar',
 
+            // ─── REPOSITORIO SIA OBSERVA ──────────────────────────────────────────
+            'sia_observa.ver',
+            'sia_observa.subir',
+            'sia_observa.descargar',
+            'sia_observa.asignar',
+
             // ─── ASIGNAR ROLES ───────────────────────────────────────────────────────
             'asignar_roles',
         ];
@@ -139,6 +145,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $workflowRoles = [
             'admin',
             'unidad_solicitante',
+            'abogado_unidad',
             'planeacion',
             'hacienda',
             'juridica',
@@ -327,6 +334,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'reportes.ver',
                 'alertas.ver',
                 'alertas.leer',
+                'sia_observa.ver',
+                'sia_observa.descargar',
+                'sia_observa.asignar',
             ]);
         }
 
@@ -341,6 +351,24 @@ class RolesAndPermissionsSeeder extends Seeder
                 'archivos.descargar',
                 'alertas.ver',
                 'alertas.leer',
+                'sia_observa.ver',
+                'sia_observa.descargar',
+                'sia_observa.asignar',
+            ]);
+        }
+
+        // ── abogado_unidad → Descarga de paquete final y gestión de repositorio SIA ──
+        $abogadoUnidadRole = Role::where('name', 'abogado_unidad')->first();
+        if ($abogadoUnidadRole) {
+            $abogadoUnidadRole->syncPermissions([
+                'procesos.ver',
+                'archivos.descargar',
+                'alertas.ver',
+                'alertas.leer',
+                'dashboard.ver',
+                'sia_observa.ver',
+                'sia_observa.subir',
+                'sia_observa.descargar',
             ]);
         }
 

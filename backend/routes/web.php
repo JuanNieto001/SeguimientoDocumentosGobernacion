@@ -20,8 +20,10 @@ use App\Http\Controllers\WorkflowFilesController;
 use App\Http\Controllers\PAAController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\ReportesController;
+use App\Http\Controllers\ProcesoSiaObservaController;
 use App\Http\Controllers\Admin\LogsController;
 use App\Http\Controllers\Admin\AuthEventsController;
+use App\Http\Controllers\Admin\SiaObservaAdminController;
 use App\Http\Controllers\Admin\ResetPasswordAdminController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\SecopConsultaController;
@@ -263,6 +265,26 @@ Route::middleware(['auth'])->prefix('workflow/procesos')->name('workflow.files.'
 
 /*
 |--------------------------------------------------------------------------
+| REPOSITORIO SIA OBSERVA (interno, sin navegación visible)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->prefix('interno/sia-observa')->name('sia-observa.')->group(function () {
+    Route::get('/procesos/{proceso}/paquete-final', [ProcesoSiaObservaController::class, 'descargarPaqueteFinal'])
+        ->name('paquete-final.descargar');
+    Route::get('/procesos/{proceso}/archivos', [ProcesoSiaObservaController::class, 'index'])
+        ->name('archivos.index');
+    Route::post('/procesos/{proceso}/archivos', [ProcesoSiaObservaController::class, 'store'])
+        ->name('archivos.store');
+    Route::get('/archivos/{archivo}/descargar', [ProcesoSiaObservaController::class, 'descargarArchivo'])
+        ->name('archivos.descargar');
+    Route::post('/procesos/{proceso}/accesos/rol', [ProcesoSiaObservaController::class, 'asignarRol'])
+        ->name('accesos.rol');
+    Route::post('/procesos/{proceso}/accesos/usuario', [ProcesoSiaObservaController::class, 'asignarUsuario'])
+        ->name('accesos.usuario');
+});
+
+/*
+|--------------------------------------------------------------------------
 | ADMIN
 |--------------------------------------------------------------------------
 */
@@ -283,6 +305,13 @@ Route::middleware(['auth', 'role:admin|admin_general'])
 
         Route::get('logs', [LogsController::class, 'index'])->name('logs');
         Route::get('logs/proceso/{proceso}', [LogsController::class, 'show'])->name('logs.proceso');
+
+        // Repositorio final SIA Observa (gestion admin)
+        Route::get('sia-observa', [SiaObservaAdminController::class, 'index'])->name('sia-observa.index');
+        Route::get('sia-observa/{proceso}', [SiaObservaAdminController::class, 'show'])->name('sia-observa.show');
+        Route::post('sia-observa/{proceso}/accesos/rol', [SiaObservaAdminController::class, 'asignarRol'])->name('sia-observa.accesos.rol');
+        Route::post('sia-observa/{proceso}/accesos/usuario', [SiaObservaAdminController::class, 'asignarUsuario'])->name('sia-observa.accesos.usuario');
+        Route::post('sia-observa/{proceso}/accesos/{acceso}/estado', [SiaObservaAdminController::class, 'cambiarEstado'])->name('sia-observa.accesos.estado');
 
         // Guías de Agente Estiven
         Route::resource('estiven-guides', EstivenGuideController::class)

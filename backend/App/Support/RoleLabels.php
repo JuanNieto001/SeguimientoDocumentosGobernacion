@@ -45,6 +45,7 @@ class RoleLabels
         'gobernador'                => 'Gobernador',
         'secretario'                => 'Secretario',
         'jefe_unidad'               => 'Jefe de Unidad (No Jefe de Sistemas)',
+        'abogado_unidad'            => 'Abogado de la Unidad',
         'planeacion'                => 'Planeación',
         'hacienda'                  => 'Hacienda',
         'juridica'                  => 'Jurídica',
