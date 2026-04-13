@@ -11,9 +11,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Secretaria;
 use App\Models\Unidad;
+use App\Rules\NotRecentlyUsedPassword;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
 class UserApiController extends Controller
@@ -69,7 +71,7 @@ class UserApiController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'email'         => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'      => ['required', 'string', 'min:8'],
+            'password'      => ['required', 'string', Password::defaults()],
             'secretaria_id' => ['nullable', 'exists:secretarias,id'],
             'unidad_id'     => ['nullable', 'exists:unidades,id'],
             'rol'           => ['required', 'string', 'exists:roles,name'],
@@ -135,7 +137,7 @@ class UserApiController extends Controller
         $data = $request->validate([
             'name'          => ['sometimes', 'string', 'max:255'],
             'email'         => ['sometimes', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password'      => ['nullable', 'string', 'min:8'],
+            'password'      => ['nullable', 'string', Password::defaults(), new NotRecentlyUsedPassword($user)],
             'secretaria_id' => ['nullable', 'exists:secretarias,id'],
             'unidad_id'     => ['nullable', 'exists:unidades,id'],
             'rol'           => ['sometimes', 'string', 'exists:roles,name'],

@@ -8,6 +8,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\PasswordHistoryService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -55,6 +56,21 @@ class User extends Authenticatable
             'password' => 'hashed',
             'activo' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (self $user): void {
+            if (!empty($user->password)) {
+                app(PasswordHistoryService::class)->record($user, (string) $user->password);
+            }
+        });
+
+        static::updated(function (self $user): void {
+            if ($user->wasChanged('password')) {
+                app(PasswordHistoryService::class)->record($user, (string) $user->password);
+            }
+        });
     }
 
     /*

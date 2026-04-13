@@ -12,6 +12,7 @@ use App\Models\AuthEvent;
 use App\Models\User;
 use App\Models\Secretaria;
 use App\Models\Unidad;
+use App\Rules\NotRecentlyUsedPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -118,7 +119,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'email'         => ['required', 'email', 'max:255', 'unique:users,email,' . $usuario->id],
-            'password'      => ['nullable', 'string', Password::defaults()],
+            'password'      => ['nullable', 'string', Password::defaults(), new NotRecentlyUsedPassword($usuario)],
             'role'          => ['required', 'string', 'exists:roles,name'],
             'secretaria_id' => ['nullable', 'exists:secretarias,id'],
             'unidad_id'     => ['nullable', 'exists:unidades,id'],
