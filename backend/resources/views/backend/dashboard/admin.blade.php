@@ -221,11 +221,11 @@
              'ic'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
             ['id'=>'widget-kpi-en-curso',      'v'=>$enCurso,         'l'=>'En curso',         's'=>'Procesos activos', 'c'=>'#0891b2','bg'=>'#ecfeff',
              'ic'=>'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-            ['id'=>'widget-kpi-finalizados',   'v'=>$finalizados,     'l'=>'Finalizados',      's'=>'Completados',      'c'=>'#15803d','bg'=>'#f0fdf4',
+            ['id'=>'widget-kpi-finalizados',   'v'=>$finalizados,     'l'=>'Finalizados',      's'=>($kpiFinalizadosSub ?? 'Completados'),      'c'=>'#15803d','bg'=>'#f0fdf4',
              'ic'=>'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
             ['id'=>'widget-kpi-rechazados',    'v'=>$rechazados,      'l'=>'Rechazados',       's'=>'Total histórico',  'c'=>'#dc2626','bg'=>'#fef2f2',
              'ic'=>'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
-            ['id'=>'widget-kpi-creados-mes',   'v'=>$creadosMes,      'l'=>'Creados este mes', 's'=>ucfirst(now()->translatedFormat('F')), 'c'=>'#7c3aed','bg'=>'#faf5ff',
+            ['id'=>'widget-kpi-creados-mes',   'v'=>$creadosMes,      'l'=>($kpiMesLabel ?? 'Creados este mes'), 's'=>($kpiMesSub ?? ucfirst(now()->translatedFormat('F'))), 'c'=>'#7c3aed','bg'=>'#faf5ff',
              'ic'=>'M12 4v16m8-8H4'],
               // Conservamos el ID histórico para no romper layouts/drag&drop guardados en localStorage.
             ['id'=>'widget-kpi-alertas-criticas','v'=>$alertasAltas,  'l'=>'Alertas altas', 's'=>'Alta prioridad',   'c'=>'#d97706','bg'=>'#fffbeb',

@@ -184,6 +184,61 @@ class DashboardController extends Controller
             ->whereIn('estado', ['FINALIZADO', 'completado', 'cerrado'])
             ->whereBetween('updated_at', [$inicioMes, $finMes])
             ->count();
+        $kpiMesLabel = 'Creados este mes';
+        $kpiMesSub = ucfirst(now()->translatedFormat('F'));
+        $kpiFinalizadosSub = 'Completados';
+
+        $areaOperativa = $this->obtenerAreaOperativaDashboard($user);
+        $esOperativo = !in_array($scope, ['global'], true)
+            && !$user->hasRole('secretario')
+            && !$user->hasRole('admin_secretaria')
+            && !$user->hasRole('jefe_unidad')
+            && !empty($areaOperativa);
+
+        if ($esOperativo) {
+            $gestionadosQuery = DB::table('proceso_etapas as pe')
+                ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
+                ->join('procesos as p', 'p.id', '=', 'pe.proceso_id')
+                ->where('e.area_role', $areaOperativa)
+                ->when($secId, fn($q) => $q->where('p.secretaria_origen_id', $secId))
+                ->when($uniId, fn($q) => $q->where('p.unidad_origen_id', $uniId));
+
+            $totalProcesos = (clone $gestionadosQuery)
+                ->distinct('p.id')
+                ->count('p.id');
+
+            $enCurso = DB::table('procesos as p')
+                ->where('p.area_actual_role', $areaOperativa)
+                ->where('p.estado', 'EN_CURSO')
+                ->when($secId, fn($q) => $q->where('p.secretaria_origen_id', $secId))
+                ->when($uniId, fn($q) => $q->where('p.unidad_origen_id', $uniId))
+                ->count();
+
+            $finalizados = (clone $gestionadosQuery)
+                ->where('pe.enviado', true)
+                ->distinct('p.id')
+                ->count('p.id');
+
+            $rechazados = DB::table('procesos as p')
+                ->join('proceso_etapas as pe', 'pe.proceso_id', '=', 'p.id')
+                ->join('etapas as e', 'e.id', '=', 'pe.etapa_id')
+                ->where('e.area_role', $areaOperativa)
+                ->where('p.estado', 'RECHAZADO')
+                ->when($secId, fn($q) => $q->where('p.secretaria_origen_id', $secId))
+                ->when($uniId, fn($q) => $q->where('p.unidad_origen_id', $uniId))
+                ->distinct('p.id')
+                ->count('p.id');
+
+            $creadosMes = (clone $gestionadosQuery)
+                ->where('pe.enviado', true)
+                ->whereBetween('pe.enviado_at', [$inicioMes, $finMes])
+                ->distinct('p.id')
+                ->count('p.id');
+
+            $finalizadosMes = $creadosMes;
+            $kpiMesLabel = 'Enviados este mes';
+            $kpiFinalizadosSub = 'Atendidos y enviados';
+        }
 
         // ── Alertas ─────────────────────────────────────────────────────────
         $alertasBaseQuery = $this->queryAlertasDashboard($user, $scope, $scoped);
@@ -345,12 +400,28 @@ class DashboardController extends Controller
             'scope', 'scopeNombre', 'user',
             'totalProcesos', 'enCurso', 'finalizados', 'rechazados',
             'creadosMes', 'finalizadosMes',
+            'kpiMesLabel', 'kpiMesSub', 'kpiFinalizadosSub',
             'alertasAltas', 'alertasTotal',
             'tendencia', 'porArea', 'porEstadoRaw', 'porModalidad',
             'alertasRiesgos', 'procesosRecientes',
             'listaLateral', 'listaLateralTipo',
             'documentosEstado', 'etapasActivas'
         ));
+    }
+
+    private function obtenerAreaOperativaDashboard($user): ?string
+    {
+        if ($user->hasRole('descentralizacion') || $user->hasRole('planeacion')) {
+            return 'planeacion';
+        }
+
+        foreach (['hacienda', 'juridica', 'secop', 'unidad_solicitante'] as $role) {
+            if ($user->hasRole($role)) {
+                return $role;
+            }
+        }
+
+        return null;
     }
 
     private function resolveDashboardScope($user, $roles, array $roleNames): string
