@@ -1,10 +1,11 @@
 {{-- Archivo: backend/resources/views/backend/dashboard.blade.php | Proposito: Vista documentada para mantenimiento. | @documentado-copilot 2026-04-11 --}}
 <x-app-layout>
     <x-slot name="header">
+        @php $dashboardUser = $user ?? auth()->user(); @endphp
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-lg font-bold text-gray-900 leading-none">
-                    Bienvenido, {{ explode(' ', auth()->user()->name)[0] }} 👋
+                    Bienvenido, {{ explode(' ', $dashboardUser->name)[0] }} 👋
                 </h1>
                 <p class="text-xs text-gray-400 mt-1">
                     @php
@@ -22,15 +23,32 @@
                             'juridica'            => 'Secretaría Jurídica',
                             'secop'               => 'Grupo SECOP',
                         ];
-                        $userRoleLabel = collect($roleLabels)->first(fn($label, $role) => auth()->user()->hasRole($role)) ?? 'Usuario';
+                        $userRoleLabel = collect($roleLabels)->first(fn($label, $role) => $dashboardUser->hasRole($role)) ?? 'Usuario';
                     @endphp
                     {{ $userRoleLabel }} &mdash; Gobernación de Caldas
                 </p>
             </div>
+            @if(($dashboardPreview['can_preview'] ?? false) === true)
+            <form method="GET" action="{{ route('dashboard') }}" class="inline-flex items-center gap-2 px-2 py-1.5 rounded-xl border bg-white" style="border-color:#e2e8f0">
+                <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Ver como</span>
+                <select name="as_user" class="rounded-lg border text-xs px-2 py-1 max-w-[16rem]" style="border-color:#cbd5e1">
+                    @foreach(($dashboardPreview['users'] ?? collect()) as $previewUser)
+                    <option value="{{ $previewUser->id }}" @selected((int)($dashboardPreview['selected_user_id'] ?? 0) === (int)$previewUser->id)>
+                        {{ $previewUser->name }} ({{ $previewUser->email }})
+                    </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white" style="background:#1d4ed8">Cargar</button>
+                @if(($dashboardPreview['is_preview'] ?? false) === true)
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-600 border" style="border-color:#d1d5db">Salir</a>
+                @endif
+            </form>
+            @endif
         </div>
     </x-slot>
 
     @php
+    $dashboardUser = $dashboardUser ?? ($user ?? auth()->user());
     $bandejaRoutes = [
         'unidad_solicitante' => 'unidad.index',
         'planeacion'         => 'planeacion.index',
@@ -40,13 +58,13 @@
     ];
     // Usuarios con rol de área-doc NO deben ver la bandeja de planeacion/hacienda aunque tengan ese rol
     $rolesDocCheck2 = ['compras','talento_humano','rentas','contabilidad','inversiones_publicas','presupuesto','radicacion'];
-    $esAreaDoc2 = collect($rolesDocCheck2)->contains(fn($r) => auth()->user()->hasRole($r));
-    $myBandeja = $esAreaDoc2 ? null : collect($bandejaRoutes)->first(fn($route, $role) => auth()->user()->hasRole($role));
+    $esAreaDoc2 = collect($rolesDocCheck2)->contains(fn($r) => $dashboardUser->hasRole($r));
+    $myBandeja = $esAreaDoc2 ? null : collect($bandejaRoutes)->first(fn($route, $role) => $dashboardUser->hasRole($role));
     $myBandejaLabel = $esAreaDoc2 ? '' : (collect(['unidad_solicitante'=>'Unidad','planeacion'=>'Planeación','hacienda'=>'Hacienda','juridica'=>'Jurídica','secop'=>'SECOP'])
-        ->first(fn($lbl, $role) => auth()->user()->hasRole($role)) ?? '');
+        ->first(fn($lbl, $role) => $dashboardUser->hasRole($role)) ?? '');
 
     $rolesDocumentosCheck = ['compras','talento_humano','rentas','contabilidad','inversiones_publicas','presupuesto','radicacion'];
-    $esAreaDocumentos = collect($rolesDocumentosCheck)->contains(fn($r) => auth()->user()->hasRole($r));
+    $esAreaDocumentos = collect($rolesDocumentosCheck)->contains(fn($r) => $dashboardUser->hasRole($r));
 
     $solicitudesPendientes = $solicitudesPendientes ?? collect();
     $solicitudesPendientesArea = $solicitudesPendientesArea ?? collect();
@@ -70,8 +88,8 @@
     ];
     $anios = range(now()->year, now()->year - 4);
     $mostrarAcciones = $myBandeja
-        || (!$esAreaDocumentos && auth()->user()->can('procesos.crear') && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante') || auth()->user()->hasRole('admin')))
-        || (!$esAreaDocumentos && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('admin')));
+        || (!$esAreaDocumentos && $dashboardUser->can('procesos.crear') && ($dashboardUser->hasRole('planeacion') || $dashboardUser->hasRole('unidad_solicitante') || $dashboardUser->hasRole('admin')))
+        || (!$esAreaDocumentos && ($dashboardUser->hasRole('planeacion') || $dashboardUser->hasRole('admin')));
     @endphp
 
     <link rel="stylesheet" href="{{ asset('vendor/gridstack/gridstack.min.css') }}">
@@ -155,6 +173,16 @@
     </style>
 
     <div class="p-6 space-y-5" style="background:#f1f5f9;min-height:calc(100vh - 65px)">
+
+        @if(($dashboardPreview['is_preview'] ?? false) === true)
+        <div class="flex items-start justify-between gap-3 px-4 py-3 rounded-xl border" style="background:#eff6ff;border-color:#bfdbfe">
+            <div>
+                <p class="text-sm font-semibold" style="color:#1e3a8a">Vista simulada: {{ $dashboardPreview['target_name'] ?? 'Usuario' }} ({{ $dashboardPreview['target_email'] ?? '' }})</p>
+                <p class="text-xs" style="color:#475569">Administrador activo: {{ $dashboardPreview['actor_name'] ?? auth()->user()->name }}</p>
+            </div>
+            <a href="{{ route('dashboard') }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 border bg-white" style="border-color:#d1d5db">Salir de simulación</a>
+        </div>
+        @endif
 
         @if(session('success'))
         <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d">
@@ -257,7 +285,7 @@
                     </a>
                     @endif
 
-                        @if(!$esAreaDocumentos && auth()->user()->can('procesos.crear') && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('unidad_solicitante') || auth()->user()->hasRole('admin')))
+                        @if(!$esAreaDocumentos && $dashboardUser->can('procesos.crear') && ($dashboardUser->hasRole('planeacion') || $dashboardUser->hasRole('unidad_solicitante') || $dashboardUser->hasRole('admin')))
                     <a href="{{ route('procesos.create') }}"
                        class="flex items-center gap-3 p-4 bg-white rounded-2xl transition-all hover:shadow-md hover:-translate-y-0.5"
                        style="border:1px solid #e2e8f0">
@@ -271,7 +299,7 @@
                     </a>
                     @endif
 
-                    @if(!$esAreaDocumentos && (auth()->user()->hasRole('planeacion') || auth()->user()->hasRole('admin')))
+                          @if(!$esAreaDocumentos && ($dashboardUser->hasRole('planeacion') || $dashboardUser->hasRole('admin')))
                     <a href="{{ route('paa.index') }}"
                        class="flex items-center gap-3 p-4 bg-white rounded-2xl transition-all hover:shadow-md hover:-translate-y-0.5"
                        style="border:1px solid #e2e8f0">

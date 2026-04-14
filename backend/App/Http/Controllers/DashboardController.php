@@ -15,13 +15,51 @@ use App\Models\ProcesoEtapaArchivo;
 use App\Models\Alerta;
 use App\Models\Workflow;
 use App\Models\Etapa;
+use App\Models\User;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $authUser = auth()->user();
+        $authUser->loadMissing('roles');
+
+        $user = $authUser;
+        $dashboardPreview = [
+            'can_preview' => false,
+            'is_preview' => false,
+            'actor_name' => $authUser->name,
+            'target_name' => $authUser->name,
+            'target_email' => $authUser->email,
+            'selected_user_id' => (int) $authUser->id,
+            'users' => collect(),
+        ];
+
+        if ($this->esSuperAdminDashboard($authUser)) {
+            $selectedUserId = (int) $request->input('as_user', $authUser->id);
+
+            if ($selectedUserId > 0 && $selectedUserId !== (int) $authUser->id) {
+                $selected = User::with('roles')->find($selectedUserId);
+                if ($selected) {
+                    $user = $selected;
+                }
+            }
+
+            $dashboardPreview = [
+                'can_preview' => true,
+                'is_preview' => (int) $user->id !== (int) $authUser->id,
+                'actor_name' => $authUser->name,
+                'target_name' => $user->name,
+                'target_email' => $user->email,
+                'selected_user_id' => (int) $user->id,
+                'users' => User::query()
+                    ->select('id', 'name', 'email')
+                    ->orderBy('name')
+                    ->get(),
+            ];
+        }
+
         $user->loadMissing('roles');
         $roleNames = $user->roles->pluck('name')->all();
 
@@ -48,7 +86,7 @@ class DashboardController extends Controller
         
         // Si el alcance es global, secretaria o unidad, usar el dashboard ejecutivo
         if (in_array($dashboardScope, ['global', 'secretaria', 'unidad'], true)) {
-            return $this->dashboardEjecutivo($user, $dashboardScope);
+            return $this->dashboardEjecutivo($user, $dashboardScope, $dashboardPreview);
         }
 
         // ── Roles de área específica (solicitudes paralelas Etapa 1) ──────────
@@ -143,6 +181,7 @@ class DashboardController extends Controller
         $metricas = $this->computeMetricas($user, $userRolesDoc, $inicioPeriodo, $finPeriodo, $filtroPeriodo, $periodoLabel);
 
         return view('dashboard', compact(
+            'user',
             'enCurso',
             'finalizados',
             'solicitudesPendientes',
@@ -151,7 +190,8 @@ class DashboardController extends Controller
             'kpisDocumentos',
             'filtroPeriodo',
             'filtroMes',
-            'filtroAnio'
+            'filtroAnio',
+            'dashboardPreview'
         ));
     }
 
@@ -161,7 +201,7 @@ class DashboardController extends Controller
      * - 'secretaria' → Secretario: solo procesos de su secretaría
      * - 'unidad'     → Jefe de unidad: solo procesos de su unidad
      */
-    private function dashboardEjecutivo($user, $scope)
+    private function dashboardEjecutivo($user, $scope, array $dashboardPreview = [])
     {
         $inicioMes = now()->startOfMonth();
         $finMes    = now()->endOfMonth();
@@ -187,13 +227,15 @@ class DashboardController extends Controller
         $kpiMesLabel = 'Creados este mes';
         $kpiMesSub = ucfirst(now()->translatedFormat('F'));
         $kpiFinalizadosSub = 'Completados';
+        $puedeCrearProcesos = $user->can('procesos.crear');
 
         $areaOperativa = $this->obtenerAreaOperativaDashboard($user);
         $esOperativo = !in_array($scope, ['global'], true)
             && !$user->hasRole('secretario')
             && !$user->hasRole('admin_secretaria')
             && !$user->hasRole('jefe_unidad')
-            && !empty($areaOperativa);
+            && !empty($areaOperativa)
+            && !$puedeCrearProcesos;
 
         if ($esOperativo) {
             $gestionadosQuery = DB::table('proceso_etapas as pe')
@@ -405,8 +447,16 @@ class DashboardController extends Controller
             'tendencia', 'porArea', 'porEstadoRaw', 'porModalidad',
             'alertasRiesgos', 'procesosRecientes',
             'listaLateral', 'listaLateralTipo',
-            'documentosEstado', 'etapasActivas'
+            'documentosEstado', 'etapasActivas',
+            'dashboardPreview'
         ));
+    }
+
+    private function esSuperAdminDashboard($user): bool
+    {
+        return $user->hasRole('admin')
+            || $user->hasRole('admin_general')
+            || $user->hasRole('gobernador');
     }
 
     private function obtenerAreaOperativaDashboard($user): ?string

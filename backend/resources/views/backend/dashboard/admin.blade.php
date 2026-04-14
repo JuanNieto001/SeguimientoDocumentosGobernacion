@@ -7,7 +7,7 @@
                 <h1 class="text-base font-black text-gray-900 leading-none">Panel de Control</h1>
                 <p class="text-[11px] text-gray-400 mt-0.5">{{ $scopeNombre }} &mdash; {{ now()->translatedFormat('F Y') }}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap justify-end">
                 @can('procesos.crear')
                 <a href="{{ route('procesos.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-sm transition-all hover:shadow-md hover:opacity-95"
@@ -22,6 +22,22 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                     Ver todos
                 </a>
+                @if(($dashboardPreview['can_preview'] ?? false) === true)
+                <form method="GET" action="{{ route('dashboard') }}" class="inline-flex items-center gap-2 px-2 py-1.5 rounded-xl border bg-white" style="border-color:#e2e8f0">
+                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Ver como</span>
+                    <select name="as_user" class="rounded-lg border text-xs px-2 py-1 max-w-[16rem]" style="border-color:#cbd5e1">
+                        @foreach(($dashboardPreview['users'] ?? collect()) as $previewUser)
+                        <option value="{{ $previewUser->id }}" @selected((int)($dashboardPreview['selected_user_id'] ?? 0) === (int)$previewUser->id)>
+                            {{ $previewUser->name }} ({{ $previewUser->email }})
+                        </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white" style="background:#1d4ed8">Cargar</button>
+                    @if(($dashboardPreview['is_preview'] ?? false) === true)
+                    <a href="{{ route('dashboard') }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-600 border" style="border-color:#d1d5db">Salir</a>
+                    @endif
+                </form>
+                @endif
             </div>
         </div>
     </x-slot>
@@ -200,6 +216,17 @@
     </style>
 
     <div class="dash-root p-1 space-y-0.5" style="background:#f4f6f9;min-height:calc(100vh - 72px)">
+
+        @if(($dashboardPreview['is_preview'] ?? false) === true)
+        <div class="mx-0.5 mb-1 px-3 py-2 rounded-xl border" style="background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a">
+            <p class="text-[11px] font-semibold">
+                Vista simulada: {{ $dashboardPreview['target_name'] ?? 'Usuario' }} ({{ $dashboardPreview['target_email'] ?? '' }})
+            </p>
+            <p class="text-[10px]" style="color:#475569">
+                Administrador activo: {{ $dashboardPreview['actor_name'] ?? auth()->user()->name }}
+            </p>
+        </div>
+        @endif
 
         {{-- ═══ CANVAS PERSONALIZABLE DEL DASHBOARD ═══ --}}
         <div class="flex items-center justify-between px-0.5 pt-0.5">
