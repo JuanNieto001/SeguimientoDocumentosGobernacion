@@ -92,7 +92,7 @@
                 </summary>
                 <div class="divide-y" style="divide-color:#f8fafc">
                     @foreach($docsDescentralizacion as $dDoc)
-                    <div class="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50/60 transition-colors">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-5 py-3.5 hover:bg-gray-50/60 transition-colors">
                         <div class="flex items-center gap-3 min-w-0">
                             <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm"
                                  style="background:{{ $dDoc->estado === 'subido' ? '#dcfce7' : '#fef9c3' }}">
@@ -111,7 +111,7 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0 ml-4">
+                        <div class="flex flex-wrap items-center gap-2 shrink-0 sm:ml-4">
                             @if($dDoc->estado === 'subido' && $dDoc->archivo_id)
                                 <a href="{{ route('workflow.files.download', $dDoc->archivo_id) }}"
                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-90"
@@ -238,8 +238,8 @@
                         </div>
 
                         {{-- Nombre + badges + columnas de acción --}}
-                        <div class="flex flex-col lg:grid lg:items-center lg:gap-3"
-                             style="grid-template-columns:1fr 11rem 13rem">
+                            <div class="flex flex-col gap-2 lg:grid lg:items-start lg:gap-3"
+                                style="grid-template-columns:minmax(0,1fr) minmax(0,11rem) minmax(0,13rem)">
 
                             {{-- Nombre del documento --}}
                             <div class="min-w-0">
@@ -259,12 +259,13 @@
                             </div>
 
                             {{-- Columna FÍSICO --}}
-                            <div class="flex justify-start lg:justify-center mt-2 lg:mt-0">
+                            <div class="mt-2 lg:mt-0 lg:flex lg:justify-center">
+                                <p class="text-[11px] uppercase tracking-wide text-gray-400 mb-1 lg:hidden">Físico</p>
                                 @if($recibido)
-                                <form method="POST" action="{{ route('unidad.recibido.fisico', [$proceso->id, $doc->check_id]) }}">
+                                <form method="POST" action="{{ route('unidad.recibido.fisico', [$proceso->id, $doc->check_id]) }}" class="w-full lg:w-36">
                                     @csrf
                                     <button type="submit"
-                                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all w-36 justify-center"
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all w-full justify-center"
                                         style="background:{{ $fisico ? '#dcfce7' : '#14532d' }};
                                                color:{{ $fisico ? '#15803d' : '#fff' }};
                                                border:1.5px solid {{ $fisico ? '#86efac' : '#14532d' }}"
@@ -284,18 +285,19 @@
                             </div>
 
                             {{-- Columna DIGITAL --}}
-                            <div class="flex justify-start lg:justify-center mt-2 lg:mt-0">
+                            <div class="mt-2 lg:mt-0 lg:flex lg:justify-center">
+                                <p class="text-[11px] uppercase tracking-wide text-gray-400 mb-1 lg:hidden">Digital</p>
                                 @if(!$fisico)
                                     {{-- Sin recibir físico aún --}}
-                                    <span class="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs w-44 justify-center"
+                                    <span class="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs w-full lg:w-44 justify-center"
                                           style="background:#f9fafb;color:#d1d5db;border:1.5px dashed #e5e7eb">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                         Recibe físico antes
                                     </span>
                                 @elseif($digital)
                                     {{-- Archivo ya subido --}}
-                                    <div class="flex items-center gap-1.5">
-                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold max-w-[8rem]"
+                                    <div class="flex items-center gap-1.5 flex-wrap lg:flex-nowrap lg:justify-center w-full">
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold max-w-full lg:max-w-[8rem]"
                                              style="background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe"
                                              title="{{ $doc->archivo_nombre }}">
                                             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -312,9 +314,9 @@
                                     </div>
                                 @else
                                     {{-- Pendiente de subir --}}
-                                    <form method="POST" action="{{ route('unidad.subir.archivo', [$proceso->id, $doc->check_id]) }}" enctype="multipart/form-data">
+                                    <form method="POST" action="{{ route('unidad.subir.archivo', [$proceso->id, $doc->check_id]) }}" enctype="multipart/form-data" class="w-full lg:w-44">
                                         @csrf
-                                        <label class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all w-44 justify-center hover:opacity-90"
+                                        <label class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all w-full justify-center hover:opacity-90"
                                                style="background:#2563eb;color:#fff;border:1.5px solid #1d4ed8">
                                             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                                             Subir digital
