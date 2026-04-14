@@ -93,16 +93,24 @@
                         $authUser->hasRole('secop') => 'secop',
                         default => null,
                     };
-                    $unread = \App\Models\Alerta::where('leida', false)
-                        ->where(function($q) use ($authUser, $areaUsuario) {
+                    $rolesGlobales = ['admin', 'admin_general', 'gobernador'];
+                    $esGlobal = collect($rolesGlobales)->contains(fn ($role) => $authUser->hasRole($role));
+
+                    $unreadQuery = \App\Models\Alerta::where('leida', false);
+
+                    if (!$esGlobal) {
+                        $unreadQuery->where(function($q) use ($authUser, $areaUsuario) {
                             $q->where('user_id', $authUser->id);
                             if ($areaUsuario) {
-                                $q->orWhere('area_responsable', $areaUsuario);
+                                $q->orWhere(function ($sub) use ($areaUsuario) {
+                                    $sub->whereNull('user_id')
+                                        ->where('area_responsable', $areaUsuario);
+                                });
                             }
-                            if ($authUser->hasRole('admin')) {
-                                $q->orWhereNotNull('id');
-                            }
-                        })->count();
+                        });
+                    }
+
+                    $unread = $unreadQuery->count();
                     $displayName = $authUser->name;
                     $displaySub = $authUser->unidad?->nombre ?: $authUser->secretaria?->nombre;
                     $displaySub = $displaySub ?: 'Sin unidad';

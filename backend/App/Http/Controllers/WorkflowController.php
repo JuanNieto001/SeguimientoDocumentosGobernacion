@@ -134,7 +134,7 @@ class WorkflowController extends Controller
                 $creador = \App\Models\User::find($proceso->created_by);
                 $areaLabel = match($proceso->area_actual_role) {
                     'unidad_solicitante' => 'Unidad Solicitante',
-                    'planeacion'         => 'Planeación',
+                    'planeacion'         => 'Descentralización',
                     'hacienda'           => 'Hacienda',
                     'juridica'           => 'Jurídica',
                     'secop'              => 'SECOP',
@@ -503,7 +503,7 @@ class WorkflowController extends Controller
             // Etiqueta visible para el usuario basada en el rol destino de la siguiente etapa.
             $areaLabel = match($nextEtapa->area_role) {
                 'unidad_solicitante' => 'Unidad Solicitante',
-                'planeacion'         => 'Planeación',
+                'planeacion'         => 'Descentralización',
                 'hacienda'           => 'Hacienda',
                 'juridica'           => 'Jurídica',
                 'secop'              => 'SECOP',

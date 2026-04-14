@@ -13,6 +13,47 @@ use App\Services\AlertaService;
 
 class AlertaController extends Controller
 {
+    private function esUsuarioGlobal($user): bool
+    {
+        return $user->hasRole('admin')
+            || $user->hasRole('admin_general')
+            || $user->hasRole('gobernador');
+    }
+
+    private function aplicarVisibilidadAlertas($query, $user, ?string $area): void
+    {
+        if ($this->esUsuarioGlobal($user)) {
+            return;
+        }
+
+        $query->where(function ($q) use ($user, $area) {
+            $q->where('user_id', $user->id);
+
+            if ($area) {
+                // Las alertas por área solo son compartidas si no tienen user_id asignado.
+                $q->orWhere(function ($sub) use ($area) {
+                    $sub->whereNull('user_id')
+                        ->where('area_responsable', $area);
+                });
+            }
+        });
+    }
+
+    private function puedeGestionarAlerta($user, ?string $area, Alerta $alerta): bool
+    {
+        if ($this->esUsuarioGlobal($user)) {
+            return true;
+        }
+
+        if ((int) $alerta->user_id === (int) $user->id) {
+            return true;
+        }
+
+        return $alerta->user_id === null
+            && $area
+            && $alerta->area_responsable === $area;
+    }
+
     /**
      * Abrir centro de alertas desde campanita: limpia punto rojo al primer clic.
      */
@@ -22,22 +63,14 @@ class AlertaController extends Controller
         $area = $this->obtenerAreaUsuario($user);
 
         $query = Alerta::query()->where('leida', false);
-
-        if (!$user->hasRole('admin')) {
-            $query->where(function ($q) use ($user, $area) {
-                $q->where('user_id', $user->id);
-                if ($area) {
-                    $q->orWhere('area_responsable', $area);
-                }
-            });
-        }
+        $this->aplicarVisibilidadAlertas($query, $user, $area);
 
         $query->update([
             'leida' => true,
             'leida_at' => now(),
         ]);
 
-        return redirect()->route('alertas.index');
+        return redirect()->route('alertas.index', ['leida' => 'todas']);
     }
 
     /**
@@ -56,16 +89,7 @@ class AlertaController extends Controller
         $leida = $request->input('leida', 'no_leidas');
 
         $query = Alerta::with(['proceso', 'proceso.workflow', 'procesoCd']);
-
-        // Filtrar por área si no es admin
-        if (!$user->hasRole('admin')) {
-            $query->where(function ($q) use ($user, $area) {
-                $q->where('user_id', $user->id);
-                if ($area) {
-                    $q->orWhere('area_responsable', $area);
-                }
-            });
-        }
+        $this->aplicarVisibilidadAlertas($query, $user, $area);
 
         // Filtro de tipo
         if ($tipo) {
@@ -90,14 +114,7 @@ class AlertaController extends Controller
 
         // Estadísticas (mismas reglas de visibilidad del usuario)
         $statsQuery = Alerta::query();
-        if (!$user->hasRole('admin')) {
-            $statsQuery->where(function ($q) use ($user, $area) {
-                $q->where('user_id', $user->id);
-                if ($area) {
-                    $q->orWhere('area_responsable', $area);
-                }
-            });
-        }
+        $this->aplicarVisibilidadAlertas($statsQuery, $user, $area);
         $estadisticas = [
             'total' => (clone $statsQuery)->where('leida', false)->count(),
             'alta' => (clone $statsQuery)->where('leida', false)->where('prioridad', 'alta')->count(),
@@ -114,14 +131,12 @@ class AlertaController extends Controller
     public function marcarLeida($id)
     {
         $alerta = Alerta::findOrFail($id);
-        
+
         // Verificar permisos
         $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $area = $this->obtenerAreaUsuario($user);
-            if ($alerta->area_responsable !== $area && $alerta->user_id !== $user->id) {
-                abort(403, 'No tienes permiso para marcar esta alerta');
-            }
+        $area = $this->obtenerAreaUsuario($user);
+        if (!$this->puedeGestionarAlerta($user, $area, $alerta)) {
+            abort(403, 'No tienes permiso para marcar esta alerta');
         }
 
         AlertaService::marcarLeida($id);
@@ -142,15 +157,7 @@ class AlertaController extends Controller
         $area = $this->obtenerAreaUsuario($user);
 
         $query = Alerta::query();
-
-        if (!$user->hasRole('admin')) {
-            $query->where(function ($q) use ($user, $area) {
-                $q->where('user_id', $user->id);
-                if ($area) {
-                    $q->orWhere('area_responsable', $area);
-                }
-            });
-        }
+        $this->aplicarVisibilidadAlertas($query, $user, $area);
 
         $count = $query->update([
             'leida' => true,
@@ -170,14 +177,12 @@ class AlertaController extends Controller
     public function destroy($id)
     {
         $alerta = Alerta::findOrFail($id);
-        
+
         // Verificar permisos
         $user = auth()->user();
-        if (!$user->hasRole('admin')) {
-            $area = $this->obtenerAreaUsuario($user);
-            if ($alerta->area_responsable !== $area && $alerta->user_id !== $user->id) {
-                abort(403, 'No tienes permiso para eliminar esta alerta');
-            }
+        $area = $this->obtenerAreaUsuario($user);
+        if (!$this->puedeGestionarAlerta($user, $area, $alerta)) {
+            abort(403, 'No tienes permiso para eliminar esta alerta');
         }
 
         $alerta->delete();
@@ -222,15 +227,7 @@ class AlertaController extends Controller
 
         $query = Alerta::with(['proceso', 'procesoCd'])
             ->where('leida', false);
-
-        if (!$user->hasRole('admin')) {
-            $query->where(function ($q) use ($user, $area) {
-                $q->where('user_id', $user->id);
-                if ($area) {
-                    $q->orWhere('area_responsable', $area);
-                }
-            });
-        }
+        $this->aplicarVisibilidadAlertas($query, $user, $area);
 
         $alertas = $query->orderBy('prioridad', 'desc')
             ->orderBy('created_at', 'desc')

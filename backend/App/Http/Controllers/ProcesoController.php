@@ -408,7 +408,7 @@ class ProcesoController extends Controller
                 // Convertimos el role técnico en etiqueta funcional para el mensaje.
                 $areaLabel = match($segundaEtapa->area_role) {
                     'unidad_solicitante' => 'Unidad Solicitante',
-                    'planeacion'         => 'Planeación',
+                    'planeacion'         => 'Descentralización',
                     'hacienda'           => 'Hacienda',
                     'juridica'           => 'Jurídica',
                     'secop'              => 'SECOP',

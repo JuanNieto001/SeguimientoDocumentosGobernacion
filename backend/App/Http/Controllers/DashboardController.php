@@ -186,8 +186,9 @@ class DashboardController extends Controller
             ->count();
 
         // ── Alertas ─────────────────────────────────────────────────────────
-        $alertasAltas = Alerta::where('leida', false)->where('prioridad', 'alta')->count();
-        $alertasTotal = Alerta::where('leida', false)->count();
+        $alertasBaseQuery = $this->queryAlertasDashboard($user, $scope, $scoped);
+        $alertasAltas = (clone $alertasBaseQuery)->where('prioridad', 'alta')->count();
+        $alertasTotal = (clone $alertasBaseQuery)->count();
 
         // ── Tendencia últimos 6 meses ────────────────────────────────────────
         $tendencia = [];
@@ -232,7 +233,7 @@ class DashboardController extends Controller
                 'label'  => $label,
                 'color'  => $areaColores[$role],
                 'total'  => $scoped()->where('area_actual_role', $role)->where('estado', 'EN_CURSO')->count(),
-                'alertas'=> Alerta::where('area_responsable', $role)->where('leida', false)->count(),
+                'alertas'=> (clone $alertasBaseQuery)->where('area_responsable', $role)->count(),
             ];
         }
 
@@ -252,14 +253,14 @@ class DashboardController extends Controller
 
         // ── Alertas y riesgos ───────────────────────────────────────────────
         $alertasRiesgos = [
-            'procesos_con_retraso'    => Alerta::where('tipo', 'tiempo_excedido')
-                ->where('leida', false)->distinct('proceso_id')->count('proceso_id'),
-            'documentos_rechazados'   => Alerta::where('tipo', 'documento_rechazado')
-                ->where('leida', false)->count(),
-            'procesos_sin_actividad'  => Alerta::where('tipo', 'sin_actividad')
-                ->where('leida', false)->distinct('proceso_id')->count('proceso_id'),
-            'certificados_por_vencer' => Alerta::where('tipo', 'certificado_por_vencer')
-                ->where('leida', false)->count(),
+            'procesos_con_retraso'    => (clone $alertasBaseQuery)
+                ->where('tipo', 'tiempo_excedido')->distinct('proceso_id')->count('proceso_id'),
+            'documentos_rechazados'   => (clone $alertasBaseQuery)
+                ->where('tipo', 'documento_rechazado')->count(),
+            'procesos_sin_actividad'  => (clone $alertasBaseQuery)
+                ->where('tipo', 'sin_actividad')->distinct('proceso_id')->count('proceso_id'),
+            'certificados_por_vencer' => (clone $alertasBaseQuery)
+                ->where('tipo', 'certificado_por_vencer')->count(),
         ];
 
         // ── Señales adicionales para Jefes de Unidad ───────────────────────
@@ -354,6 +355,63 @@ class DashboardController extends Controller
 
     private function resolveDashboardScope($user, $roles, array $roleNames): string
     {
+        $roleNames = array_values(array_unique($roleNames));
+
+        // Jerarquía fija para evitar depender de seeders/dashboard_scope en otros equipos.
+        if (!empty(array_intersect($roleNames, ['admin', 'admin_general', 'gobernador']))) {
+            return 'global';
+        }
+
+        if (!empty(array_intersect($roleNames, ['secretario', 'admin_secretaria']))) {
+            return !empty($user->secretaria_id) ? 'secretaria' : 'propios';
+        }
+
+        if (in_array('jefe_unidad', $roleNames, true)) {
+            if (!empty($user->unidad_id)) {
+                return 'unidad';
+            }
+
+            if (!empty($user->secretaria_id)) {
+                return 'secretaria';
+            }
+
+            return 'propios';
+        }
+
+        // Requerimiento operativo: el resto de usuarios usa la vista tipo Descentralización.
+        $rolesResto = [
+            'unidad_solicitante',
+            'abogado_unidad',
+            'planeacion',
+            'descentralizacion',
+            'hacienda',
+            'juridica',
+            'secop',
+            'compras',
+            'talento_humano',
+            'rentas',
+            'contabilidad',
+            'inversiones_publicas',
+            'presupuesto',
+            'radicacion',
+            'profesional_contratacion',
+            'revisor_juridico',
+            'consulta',
+        ];
+
+        if (!empty(array_intersect($roleNames, $rolesResto))) {
+            if (!empty($user->secretaria_id)) {
+                return 'secretaria';
+            }
+
+            if (!empty($user->unidad_id)) {
+                return 'unidad';
+            }
+
+            return 'propios';
+        }
+
+        // Fallback para roles no contemplados explícitamente.
         $priority = ['propios' => 0, 'unidad' => 1, 'secretaria' => 2, 'global' => 3];
         $scope = 'propios';
 
@@ -362,18 +420,9 @@ class DashboardController extends Controller
             if (!is_string($roleScope) || !isset($priority[$roleScope])) {
                 continue;
             }
+
             if ($priority[$roleScope] > $priority[$scope]) {
                 $scope = $roleScope;
-            }
-        }
-
-        if ($scope === 'propios') {
-            if (!empty(array_intersect($roleNames, ['admin', 'admin_general', 'gobernador']))) {
-                $scope = 'global';
-            } elseif (!empty(array_intersect($roleNames, ['secretario', 'admin_secretaria']))) {
-                $scope = 'secretaria';
-            } elseif (in_array('jefe_unidad', $roleNames, true)) {
-                $scope = 'unidad';
             }
         }
 
@@ -386,6 +435,48 @@ class DashboardController extends Controller
         }
 
         return $scope;
+    }
+
+    private function queryAlertasDashboard($user, string $scope, callable $scoped)
+    {
+        $query = Alerta::query()->where('leida', false);
+
+        if ($scope === 'global') {
+            return $query;
+        }
+
+        $areaUsuario = $this->obtenerAreaUsuarioParaAlertas($user);
+
+        return $query->where(function ($q) use ($user, $areaUsuario, $scoped) {
+            $q->whereIn('proceso_id', $scoped()->select('id'))
+                ->orWhere('user_id', $user->id);
+
+            if ($areaUsuario) {
+                $q->orWhere(function ($sub) use ($areaUsuario) {
+                    $sub->whereNull('user_id')
+                        ->where('area_responsable', $areaUsuario);
+                });
+            }
+        });
+    }
+
+    private function obtenerAreaUsuarioParaAlertas($user): ?string
+    {
+        if ($user->hasRole('rentas')) return 'rentas';
+        if ($user->hasRole('contabilidad')) return 'contabilidad';
+        if ($user->hasRole('presupuesto')) return 'presupuesto';
+        if ($user->hasRole('inversiones_publicas')) return 'inversiones_publicas';
+        if ($user->hasRole('radicacion')) return 'radicacion';
+        if ($user->hasRole('compras')) return 'compras';
+        if ($user->hasRole('talento_humano')) return 'talento_humano';
+        if ($user->hasRole('descentralizacion')) return 'planeacion';
+        if ($user->hasRole('planeacion')) return 'planeacion';
+        if ($user->hasRole('hacienda')) return 'hacienda';
+        if ($user->hasRole('juridica')) return 'juridica';
+        if ($user->hasRole('secop')) return 'secop';
+        if ($user->hasRole('unidad_solicitante')) return 'unidad_solicitante';
+
+        return null;
     }
 
     /**

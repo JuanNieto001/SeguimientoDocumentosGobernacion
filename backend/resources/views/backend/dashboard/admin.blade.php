@@ -58,18 +58,6 @@
         $docsEstadoValues[] = $docsEstadoCounts[$key] ?? 0;
         $docsEstadoColors[] = $info['color'];
     }
-
-    $etapasChartLabels = collect($etapasActivas ?? collect())->pluck('nombre')->toArray();
-    $etapasChartValues = collect($etapasActivas ?? collect())->pluck('total')->toArray();
-    $etapasChartColors = collect($etapasActivas ?? collect())->pluck('area_role')->map(function ($role) {
-        return [
-            'unidad_solicitante' => '#3b82f6',
-            'planeacion'         => '#16a34a',
-            'hacienda'           => '#ca8a04',
-            'juridica'           => '#ea580c',
-            'secop'              => '#9333ea',
-        ][$role] ?? '#64748b';
-    })->toArray();
     @endphp
 
     <link rel="stylesheet" href="{{ asset('vendor/gridstack/gridstack.min.css') }}">
@@ -372,26 +360,7 @@
                 </div>
             </div>
         
-            <div class="grid-stack-item" id="widget-mensual" gs-x="0" gs-y="4" gs-w="4" gs-h="4">
-                <div class="grid-stack-item-content">
-                    <div class="dash-graph-widget">
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <h3>Procesos por mes</h3>
-                                    <p>Últimos 6 meses — creados, finalizados y rechazados</p>
-                                </div>
-                                <span class="badge-pill" style="background:#f0fdf4;color:#15803d">Tiempo real</span>
-                            </div>
-                            <div class="p-2" style="flex:1;min-height:120px">
-                                <canvas id="barMensualChart" style="height:100% !important"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid-stack-item" id="widget-estado" gs-x="4" gs-y="4" gs-w="4" gs-h="4">
+            <div class="grid-stack-item" id="widget-estado" gs-x="0" gs-y="4" gs-w="6" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -433,7 +402,7 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-tendencia" gs-x="8" gs-y="4" gs-w="4" gs-h="4">
+            <div class="grid-stack-item" id="widget-tendencia" gs-x="6" gs-y="4" gs-w="6" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -470,7 +439,7 @@
             </div>
 
             @if($scope === 'unidad')
-            <div class="grid-stack-item" id="widget-docs-estado" gs-x="0" gs-y="10" gs-w="4" gs-h="3">
+            <div class="grid-stack-item" id="widget-docs-estado" gs-x="0" gs-y="10" gs-w="12" gs-h="3">
                 <div class="grid-stack-item-content">
                     <div class="dash-graph-widget">
                         <div class="chart-card">
@@ -501,23 +470,6 @@
                 </div>
             </div>
 
-            <div class="grid-stack-item" id="widget-etapas" gs-x="4" gs-y="10" gs-w="8" gs-h="3">
-                <div class="grid-stack-item-content">
-                    <div class="dash-graph-widget">
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <h3>Procesos por etapa</h3>
-                                    <p>Top etapas activas en la unidad</p>
-                                </div>
-                            </div>
-                            <div class="p-2" style="flex:1;min-height:120px">
-                                <canvas id="etapasUnidadChart" style="height:100% !important"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             @endif
         </div>
 
@@ -712,42 +664,7 @@
         Chart.defaults.color = '#94a3b8';
     }
 
-    // ─── 1. BAR CHART: Procesos por mes ───────────────────────────────────────
-    (function () {
-        if (typeof Chart === 'undefined') return;
-        const meses       = @json(collect($tendencia)->pluck('mes_corto'));
-        const creados     = @json(collect($tendencia)->pluck('creados'));
-        const finalizados = @json(collect($tendencia)->pluck('finalizados'));
-        const rechazados  = @json(collect($tendencia)->pluck('rechazados'));
-        const ctx = document.getElementById('barMensualChart');
-        if (!ctx) return;
-        const barChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: meses,
-                datasets: [
-                    { label:'Creados',    data:creados,     backgroundColor:'#3b82f688', borderColor:'#3b82f6', borderWidth:2, borderRadius:5, borderSkipped:false },
-                    { label:'Finalizados',data:finalizados, backgroundColor:'#22c55e88', borderColor:'#16a34a', borderWidth:2, borderRadius:5, borderSkipped:false },
-                    { label:'Rechazados', data:rechazados,  backgroundColor:'#ef444488', borderColor:'#dc2626', borderWidth:2, borderRadius:5, borderSkipped:false },
-                ]
-            },
-            options: {
-                responsive:true, maintainAspectRatio:false,
-                interaction:{ mode:'index', intersect:false },
-                plugins:{
-                    legend:{ position:'top', align:'end', labels:{ boxWidth:8, boxHeight:8, borderRadius:3, useBorderRadius:true, font:{size:10} }},
-                    tooltip:{ cornerRadius:8 }
-                },
-                scales:{
-                    x:{ grid:{display:false}, ticks:{font:{size:10}} },
-                    y:{ grid:{color:'#f1f5f9', lineWidth:1}, border:{dash:[3,3],color:'transparent'}, ticks:{font:{size:10}, precision:0, stepSize:1}, beginAtZero:true }
-                }
-            }
-        });
-        window.dashboardCharts.barMensualChart = barChart;
-    })();
-
-    // ─── 2. DONUT: Distribución por estado ────────────────────────────────────
+    // ─── 1. DONUT: Distribución por estado ────────────────────────────────────
     (function () {
         if (typeof Chart === 'undefined') return;
         const ctx = document.getElementById('donutEstadoChart');
@@ -774,7 +691,7 @@
         window.dashboardCharts.donutEstadoChart = donutChart;
     })();
 
-    // ─── 3. HORIZONTAL BAR: Por área ──────────────────────────────────────────
+    // ─── 2. HORIZONTAL BAR: Por área ──────────────────────────────────────────
     (function () {
         if (typeof Chart === 'undefined') return;
         const labels = @json(collect($porArea)->pluck('label'));
@@ -797,7 +714,7 @@
         window.dashboardCharts.areaHorizChart = areaChart;
     })();
 
-    // ─── 4. LINE: Tendencia ────────────────────────────────────────────────────
+    // ─── 3. LINE: Tendencia ────────────────────────────────────────────────────
     (function () {
         if (typeof Chart === 'undefined') return;
         const meses       = @json(collect($tendencia)->pluck('mes_corto'));
@@ -833,7 +750,7 @@
     })();
 
     @if($scope === 'unidad')
-    // ─── 5. DONUT: Documentos por estado ─────────────────────────────────────
+    // ─── 4. DONUT: Documentos por estado ─────────────────────────────────────
     (function () {
         if (typeof Chart === 'undefined') return;
         const ctx = document.getElementById('docsEstadoUnidadChart');
@@ -865,52 +782,6 @@
             }
         });
         window.dashboardCharts.docsEstadoUnidadChart = chart;
-    })();
-
-    // ─── 6. HORIZONTAL BAR: Procesos por etapa ───────────────────────────────
-    (function () {
-        if (typeof Chart === 'undefined') return;
-        const ctx = document.getElementById('etapasUnidadChart');
-        if (!ctx) return;
-        const labels = @json($etapasChartLabels);
-        const data = @json($etapasChartValues);
-        const colors = @json($etapasChartColors);
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [{
-                    data,
-                    backgroundColor: colors.map(color => color + '66'),
-                    borderColor: colors,
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { cornerRadius: 8 }
-                },
-                scales: {
-                    x: {
-                        grid: { color: '#f1f5f9' },
-                        border: { dash: [3, 3], color: 'transparent' },
-                        ticks: { font: { size: 10 }, precision: 0 },
-                        beginAtZero: true
-                    },
-                    y: {
-                        grid: { display: false },
-                        ticks: { font: { size: 10 } }
-                    }
-                }
-            }
-        });
-        window.dashboardCharts.etapasUnidadChart = chart;
     })();
     @endif
 
@@ -945,7 +816,7 @@
         const canvasConfigs = [
             {
                 canvasId: 'dashboardTopCanvas',
-                storageKey: 'dashboard.global.top.layout.v5',
+                storageKey: 'dashboard.global.top.layout.v6',
                 defaultLayout: [
                     { id: 'widget-kpi-total-procesos', x: 0, y: 0, w: 2, h: 1 },
                     { id: 'widget-kpi-en-curso', x: 2, y: 0, w: 2, h: 1 },
@@ -955,13 +826,11 @@
                     { id: 'widget-kpi-alertas-criticas', x: 10, y: 0, w: 2, h: 1 },
                     { id: 'widget-secretarias', x: 0, y: 1, w: 7, h: 3 },
                     { id: 'widget-alertas', x: 7, y: 1, w: 5, h: 3 },
-                    { id: 'widget-mensual', x: 0, y: 4, w: 4, h: 4 },
-                    { id: 'widget-estado', x: 4, y: 4, w: 4, h: 4 },
-                    { id: 'widget-tendencia', x: 8, y: 4, w: 4, h: 4 },
+                    { id: 'widget-estado', x: 0, y: 4, w: 6, h: 4 },
+                    { id: 'widget-tendencia', x: 6, y: 4, w: 6, h: 4 },
                     { id: 'widget-area', x: 0, y: 8, w: 12, h: 2 },
                     @if($scope === 'unidad')
-                    { id: 'widget-docs-estado', x: 0, y: 10, w: 4, h: 3 },
-                    { id: 'widget-etapas', x: 4, y: 10, w: 8, h: 3 },
+                    { id: 'widget-docs-estado', x: 0, y: 10, w: 12, h: 3 },
                     @endif
                 ],
             },
