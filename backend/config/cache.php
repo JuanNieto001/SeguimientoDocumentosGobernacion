@@ -7,6 +7,8 @@
 
 use Illuminate\Support\Str;
 
+$defaultStore = env('CACHE_STORE', env('CACHE_DRIVER', 'database'));
+
 return [
 
     /*
@@ -20,7 +22,20 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => $defaultStore,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rate Limiter Store
+    |--------------------------------------------------------------------------
+    |
+    | The rate limiter should use a persistent cache store. If local
+    | development uses the in-memory "array" store, fallback to "file" so
+    | login lockout attempts are accumulated correctly across requests.
+    |
+    */
+
+    'limiter' => env('CACHE_LIMITER', $defaultStore === 'array' ? 'file' : $defaultStore),
 
     /*
     |--------------------------------------------------------------------------
